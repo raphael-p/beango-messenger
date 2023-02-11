@@ -44,10 +44,10 @@ func CreateChat(c *gin.Context) {
 	// Check if chat already exists
 	var chatId *string
 	for key, value := range database.Chats {
-		if newChat.UserIds[0] == value.UserIds[0] ||
-			newChat.UserIds[1] == value.UserIds[1] ||
-			newChat.UserIds[0] == value.UserIds[1] ||
-			newChat.UserIds[1] == value.UserIds[0] {
+		if (newChat.UserIds[0] == value.UserIds[0] &&
+			newChat.UserIds[1] == value.UserIds[1]) ||
+			(newChat.UserIds[0] == value.UserIds[1] &&
+				newChat.UserIds[1] == value.UserIds[0]) {
 			chatId = &key
 		}
 	}
