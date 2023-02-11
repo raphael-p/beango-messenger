@@ -18,9 +18,13 @@ type CreateUserInput struct {
 
 func GetUsers(w http.ResponseWriter, r *http.Request) {
 	_, vals := utils.MapValues(database.Users)
-	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(vals)
+	response, err := json.Marshal(vals)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+	w.Header().Set("content-type", "application/json")
+	w.Write(response)
 }
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -29,24 +33,28 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&input); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "malformed request body")
+		fmt.Println(err.Error())
+		http.Error(w, "malformed request body", http.StatusBadRequest)
 		return
 	}
 
 	if input.Username == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "username is missing")
+		http.Error(w, "username is missing", http.StatusBadRequest)
 		return
+	}
+
+	for _, value := range database.Users {
+		if value.Username == input.Username {
+			http.Error(w, "username is taken", http.StatusConflict)
+			return
+		}
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.MinCost)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
 	newUser.Id = uuid.New().String()
 	newUser.Username = input.Username
 	newUser.Key = string(hash)
@@ -54,8 +62,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	response, err := json.Marshal(newUser)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, "could not encode response object")
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
+	w.Header().Set("content-type", "application/json")
 	w.Write(response)
 }
