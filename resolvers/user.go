@@ -1,9 +1,10 @@
 package resolvers
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/utils"
@@ -15,28 +16,34 @@ type CreateUserInput struct {
 	Password string `json:"password"`
 }
 
-func GetUsers(c *gin.Context) {
+func GetUsers(w http.ResponseWriter, r *http.Request) {
 	_, vals := utils.MapValues(database.Users)
-	c.IndentedJSON(http.StatusOK, vals)
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(vals)
 }
 
-func CreateUser(c *gin.Context) {
+func CreateUser(w http.ResponseWriter, r *http.Request) {
 	var input CreateUserInput
 	newUser := database.User{}
 
-	if err := c.BindJSON(&input); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, "malformed request body")
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&input); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, "malformed request body")
 		return
 	}
 
 	if input.Username == "" {
-		c.IndentedJSON(http.StatusBadRequest, "username is missing")
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, "username is missing")
 		return
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.MinCost)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(err)
 		return
 	}
 
@@ -44,5 +51,11 @@ func CreateUser(c *gin.Context) {
 	newUser.Username = input.Username
 	newUser.Key = string(hash)
 	database.Users[newUser.Id] = newUser
-	c.IndentedJSON(http.StatusCreated, newUser)
+	w.WriteHeader(http.StatusCreated)
+	response, err := json.Marshal(newUser)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, "could not encode response object")
+	}
+	w.Write(response)
 }
