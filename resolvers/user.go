@@ -1,8 +1,6 @@
 package resolvers
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -25,10 +23,7 @@ func CreateUser(w *utils.ResponseWriter, r *http.Request) {
 	var input CreateUserInput
 	newUser := database.User{}
 
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&input); err != nil {
-		fmt.Println(err.Error())
-		w.StringResponse(http.StatusBadRequest, "malformed request body")
+	if success := decodeBody(w, r, input); !success {
 		return
 	}
 
