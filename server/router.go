@@ -32,6 +32,26 @@ func (r *router) newRoute(method, pattern string, handler handlerFunc) {
 	r.routes = append(r.routes, route)
 }
 
+func (r *router) GET(pattern string, handler handlerFunc) {
+	r.newRoute(http.MethodGet, pattern, handler)
+}
+
+func (r *router) POST(pattern string, handler handlerFunc) {
+	r.newRoute(http.MethodPost, pattern, handler)
+}
+
+func (r *router) PUT(pattern string, handler handlerFunc) {
+	r.newRoute(http.MethodPut, pattern, handler)
+}
+
+func (r *router) PATCH(pattern string, handler handlerFunc) {
+	r.newRoute(http.MethodPatch, pattern, handler)
+}
+
+func (r *router) DELETE(pattern string, handler handlerFunc) {
+	r.newRoute(http.MethodDelete, pattern, handler)
+}
+
 func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	r.serveHTTP(utils.NewResponseWriter(w), req)
 }
