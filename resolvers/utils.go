@@ -8,9 +8,9 @@ import (
 	"github.com/raphael-p/beango/utils"
 )
 
-func decodeBody(w *utils.ResponseWriter, r *http.Request, input any) bool {
+func bindJSON(w *utils.ResponseWriter, r *http.Request, input any) bool {
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&input); err != nil {
+	if err := decoder.Decode(input); err != nil {
 		fmt.Println(err.Error())
 		w.StringResponse(http.StatusBadRequest, "malformed request body")
 		return false

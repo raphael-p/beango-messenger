@@ -23,7 +23,7 @@ func CreateUser(w *utils.ResponseWriter, r *http.Request) {
 	var input CreateUserInput
 	newUser := database.User{}
 
-	if success := decodeBody(w, r, input); !success {
+	if success := bindJSON(w, r, &input); !success {
 		return
 	}
 
