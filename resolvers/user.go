@@ -9,21 +9,36 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type UserOutput struct {
+	Id       string `json:"id"`
+	Username string `json:"username"`
+}
+
+func stripFields(user database.User) UserOutput {
+	return UserOutput{user.Id, user.Username}
+}
+
+type GetUsersOutput []UserOutput
+
+func GetUsers(w *utils.ResponseWriter, r *http.Request) {
+	_, vals := utils.MapValues(database.Users)
+
+	var output GetUsersOutput
+	for _, val := range vals {
+		output = append(output, stripFields(val))
+	}
+
+	w.JSONResponse(http.StatusOK, output)
+}
+
 type CreateUserInput struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-func GetUsers(w *utils.ResponseWriter, r *http.Request) {
-	_, vals := utils.MapValues(database.Users)
-	w.JSONResponse(http.StatusOK, vals)
-}
-
 func CreateUser(w *utils.ResponseWriter, r *http.Request) {
 	var input CreateUserInput
-	newUser := database.User{}
-
-	if success := bindJSON(w, r, &input); !success {
+	if ok := bindRequestJSON(w, r, &input); !ok {
 		return
 	}
 
@@ -44,9 +59,12 @@ func CreateUser(w *utils.ResponseWriter, r *http.Request) {
 		w.StringResponse(http.StatusBadRequest, err.Error())
 		return
 	}
-	newUser.Id = uuid.New().String()
-	newUser.Username = input.Username
-	newUser.Key = string(hash)
+
+	newUser := database.User{
+		Id:       uuid.New().String(),
+		Username: input.Username,
+		Key:      string(hash),
+	}
 	database.Users[newUser.Id] = newUser
-	w.JSONResponse(http.StatusCreated, newUser)
+	w.JSONResponse(http.StatusCreated, stripFields(newUser))
 }

@@ -8,9 +8,10 @@ import (
 	"github.com/raphael-p/beango/utils"
 )
 
-func bindJSON(w *utils.ResponseWriter, r *http.Request, input any) bool {
+// Decodes JSON from HTTP request body and binds it to a struct pointer
+func bindRequestJSON(w *utils.ResponseWriter, r *http.Request, ptr any) bool {
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(input); err != nil {
+	if err := decoder.Decode(ptr); err != nil {
 		fmt.Println(err.Error())
 		w.StringResponse(http.StatusBadRequest, "malformed request body")
 		return false
