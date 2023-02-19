@@ -1,7 +1,9 @@
 # Beango Messenger
 
-🔥 A blazingly fast messanging app built in golang
+![banner for BeanGo messanger](banner.png)
 
-🚀 Beango can send a message accross the world in less than 1.3 minutes 
+🛠️ Under development
+
+🪶 A lightweight messanging app built in golang
 
 🐈 Named after a very special cat 
