@@ -13,10 +13,10 @@ func Start() {
 	router := newRouter()
 	router.GET("/users", resolvers.GetUsers)
 	router.POST("/user", resolvers.CreateUser)
-	// "/chats", resolvers.GetChats
-	// "/chat", resolvers.CreateChat
-	// "/messages", resolvers.GetMessages
-	// "/message", resolvers.SendMessage
+	router.GET("/chats", resolvers.GetChats)
+	router.PUT("/chat", resolvers.CreateChat)
+	router.GET("/messages", resolvers.GetMessages)
+	router.POST("/message", resolvers.SendMessage)
 
 	l, err := net.Listen("tcp", ":8081")
 	if err != nil {

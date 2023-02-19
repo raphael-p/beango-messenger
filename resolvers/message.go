@@ -3,26 +3,32 @@ package resolvers
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/utils"
 )
 
-func GetMessages(c *gin.Context) {
+func GetMessages(w *utils.ResponseWriter, r *http.Request) {
 	_, vals := utils.MapValues(database.Messages)
-	c.IndentedJSON(http.StatusOK, vals)
+	w.JSONResponse(http.StatusOK, vals)
 }
 
-func SendMessage(c *gin.Context) {
-	var newMessage database.Message
+type SendMessageInput struct {
+	ChatId  string `json:"chatId"`
+	Content string `json:"content"`
+}
 
-	if err := c.BindJSON(&newMessage); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, "malformed request body")
+func SendMessage(w *utils.ResponseWriter, r *http.Request) {
+	var input SendMessageInput
+	if ok := bindRequestJSON(w, r, &input); !ok {
 		return
 	}
 
-	newMessage.Id = uuid.New().String()
+	newMessage := database.Message{
+		Id:      uuid.New().String(),
+		ChatId:  input.ChatId,
+		Content: input.Content,
+	}
 	database.Messages[newMessage.Id] = newMessage
-	c.IndentedJSON(http.StatusAccepted, newMessage)
+	w.JSONResponse(http.StatusAccepted, newMessage)
 }

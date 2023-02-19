@@ -4,58 +4,58 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/utils"
 )
 
-func GetChats(c *gin.Context) {
+func GetChats(w *utils.ResponseWriter, r *http.Request) {
 	_, vals := utils.MapValues(database.Chats)
-	c.IndentedJSON(http.StatusOK, vals)
+	w.JSONResponse(http.StatusOK, vals)
 }
 
-func CreateChat(c *gin.Context) {
-	var newChat database.Chat
+type CreateChatInput struct {
+	UserIds []string `json:"userIds"`
+}
 
-	if err := c.BindJSON(&newChat); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, "malformed request body")
+func CreateChat(w *utils.ResponseWriter, r *http.Request) {
+	var input CreateChatInput
+	if ok := bindRequestJSON(w, r, &input); !ok {
 		return
 	}
 
-	if len(newChat.UserIds) != 2 {
-		c.IndentedJSON(http.StatusBadRequest, "chat must have exactly two users")
+	if len(input.UserIds) != 2 {
+		w.StringResponse(http.StatusBadRequest, "chat must have exactly two users")
 		return
 	}
 
 	// Check that user ids exist
 	var missingIds []string
-	for _, userId := range newChat.UserIds {
+	for _, userId := range input.UserIds {
 		_, exists := database.Users[userId]
 		if !exists {
 			missingIds = append(missingIds, userId)
 		}
 	}
 	if len(missingIds) != 0 {
-		c.IndentedJSON(http.StatusBadRequest, "invalid userId(s): "+strings.Join(missingIds, ", "))
+		err := "invalid userId(s): " + strings.Join(missingIds, ", ")
+		w.StringResponse(http.StatusBadRequest, err)
 		return
 	}
+	newChat := database.Chat{UserIds: input.UserIds}
 
 	// Check if chat already exists
-	var chatId *string
 	for key, value := range database.Chats {
-		if (newChat.UserIds[0] == value.UserIds[0] &&
-			newChat.UserIds[1] == value.UserIds[1]) ||
-			(newChat.UserIds[0] == value.UserIds[1] &&
-				newChat.UserIds[1] == value.UserIds[0]) {
-			chatId = &key
+		if (input.UserIds[0] == value.UserIds[0] &&
+			input.UserIds[1] == value.UserIds[1]) ||
+			(input.UserIds[0] == value.UserIds[1] &&
+				input.UserIds[1] == value.UserIds[0]) {
+			newChat.Id = key
 		}
 	}
-	if chatId != nil {
-		newChat.Id = *chatId
-	} else {
+	if newChat.Id == "" {
 		newChat.Id = uuid.New().String()
+		database.Chats[newChat.Id] = newChat
 	}
-	database.Chats[newChat.Id] = newChat
-	c.IndentedJSON(http.StatusCreated, newChat)
+	w.JSONResponse(http.StatusCreated, newChat)
 }

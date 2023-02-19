@@ -74,10 +74,8 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 				allow = append(allow, route.method)
 				continue
 			}
-			route.handler(
-				utils.NewResponseWriter(w),
-				buildContext(req, route.paramKeys, matches[1:]),
-			)
+			req = buildContext(req, route.paramKeys, matches[1:])
+			route.handler(utils.NewResponseWriter(w), req)
 			return
 		}
 	}
