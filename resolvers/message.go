@@ -24,6 +24,13 @@ func SendMessage(w *utils.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, exists := database.Chats[input.ChatId]
+	if !exists {
+		err := "invalid chatId: " + input.ChatId
+		w.StringResponse(http.StatusBadRequest, err)
+		return
+	}
+
 	newMessage := database.Message{
 		Id:      uuid.New().String(),
 		ChatId:  input.ChatId,
