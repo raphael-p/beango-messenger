@@ -12,9 +12,10 @@ type Chat struct {
 }
 
 type User struct {
-	Id       string `json:"id"`
-	Username string `json:"username"`
-	Key      string `json:"key"`
+	Id          string `json:"id"`
+	Username    string `json:"username"`
+	DisplayName string `json:"displayName"`
+	Key         string `json:"key"`
 }
 
 type ChatObject interface {

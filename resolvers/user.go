@@ -10,12 +10,13 @@ import (
 )
 
 type UserOutput struct {
-	Id       string `json:"id"`
-	Username string `json:"username"`
+	Id          string `json:"id"`
+	Username    string `json:"username"`
+	DisplayName string `json:"displayName"`
 }
 
 func stripFields(user database.User) UserOutput {
-	return UserOutput{user.Id, user.Username}
+	return UserOutput{user.Id, user.Username, user.DisplayName}
 }
 
 type GetUsersOutput []UserOutput
@@ -32,8 +33,9 @@ func GetUsers(w *utils.ResponseWriter, r *http.Request) {
 }
 
 type CreateUserInput struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username    string `json:"username"`
+	DisplayName string `json:"displayName"`
+	Password    string `json:"password"`
 }
 
 func CreateUser(w *utils.ResponseWriter, r *http.Request) {
@@ -61,9 +63,10 @@ func CreateUser(w *utils.ResponseWriter, r *http.Request) {
 	}
 
 	newUser := database.User{
-		Id:       uuid.New().String(),
-		Username: input.Username,
-		Key:      string(hash),
+		Id:          uuid.New().String(),
+		Username:    input.Username,
+		DisplayName: input.DisplayName,
+		Key:         string(hash),
 	}
 	database.Users[newUser.Id] = newUser
 	w.JSONResponse(http.StatusCreated, stripFields(newUser))
