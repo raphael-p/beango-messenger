@@ -15,7 +15,7 @@ type User struct {
 	Id          string `json:"id"`
 	Username    string `json:"username"`
 	DisplayName string `json:"displayName"`
-	Key         string `json:"key"`
+	Key         []byte `json:"key"`
 }
 
 type ChatObject interface {

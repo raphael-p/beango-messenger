@@ -66,7 +66,7 @@ func CreateUser(w *utils.ResponseWriter, r *http.Request) {
 		Id:          uuid.New().String(),
 		Username:    input.Username,
 		DisplayName: input.DisplayName,
-		Key:         string(hash),
+		Key:         hash,
 	}
 	database.Users[newUser.Id] = newUser
 	w.JSONResponse(http.StatusCreated, stripFields(newUser))
