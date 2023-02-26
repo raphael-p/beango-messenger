@@ -2,12 +2,14 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/utils"
 )
 
@@ -87,25 +89,58 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	http.NotFound(w, req)
 }
 
-// Server's context key, used to avoid clashes
-type ContextKey string
+// Server's context keys, used to avoid clashes
+type ContextParameters string
+type ContextUser string
 
 // Returns a shallow-copy of the request with an updated context,
 // including path parameters
 func buildContext(req *http.Request, paramKeys, paramValues []string) *http.Request {
 	ctx := req.Context()
 	for i := 0; i < len(paramKeys); i++ {
-		ctx = context.WithValue(ctx, ContextKey(paramKeys[i]), paramValues[i])
+		ctx = context.WithValue(ctx, ContextParameters(paramKeys[i]), paramValues[i])
 	}
 	return req.WithContext(ctx)
 }
 
-// A wrapper around a route's handler, used for logging
+// A wrapper around a route's handler for request middleware
 func (r *route) handler(w *utils.ResponseWriter, req *http.Request) {
+	// Log request
 	requestString := fmt.Sprint(req.Method, " ", req.URL)
 	fmt.Println("received ", requestString)
+
+	// Authentication
+	userId, err := getUserIdFromCookie(w, req)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	user := database.GetUser(userId)
+	if user == nil {
+		w.StringResponse(http.StatusInternalServerError, "session is valid, but user no longer exists")
+	}
+	req = req.WithContext(context.WithValue(req.Context(), ContextUser("user"), user))
+
+	// Log response
 	start := time.Now()
 	r.innerHandler(w, req)
 	w.Time = time.Since(start).Milliseconds()
 	fmt.Printf("%s resolved with %s\n", requestString, w)
+}
+
+func getUserIdFromCookie(w *utils.ResponseWriter, req *http.Request) (string, error) {
+	cookieName := utils.AUTH_COOKIE
+	cookie := utils.GetCookie(cookieName, req)
+	session, ok := database.CheckSession(cookie)
+
+	if ok {
+		return session.UserId, nil
+	}
+	if cookie != nil {
+		utils.InvalidateCookie(cookieName, w)
+	}
+	if session != nil {
+		database.DeleteSession(session.Id)
+	}
+	return "", errors.New("cookie or session is invalid")
 }

@@ -15,14 +15,12 @@ type SessionInput struct {
 	Password string `json:"password"`
 }
 
-var AUTH_COOKIE = "beango-session"
-
 func CreateSession(w *utils.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie(AUTH_COOKIE)
+	cookie, err := r.Cookie(string(utils.AUTH_COOKIE))
 	if err == nil {
 		session := database.GetSession(cookie.Value)
 		if session != nil {
-			w.StringResponse(http.StatusOK, "already authenticated")
+			w.StringResponse(http.StatusConflict, "session already exists")
 			return
 		}
 	}
@@ -39,7 +37,7 @@ func CreateSession(w *utils.ResponseWriter, r *http.Request) {
 			sessionId := uuid.New().String()
 			expiryDate := time.Now().Add(24 * time.Hour)
 			cookie := &http.Cookie{
-				Name:     AUTH_COOKIE,
+				Name:     string(utils.AUTH_COOKIE),
 				Value:    sessionId,
 				Expires:  expiryDate,
 				Path:     "/",
@@ -54,10 +52,10 @@ func CreateSession(w *utils.ResponseWriter, r *http.Request) {
 			}
 			database.AddSession(session)
 			http.SetCookie(w, cookie)
-			w.StringResponse(http.StatusOK, "authentication successful")
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 	}
 
-	w.StringResponse(http.StatusUnauthorized, "authentication failed")
+	w.WriteHeader(http.StatusUnauthorized)
 }
