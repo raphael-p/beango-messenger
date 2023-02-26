@@ -16,10 +16,10 @@ type SessionInput struct {
 }
 
 func CreateSession(w *utils.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie(string(utils.AUTH_COOKIE))
-	if err == nil {
-		session := database.GetSession(cookie.Value)
-		if session != nil {
+	cookie := utils.GetCookie(utils.AUTH_COOKIE, r)
+	if cookie != nil {
+		_, ok := database.CheckSession(cookie)
+		if ok {
 			w.StringResponse(http.StatusConflict, "session already exists")
 			return
 		}
@@ -36,22 +36,12 @@ func CreateSession(w *utils.ResponseWriter, r *http.Request) {
 		if err == nil {
 			sessionId := uuid.New().String()
 			expiryDate := time.Now().Add(24 * time.Hour)
-			cookie := &http.Cookie{
-				Name:     string(utils.AUTH_COOKIE),
-				Value:    sessionId,
-				Expires:  expiryDate,
-				Path:     "/",
-				Secure:   true,
-				HttpOnly: true,
-				SameSite: http.SameSiteStrictMode,
-			}
-			session := database.Session{
+			utils.SetCookie(utils.AUTH_COOKIE, sessionId, expiryDate, w)
+			database.AddSession(database.Session{
 				Id:         sessionId,
 				UserId:     user.Id,
 				ExpiryDate: expiryDate,
-			}
-			database.AddSession(session)
-			http.SetCookie(w, cookie)
+			})
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}

@@ -19,6 +19,19 @@ func GetCookie(name Cookie, r *http.Request) *http.Cookie {
 	return cookie
 }
 
+func SetCookie(name Cookie, sessionId string, expiryDate time.Time, w *ResponseWriter) {
+	cookie := &http.Cookie{
+		Name:     string(name),
+		Value:    sessionId,
+		Expires:  expiryDate,
+		Path:     "/",
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	}
+	http.SetCookie(w, cookie)
+}
+
 func InvalidateCookie(cookie Cookie, w *ResponseWriter) {
 	invalidCookie := &http.Cookie{
 		Name:    string(cookie),

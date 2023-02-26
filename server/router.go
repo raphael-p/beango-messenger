@@ -132,15 +132,11 @@ func getUserIdFromCookie(w *utils.ResponseWriter, req *http.Request) (string, er
 	cookieName := utils.AUTH_COOKIE
 	cookie := utils.GetCookie(cookieName, req)
 	session, ok := database.CheckSession(cookie)
-
 	if ok {
 		return session.UserId, nil
 	}
 	if cookie != nil {
 		utils.InvalidateCookie(cookieName, w)
-	}
-	if session != nil {
-		database.DeleteSession(session.Id)
 	}
 	return "", errors.New("cookie or session is invalid")
 }

@@ -37,7 +37,8 @@ func CheckSession(cookie *http.Cookie) (*Session, bool) {
 		return nil, false
 	}
 	if session.ExpiryDate.Before(time.Now()) {
-		return session, false
+		DeleteSession(session.Id)
+		return nil, false
 	}
 	return session, true
 }
