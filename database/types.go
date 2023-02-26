@@ -1,7 +1,5 @@
 package database
 
-import "time"
-
 type Message struct {
 	Id      string `json:"id"`
 	ChatId  string `json:"chatId"`
@@ -18,10 +16,4 @@ type User struct {
 	Username    string `json:"username"`
 	DisplayName string `json:"displayName"`
 	Key         []byte `json:"key"`
-}
-
-type Session struct {
-	Id         string    `json:"id"`
-	UserId     string    `json:"userId"`
-	ExpiryDate time.Time `json:"expiryDate"`
 }

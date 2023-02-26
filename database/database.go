@@ -14,15 +14,11 @@ func GetUserByUsername(username string) *User {
 	return nil
 }
 
-func AddSession(session Session) {
-	Sessions[session.Id] = session
-}
-
-func GetSession(id string) *Session {
-	session, ok := Sessions[id]
+func GetUser(id string) *User {
+	user, ok := Users[id]
 	if !ok {
 		return nil
 	} else {
-		return &session
+		return &user
 	}
 }
