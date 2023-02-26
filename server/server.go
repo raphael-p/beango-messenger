@@ -11,9 +11,9 @@ import (
 
 func Start() {
 	router := newRouter()
-	router.POST("/session", resolvers.CreateSession)
+	router.POST("/session", resolvers.CreateSession).noAuth()
 	router.GET("/users", resolvers.GetUsers)
-	router.POST("/user", resolvers.CreateUser)
+	router.POST("/user", resolvers.CreateUser).noAuth()
 	router.GET("/chats", resolvers.GetChats)
 	router.PUT("/chat", resolvers.CreateChat)
 	router.GET("/messages", resolvers.GetMessages)

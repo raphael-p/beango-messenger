@@ -1,5 +1,9 @@
 package database
 
+import (
+	"fmt"
+)
+
 var Users = make(map[string]User)
 var Chats = make(map[string]Chat)
 var Messages = make(map[string]Message)
@@ -14,11 +18,11 @@ func GetUserByUsername(username string) *User {
 	return nil
 }
 
-func GetUser(id string) *User {
+func GetUser(id string) (*User, error) {
 	user, ok := Users[id]
 	if !ok {
-		return nil
+		return nil, fmt.Errorf("no user found with id %s", id)
 	} else {
-		return &user
+		return &user, nil
 	}
 }

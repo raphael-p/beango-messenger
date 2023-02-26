@@ -20,6 +20,11 @@ type route struct {
 	pattern      *regexp.Regexp
 	innerHandler handlerFunc
 	paramKeys    []string
+	authenticate bool
+}
+
+func (r *route) noAuth() {
+	r.authenticate = false
 }
 
 type router struct {
@@ -30,7 +35,7 @@ func newRouter() *router {
 	return &router{routes: []*route{}}
 }
 
-func (r *router) addRoute(method, endpoint string, handler handlerFunc) {
+func (r *router) addRoute(method, endpoint string, handler handlerFunc) *route {
 	// handle path parameters
 	pathParamPattern := regexp.MustCompile(":([a-z]+)")
 	matches := pathParamPattern.FindAllStringSubmatch(endpoint, -1)
@@ -43,28 +48,35 @@ func (r *router) addRoute(method, endpoint string, handler handlerFunc) {
 			paramKeys = append(paramKeys, matches[i][1])
 		}
 	}
-	route := route{method, regexp.MustCompile("^" + endpoint + "$"), handler, paramKeys}
-	r.routes = append(r.routes, &route)
+	route := &route{
+		method,
+		regexp.MustCompile("^" + endpoint + "$"),
+		handler,
+		paramKeys,
+		true,
+	}
+	r.routes = append(r.routes, route)
+	return route
 }
 
-func (r *router) GET(pattern string, handler handlerFunc) {
-	r.addRoute(http.MethodGet, pattern, handler)
+func (r *router) GET(pattern string, handler handlerFunc) *route {
+	return r.addRoute(http.MethodGet, pattern, handler)
 }
 
-func (r *router) POST(pattern string, handler handlerFunc) {
-	r.addRoute(http.MethodPost, pattern, handler)
+func (r *router) POST(pattern string, handler handlerFunc) *route {
+	return r.addRoute(http.MethodPost, pattern, handler)
 }
 
-func (r *router) PUT(pattern string, handler handlerFunc) {
-	r.addRoute(http.MethodPut, pattern, handler)
+func (r *router) PUT(pattern string, handler handlerFunc) *route {
+	return r.addRoute(http.MethodPut, pattern, handler)
 }
 
-func (r *router) PATCH(pattern string, handler handlerFunc) {
-	r.addRoute(http.MethodPatch, pattern, handler)
+func (r *router) PATCH(pattern string, handler handlerFunc) *route {
+	return r.addRoute(http.MethodPatch, pattern, handler)
 }
 
-func (r *router) DELETE(pattern string, handler handlerFunc) {
-	r.addRoute(http.MethodDelete, pattern, handler)
+func (r *router) DELETE(pattern string, handler handlerFunc) *route {
+	return r.addRoute(http.MethodDelete, pattern, handler)
 }
 
 func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -110,22 +122,33 @@ func (r *route) handler(w *utils.ResponseWriter, req *http.Request) {
 	fmt.Println("received ", requestString)
 
 	// Authentication
-	userId, err := getUserIdFromCookie(w, req)
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
+	if r.authenticate {
+		reqWithUser, err := authentication(w, req)
+		if err != nil {
+			return
+		}
+		req = reqWithUser
 	}
-	user := database.GetUser(userId)
-	if user == nil {
-		w.StringResponse(http.StatusInternalServerError, "session is valid, but user no longer exists")
-	}
-	req = req.WithContext(context.WithValue(req.Context(), ContextUser("user"), user))
 
 	// Log response
 	start := time.Now()
 	r.innerHandler(w, req)
 	w.Time = time.Since(start).Milliseconds()
 	fmt.Printf("%s resolved with %s\n", requestString, w)
+}
+
+func authentication(w *utils.ResponseWriter, req *http.Request) (*http.Request, error) {
+	userId, err := getUserIdFromCookie(w, req)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return nil, err
+	}
+	user, err := database.GetUser(userId)
+	if err != nil {
+		w.StringResponse(http.StatusInternalServerError, "session is valid, but user no longer exists")
+		return nil, err
+	}
+	return req.WithContext(context.WithValue(req.Context(), ContextUser("user"), user)), nil
 }
 
 func getUserIdFromCookie(w *utils.ResponseWriter, req *http.Request) (string, error) {
