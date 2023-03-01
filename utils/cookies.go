@@ -11,12 +11,12 @@ const (
 	AUTH_COOKIE Cookie = "beango-session"
 )
 
-func GetCookie(name Cookie, r *http.Request) *http.Cookie {
+func GetCookieValue(name Cookie, r *http.Request) (string, error) {
 	cookie, err := r.Cookie(string(name))
 	if err != nil {
-		return nil
+		return "", err
 	}
-	return cookie
+	return cookie.Value, nil
 }
 
 func SetCookie(name Cookie, sessionId string, expiryDate time.Time, w *ResponseWriter) {

@@ -1,7 +1,6 @@
 package database
 
 import (
-	"net/http"
 	"time"
 )
 
@@ -28,11 +27,8 @@ func DeleteSession(id string) {
 	delete(Sessions, id)
 }
 
-func CheckSession(cookie *http.Cookie) (*Session, bool) {
-	if cookie == nil {
-		return nil, false
-	}
-	session := GetSession(cookie.Value)
+func CheckSession(id string) (*Session, bool) {
+	session := GetSession(id)
 	if session == nil {
 		return nil, false
 	}

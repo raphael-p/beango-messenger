@@ -148,18 +148,20 @@ func authentication(w *utils.ResponseWriter, req *http.Request) (*http.Request, 
 		w.StringResponse(http.StatusInternalServerError, "session is valid, but user no longer exists")
 		return nil, err
 	}
-	return req.WithContext(context.WithValue(req.Context(), ContextUser("user"), user)), nil
+	contextWithUser := context.WithValue(req.Context(), utils.ContextUser("user"), user)
+	return req.WithContext(contextWithUser), nil
 }
 
 func getUserIdFromCookie(w *utils.ResponseWriter, req *http.Request) (string, error) {
 	cookieName := utils.AUTH_COOKIE
-	cookie := utils.GetCookie(cookieName, req)
-	session, ok := database.CheckSession(cookie)
-	if ok {
-		return session.UserId, nil
+	sessionId, err := utils.GetCookieValue(cookieName, req)
+	if err != nil {
+		return "", err
 	}
-	if cookie != nil {
+	session, ok := database.CheckSession(sessionId)
+	if !ok {
 		utils.InvalidateCookie(cookieName, w)
+		return "", errors.New("cookie or session is invalid")
 	}
-	return "", errors.New("cookie or session is invalid")
+	return session.UserId, nil
 }

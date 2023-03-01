@@ -16,9 +16,9 @@ type SessionInput struct {
 }
 
 func CreateSession(w *utils.ResponseWriter, r *http.Request) {
-	cookie := utils.GetCookie(utils.AUTH_COOKIE, r)
-	if cookie != nil {
-		_, ok := database.CheckSession(cookie)
+	sessionId, _ := utils.GetCookieValue(utils.AUTH_COOKIE, r)
+	if sessionId != "" {
+		_, ok := database.CheckSession(sessionId)
 		if ok {
 			w.StringResponse(http.StatusConflict, "session already exists")
 			return
