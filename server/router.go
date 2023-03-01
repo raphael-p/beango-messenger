@@ -101,16 +101,12 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	http.NotFound(w, req)
 }
 
-// Server's context keys, used to avoid clashes
-type ContextParameters string
-type ContextUser string
-
 // Returns a shallow-copy of the request with an updated context,
 // including path parameters
 func buildContext(req *http.Request, paramKeys, paramValues []string) *http.Request {
 	ctx := req.Context()
 	for i := 0; i < len(paramKeys); i++ {
-		ctx = context.WithValue(ctx, ContextParameters(paramKeys[i]), paramValues[i])
+		ctx = context.WithValue(ctx, utils.ContextParameters(paramKeys[i]), paramValues[i])
 	}
 	return req.WithContext(ctx)
 }
