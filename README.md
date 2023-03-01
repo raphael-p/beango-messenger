@@ -4,6 +4,6 @@
 
 🛠️ Under development
 
-🪶 A lightweight messanging app built in golang
+🪶 A lightweight messaging app built in golang
 
 🐈 Named after a very special cat 
