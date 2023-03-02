@@ -30,7 +30,7 @@ func CreateSession(w *utils.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := database.GetUserByUsername(input.Username)
+	user, _ := database.GetUserByUsername(input.Username)
 	if user != nil {
 		err := bcrypt.CompareHashAndPassword(user.Key, []byte(input.Password))
 		if err == nil {
