@@ -16,8 +16,8 @@ func Start() {
 	router.POST("/user", resolvers.CreateUser).noAuth()
 	router.GET("/chats", resolvers.GetChats)
 	router.POST("/chat", resolvers.CreateChat)
-	router.GET("/messages", resolvers.GetMessages)
-	router.POST("/message", resolvers.SendMessage)
+	router.GET("/messages/:chatid", resolvers.GetChatMessages)
+	router.POST("/message/:chatid", resolvers.SendMessage)
 
 	l, err := net.Listen("tcp", ":8081")
 	if err != nil {

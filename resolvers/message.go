@@ -8,32 +8,43 @@ import (
 	"github.com/raphael-p/beango/utils"
 )
 
-func GetMessages(w *utils.ResponseWriter, r *http.Request) {
-	_, vals := utils.MapValues(database.Messages)
-	w.JSONResponse(http.StatusOK, vals)
+func GetChatMessages(w *utils.ResponseWriter, r *http.Request) {
+	user := utils.GetUserFromContext(r)
+	chatId := utils.GetParamFromContext(r, "chatid")
+	chat, _ := database.GetChat(chatId)
+
+	// Check that the user is in the chat
+	if chat == nil || (chat.UserIds[0] != user.Id && chat.UserIds[1] != user.Id) {
+		w.StringResponse(http.StatusNotFound, "chat not found")
+		return
+	}
+
+	w.JSONResponse(http.StatusOK, database.GetMessagesByChatId(chat.Id))
 }
 
 type SendMessageInput struct {
-	ChatId  string `json:"chatId"`
 	Content string `json:"content"`
 }
 
 func SendMessage(w *utils.ResponseWriter, r *http.Request) {
+	user := utils.GetUserFromContext(r)
+	chatId := utils.GetParamFromContext(r, "chatid")
+	chat, _ := database.GetChat(chatId)
+
+	// Check that the user is in the chat
+	if chat == nil || (chat.UserIds[0] != user.Id && chat.UserIds[1] != user.Id) {
+		w.StringResponse(http.StatusNotFound, "chat not found")
+		return
+	}
+
 	var input SendMessageInput
 	if ok := bindRequestJSON(w, r, &input); !ok {
 		return
 	}
 
-	_, exists := database.Chats[input.ChatId]
-	if !exists {
-		err := "invalid chatId: " + input.ChatId
-		w.StringResponse(http.StatusBadRequest, err)
-		return
-	}
-
 	newMessage := database.Message{
 		Id:      uuid.New().String(),
-		ChatId:  input.ChatId,
+		ChatId:  chatId,
 		Content: input.Content,
 	}
 	database.Messages[newMessage.Id] = newMessage
