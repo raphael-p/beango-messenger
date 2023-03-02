@@ -1,6 +1,7 @@
 package resolvers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -27,7 +28,8 @@ func CreateChat(w *utils.ResponseWriter, r *http.Request) {
 	// Check that user id exists
 	_, err := database.GetUser(input.UserId)
 	if err != nil {
-		w.StringResponse(http.StatusBadRequest, "invalid userId: "+input.UserId)
+		message := fmt.Sprintf("userId %s is invalid", input.UserId)
+		w.StringResponse(http.StatusBadRequest, message)
 		return
 	}
 
