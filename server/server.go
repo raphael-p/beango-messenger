@@ -15,7 +15,7 @@ func Start() {
 	router.GET("/users", resolvers.GetUsers)
 	router.POST("/user", resolvers.CreateUser).noAuth()
 	router.GET("/chats", resolvers.GetChats)
-	router.PUT("/chat", resolvers.CreateChat)
+	router.POST("/chat", resolvers.CreateChat)
 	router.GET("/messages", resolvers.GetMessages)
 	router.POST("/message", resolvers.SendMessage)
 

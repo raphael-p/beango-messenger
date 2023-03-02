@@ -2,7 +2,6 @@ package resolvers
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/raphael-p/beango/database"
@@ -10,12 +9,13 @@ import (
 )
 
 func GetChats(w *utils.ResponseWriter, r *http.Request) {
-	_, vals := utils.MapValues(database.Chats)
-	w.JSONResponse(http.StatusOK, vals)
+	user := utils.GetUserFromContext(r)
+	chats := database.GetChatsByUserId(user.Id)
+	w.JSONResponse(http.StatusOK, chats)
 }
 
 type CreateChatInput struct {
-	UserIds []string `json:"userIds"`
+	UserId string `json:"userId"`
 }
 
 func CreateChat(w *utils.ResponseWriter, r *http.Request) {
@@ -24,38 +24,25 @@ func CreateChat(w *utils.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(input.UserIds) != 2 {
-		w.StringResponse(http.StatusBadRequest, "chat must have exactly two users")
+	// Check that user id exists
+	_, err := database.GetUser(input.UserId)
+	if err != nil {
+		w.StringResponse(http.StatusBadRequest, "invalid userId: "+input.UserId)
 		return
 	}
 
-	// Check that user ids exist
-	var missingIds []string
-	for _, userId := range input.UserIds {
-		_, exists := database.Users[userId]
-		if !exists {
-			missingIds = append(missingIds, userId)
-		}
-	}
-	if len(missingIds) != 0 {
-		err := "invalid userId(s): " + strings.Join(missingIds, ", ")
-		w.StringResponse(http.StatusBadRequest, err)
-		return
-	}
-	newChat := database.Chat{UserIds: input.UserIds}
+	user := utils.GetUserFromContext(r)
+	userIds := [2]string{user.Id, input.UserId}
 
 	// Check if chat already exists
-	for key, value := range database.Chats {
-		if (input.UserIds[0] == value.UserIds[0] &&
-			input.UserIds[1] == value.UserIds[1]) ||
-			(input.UserIds[0] == value.UserIds[1] &&
-				input.UserIds[1] == value.UserIds[0]) {
-			newChat.Id = key
-		}
+	if chat := database.GetChatByUserIds(userIds); chat != nil {
+		w.StringResponse(http.StatusConflict, "chat already exists")
+		return
 	}
-	if newChat.Id == "" {
-		newChat.Id = uuid.New().String()
-		database.Chats[newChat.Id] = newChat
+
+	newChat := database.Chat{
+		Id:      uuid.NewString(),
+		UserIds: userIds,
 	}
 	w.JSONResponse(http.StatusCreated, newChat)
 }
