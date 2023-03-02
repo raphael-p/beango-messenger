@@ -15,21 +15,8 @@ type UserOutput struct {
 	DisplayName string `json:"displayName"`
 }
 
-func stripFields(user database.User) UserOutput {
-	return UserOutput{user.Id, user.Username, user.DisplayName}
-}
-
-type GetUsersOutput []UserOutput
-
-func GetUsers(w *utils.ResponseWriter, r *http.Request) {
-	_, vals := utils.MapValues(database.Users)
-
-	var output GetUsersOutput
-	for _, val := range vals {
-		output = append(output, stripFields(val))
-	}
-
-	w.JSONResponse(http.StatusOK, output)
+func stripFields(user *database.User) *UserOutput {
+	return &UserOutput{user.Id, user.Username, user.DisplayName}
 }
 
 type CreateUserInput struct {
@@ -69,5 +56,15 @@ func CreateUser(w *utils.ResponseWriter, r *http.Request) {
 		Key:         hash,
 	}
 	database.Users[newUser.Id] = newUser
-	w.JSONResponse(http.StatusCreated, stripFields(newUser))
+	w.JSONResponse(http.StatusCreated, stripFields(&newUser))
+}
+
+func GetUserByName(w *utils.ResponseWriter, r *http.Request) {
+	username := utils.GetParamFromContext(r, "username")
+	user, _ := database.GetUserByUsername(username)
+	if user == nil {
+		w.StringResponse(http.StatusNotFound, "user not found")
+		return
+	}
+	w.JSONResponse(http.StatusOK, stripFields(user))
 }

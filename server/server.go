@@ -12,8 +12,8 @@ import (
 func Start() {
 	router := newRouter()
 	router.POST("/session", resolvers.CreateSession).noAuth()
-	router.GET("/users", resolvers.GetUsers)
 	router.POST("/user", resolvers.CreateUser).noAuth()
+	router.GET("/user/:username", resolvers.GetUserByName)
 	router.GET("/chats", resolvers.GetChats)
 	router.POST("/chat", resolvers.CreateChat)
 	router.GET("/messages/:chatid", resolvers.GetChatMessages)
