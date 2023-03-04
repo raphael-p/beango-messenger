@@ -42,9 +42,10 @@ func CreateChat(w *utils.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newChat := database.Chat{
+	newChat := &database.Chat{
 		Id:      uuid.NewString(),
 		UserIds: userIds,
 	}
+	database.SetChat(newChat)
 	w.JSONResponse(http.StatusCreated, newChat)
 }

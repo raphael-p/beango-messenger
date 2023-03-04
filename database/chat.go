@@ -42,3 +42,7 @@ func GetChatByUserIds(userIds [2]string) *Chat {
 	}
 	return nil
 }
+
+func SetChat(chat *Chat) {
+	Chats[chat.Id] = *chat
+}

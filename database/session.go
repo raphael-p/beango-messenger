@@ -10,10 +10,6 @@ type Session struct {
 	ExpiryDate time.Time `json:"expiryDate"`
 }
 
-func AddSession(session Session) {
-	Sessions[session.Id] = session
-}
-
 func GetSession(id string) *Session {
 	session, ok := Sessions[id]
 	if !ok {
@@ -21,6 +17,10 @@ func GetSession(id string) *Session {
 	} else {
 		return &session
 	}
+}
+
+func SetSession(session Session) {
+	Sessions[session.Id] = session
 }
 
 func DeleteSession(id string) {

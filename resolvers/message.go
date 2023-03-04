@@ -42,11 +42,11 @@ func SendMessage(w *utils.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newMessage := database.Message{
-		Id:      uuid.New().String(),
+	newMessage := &database.Message{
+		Id:      uuid.NewString(),
 		ChatId:  chatId,
 		Content: input.Content,
 	}
-	database.Messages[newMessage.Id] = newMessage
+	database.SetMessage(newMessage)
 	w.JSONResponse(http.StatusAccepted, newMessage)
 }

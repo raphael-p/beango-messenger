@@ -49,14 +49,14 @@ func CreateUser(w *utils.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newUser := database.User{
+	newUser := &database.User{
 		Id:          uuid.New().String(),
 		Username:    input.Username,
 		DisplayName: input.DisplayName,
 		Key:         hash,
 	}
-	database.Users[newUser.Id] = newUser
-	w.JSONResponse(http.StatusCreated, stripFields(&newUser))
+	database.SetUser(newUser)
+	w.JSONResponse(http.StatusCreated, stripFields(newUser))
 }
 
 func GetUserByName(w *utils.ResponseWriter, r *http.Request) {

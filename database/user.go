@@ -26,3 +26,7 @@ func GetUserByUsername(username string) (*User, error) {
 	}
 	return nil, fmt.Errorf("no user found with username %s", username)
 }
+
+func SetUser(user *User) {
+	Users[user.Id] = *user
+}

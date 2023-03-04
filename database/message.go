@@ -16,3 +16,7 @@ func GetMessagesByChatId(chatId string) []Message {
 	}
 	return messages
 }
+
+func SetMessage(message *Message) {
+	Messages[message.Id] = *message
+}
