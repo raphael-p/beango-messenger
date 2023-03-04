@@ -36,11 +36,9 @@ func CreateUser(w *utils.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, value := range database.Users {
-		if value.Username == input.Username {
-			w.StringResponse(http.StatusConflict, "username is taken")
-			return
-		}
+	if user, _ := database.GetUserByUsername(input.Username); user != nil {
+		w.StringResponse(http.StatusConflict, "username is taken")
+		return
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.MinCost)
