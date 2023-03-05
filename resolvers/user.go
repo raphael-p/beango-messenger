@@ -21,7 +21,7 @@ func stripFields(user *database.User) *UserOutput {
 
 type CreateUserInput struct {
 	Username    string `json:"username"`
-	DisplayName string `json:"displayName"`
+	DisplayName string `json:"displayName" optional:"true"`
 	Password    string `json:"password"`
 }
 
@@ -47,6 +47,9 @@ func CreateUser(w *utils.ResponseWriter, r *http.Request) {
 		Username:    input.Username,
 		DisplayName: input.DisplayName,
 		Key:         hash,
+	}
+	if newUser.DisplayName == "" {
+		newUser.DisplayName = input.Username
 	}
 	database.SetUser(newUser)
 	w.JSONResponse(http.StatusCreated, stripFields(newUser))
