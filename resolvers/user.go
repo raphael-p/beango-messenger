@@ -31,11 +31,6 @@ func CreateUser(w *utils.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if input.Username == "" {
-		w.StringResponse(http.StatusBadRequest, "username is missing")
-		return
-	}
-
 	if user, _ := database.GetUserByUsername(input.Username); user != nil {
 		w.StringResponse(http.StatusConflict, "username is taken")
 		return
