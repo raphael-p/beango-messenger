@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -10,27 +9,18 @@ import (
 type MyLogger struct {
 	stdOutLogger *log.Logger
 	fileLogger   *log.Logger
+	logLevel     logLevel
 }
 
-func NewLogger(logDirectory string, logFileName string) (*MyLogger, error) {
-	path := filepath.Join(logDirectory, logFileName)
-	logFile, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		err = os.MkdirAll(logDirectory, 0755)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create log directory: %s", err)
-		}
+type logLevel int
 
-		logFile, err = os.Create(path)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create log file: %s", err)
-		}
-	}
-	return &MyLogger{
-		log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lmicroseconds/1000),
-		log.New(logFile, "", log.Ldate|log.Ltime|log.Lmicroseconds/1000),
-	}, nil
-}
+const (
+	logLevelTrace logLevel = iota
+	logLevelDebug
+	logLevelInfo
+	logLevelWarning
+	logLevelError
+)
 
 func (l *MyLogger) Close() {
 	if file, ok := l.fileLogger.Writer().(*os.File); ok {
@@ -45,21 +35,59 @@ func (l *MyLogger) log(level string, ansiColour string, message string) {
 }
 
 func (l *MyLogger) Trace(message string) {
-	l.log("TRACE", "", message)
+	if l.logLevel <= logLevelTrace {
+		l.log("TRACE", "", message)
+	}
 }
 
 func (l *MyLogger) Debug(message string) {
-	l.log("DEBUG", "\033[34m", message)
+	if l.logLevel <= logLevelDebug {
+		l.log("DEBUG", "\033[34m", message)
+	}
 }
 
 func (l *MyLogger) Info(message string) {
-	l.log("INFO", "\033[36m", message)
+	if l.logLevel <= logLevelInfo {
+		l.log("INFO", "\033[36m", message)
+	}
 }
 
 func (l *MyLogger) Warning(message string) {
-	l.log("WARNING", "\033[33;1m", message)
+	if l.logLevel <= logLevelWarning {
+		l.log("WARNING", "\033[33;1m", message)
+	}
 }
 
 func (l *MyLogger) Error(message string) {
-	l.log("ERROR", "\033[31;1m", message)
+	if l.logLevel <= logLevelError {
+		l.log("ERROR", "\033[31;1m", message)
+	}
+}
+
+var Logger *MyLogger
+
+func init() {
+	logDirectory := "logs"          // TODO: make config variable
+	logFileName := "server..log"    // TODO: make config variable
+	defaultLogLevel := logLevelInfo // TODO: make config variable
+	path := filepath.Join(logDirectory, logFileName)
+	logFile, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		err = os.MkdirAll(logDirectory, 0755)
+		if err != nil {
+			log.Fatalf("FATAL ERROR failed to create log directory: %s\n", err)
+		}
+
+		logFile, err = os.Create(path)
+		if err != nil {
+			log.Fatalf("FATAL ERROR failed to create log file: %s\n", err)
+		}
+	}
+
+	Logger = &MyLogger{
+		log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lmicroseconds/1000),
+		log.New(logFile, "", log.Ldate|log.Ltime|log.Lmicroseconds/1000),
+		defaultLogLevel,
+	}
+	Logger.Trace("logger created")
 }

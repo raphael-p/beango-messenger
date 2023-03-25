@@ -12,12 +12,7 @@ import (
 
 func Start() {
 	// Set up logger
-	logger, err := utils.NewLogger("logs", "server.log")
-	if err != nil {
-		fmt.Printf("FATAL ERROR: %s\n", err)
-		os.Exit(1)
-	}
-	defer logger.Close()
+	defer utils.Logger.Close()
 
 	// Set up router
 	router := newRouter()
