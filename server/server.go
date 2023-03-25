@@ -7,9 +7,19 @@ import (
 	"os"
 
 	"github.com/raphael-p/beango/resolvers"
+	"github.com/raphael-p/beango/utils"
 )
 
 func Start() {
+	// Set up logger
+	logger, err := utils.NewLogger("logs", "server.log")
+	if err != nil {
+		fmt.Printf("FATAL ERROR: %s\n", err)
+		os.Exit(1)
+	}
+	defer logger.Close()
+
+	// Set up router
 	router := newRouter()
 	router.POST("/session", resolvers.CreateSession).noAuth()
 	router.POST("/user", resolvers.CreateUser).noAuth()
@@ -19,6 +29,7 @@ func Start() {
 	router.GET("/messages/:chatid", resolvers.GetChatMessages)
 	router.POST("/message/:chatid", resolvers.SendMessage)
 
+	// Run server
 	l, err := net.Listen("tcp", ":8081")
 	if err != nil {
 		fmt.Printf("error starting server: %s\n", err)
