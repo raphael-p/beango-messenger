@@ -20,7 +20,7 @@ func CreateSession(w *utils.ResponseWriter, r *http.Request) {
 	if sessionId != "" {
 		_, ok := database.CheckSession(sessionId)
 		if ok {
-			w.StringResponse(http.StatusConflict, "session already exists")
+			w.StringResponse(http.StatusBadRequest, "there already is a valid session cookie in the request")
 			return
 		}
 	}

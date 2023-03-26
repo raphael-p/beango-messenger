@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -20,6 +21,10 @@ func GetSession(id string) *Session {
 }
 
 func SetSession(session Session) {
+	if session, err := GetSessionByUserId(session.UserId); err == nil {
+		DeleteSession(session.Id)
+	}
+
 	Sessions[session.Id] = session
 }
 
@@ -37,4 +42,13 @@ func CheckSession(id string) (*Session, bool) {
 		return nil, false
 	}
 	return session, true
+}
+
+func GetSessionByUserId(userId string) (*Session, error) {
+	for _, session := range Sessions {
+		if session.UserId == userId {
+			return &session, nil
+		}
+	}
+	return nil, fmt.Errorf("no session found for user ID %s", userId)
 }
