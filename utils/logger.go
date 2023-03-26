@@ -68,7 +68,7 @@ var Logger *MyLogger
 
 func init() {
 	logDirectory := "logs"          // TODO: make config variable
-	logFileName := "server..log"    // TODO: make config variable
+	logFileName := "server.log"     // TODO: make config variable
 	defaultLogLevel := logLevelInfo // TODO: make config variable
 	path := filepath.Join(logDirectory, logFileName)
 	logFile, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -85,8 +85,8 @@ func init() {
 	}
 
 	Logger = &MyLogger{
-		log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lmicroseconds/1000),
-		log.New(logFile, "", log.Ldate|log.Ltime|log.Lmicroseconds/1000),
+		log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lmicroseconds),
+		log.New(logFile, "", log.Ldate|log.Ltime|log.Lmicroseconds),
 		defaultLogLevel,
 	}
 	Logger.Trace("logger created")

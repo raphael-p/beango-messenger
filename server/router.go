@@ -48,6 +48,7 @@ func (r *router) addRoute(method, endpoint string, handler handlerFunc) *route {
 			paramKeys = append(paramKeys, matches[i][1])
 		}
 	}
+
 	route := &route{
 		method,
 		regexp.MustCompile("^" + endpoint + "$"),
@@ -115,7 +116,7 @@ func buildContext(req *http.Request, paramKeys, paramValues []string) *http.Requ
 func (r *route) handler(w *utils.ResponseWriter, req *http.Request) {
 	// Log request
 	requestString := fmt.Sprint(req.Method, " ", req.URL)
-	fmt.Println("received ", requestString)
+	utils.Logger.Info(fmt.Sprintf("received %s\n", requestString))
 
 	// Authentication
 	if r.authenticate {
@@ -130,7 +131,7 @@ func (r *route) handler(w *utils.ResponseWriter, req *http.Request) {
 	start := time.Now()
 	r.innerHandler(w, req)
 	w.Time = time.Since(start).Milliseconds()
-	fmt.Printf("%s resolved with %s\n", requestString, w)
+	utils.Logger.Info(fmt.Sprintf("%s resolved with %s\n", requestString, w))
 }
 
 func authentication(w *utils.ResponseWriter, req *http.Request) (*http.Request, error) {
@@ -141,7 +142,7 @@ func authentication(w *utils.ResponseWriter, req *http.Request) (*http.Request, 
 	}
 	user, err := database.GetUser(userId)
 	if err != nil {
-		w.StringResponse(http.StatusInternalServerError, "session is valid, but user no longer exists")
+		w.StringResponse(http.StatusNotFound, "user not found during authentication")
 		return nil, err
 	}
 	contextWithUser := context.WithValue(req.Context(), utils.ContextUser("user"), user)

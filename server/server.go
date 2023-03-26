@@ -27,11 +27,11 @@ func Start() {
 	// Run server
 	l, err := net.Listen("tcp", ":8081")
 	if err != nil {
-		fmt.Printf("error starting server: %s\n", err)
+		utils.Logger.Error(fmt.Sprintf("failed to start server: %s\n", err))
 	}
-	fmt.Println("🐱‍💻 BeanGo server started on", l.Addr().String())
+	utils.Logger.Info(fmt.Sprintf("🐱‍💻 BeanGo server started on %s\n", l.Addr().String()))
 	if err := http.Serve(l, router); err != nil {
-		fmt.Printf("server closed: %s\n", err)
+		utils.Logger.Error(fmt.Sprintf("server closed: %s\n", err))
 	}
 	os.Exit(1)
 }
