@@ -11,7 +11,8 @@ import (
 )
 
 func Start() {
-	// Set up logger
+	// Start up logger
+	utils.StartLogger()
 	defer utils.Logger.Close()
 
 	// Set up router

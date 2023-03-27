@@ -73,7 +73,7 @@ func (l *MyLogger) Fatal(message string) {
 
 var Logger *MyLogger
 
-func init() {
+func StartLogger() {
 	logDirectory := "logs"          // TODO: make config variable
 	logFileName := "server.log"     // TODO: make config variable
 	defaultLogLevel := logLevelInfo // TODO: make config variable
