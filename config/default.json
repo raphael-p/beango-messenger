@@ -1,0 +1,13 @@
+{
+    "server": {
+        "port": 8081     
+    },
+    "logger": {
+        "directory": "logs",
+        "filename": "server.log",
+        "defaulLevel": 2
+    },
+    "session": {
+        "secondsUntilExpiry": 86400
+    }
+}

@@ -6,11 +6,15 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/raphael-p/beango/config"
 	"github.com/raphael-p/beango/resolvers"
 	"github.com/raphael-p/beango/utils"
 )
 
 func Start() {
+	// Start up config
+	config.Init()
+
 	// Start up logger
 	utils.StartLogger()
 	defer utils.Logger.Close()

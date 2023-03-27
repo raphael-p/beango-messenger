@@ -35,7 +35,7 @@ func CreateSession(w *utils.ResponseWriter, r *http.Request) {
 		err := bcrypt.CompareHashAndPassword(user.Key, []byte(input.Password))
 		if err == nil {
 			sessionId := uuid.NewString()
-			expiryDate := time.Now().Add(24 * time.Hour)
+			expiryDate := time.Now().Add(24 * time.Hour) // TODO: make config variable
 			utils.SetCookie(utils.AUTH_COOKIE, sessionId, expiryDate, w)
 			database.SetSession(database.Session{
 				Id:         sessionId,
