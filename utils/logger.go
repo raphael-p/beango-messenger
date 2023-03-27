@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -71,7 +73,19 @@ func (l *MyLogger) Fatal(message string) {
 	os.Exit(1)
 }
 
+// Fatal errors on startup, before the logger can be started
+// Only logs to stdout, not the log file
+func StaticFatal(message string) {
+	reset := "\033[0m"
+	red := "\033[31;1m"
+	createLogger(os.Stdout).Fatalf("%s[%s]%s %s", red, "FATAL_ERROR", reset, message)
+}
+
 var Logger *MyLogger
+
+func createLogger(out io.Writer) *log.Logger {
+	return log.New(out, "", log.Ldate|log.Ltime|log.Lmicroseconds)
+}
 
 func StartLogger() {
 	logDirectory := "logs"          // TODO: make config variable
@@ -82,19 +96,15 @@ func StartLogger() {
 	if err != nil {
 		err = os.MkdirAll(logDirectory, 0755)
 		if err != nil {
-			log.Fatalf("[FATAL ERROR] failed to create log directory: %s\n", err)
+			StaticFatal(fmt.Sprint("failed to create log directory: ", err))
 		}
 
 		logFile, err = os.Create(path)
 		if err != nil {
-			log.Fatalf("[FATAL ERROR] failed to create log file: %s\n", err)
+			StaticFatal(fmt.Sprint("failed to create log file: ", err))
 		}
 	}
 
-	Logger = &MyLogger{
-		log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lmicroseconds),
-		log.New(logFile, "", log.Ldate|log.Ltime|log.Lmicroseconds),
-		defaultLogLevel,
-	}
+	Logger = &MyLogger{createLogger(os.Stdout), createLogger(logFile), defaultLogLevel}
 	Logger.Trace("logger created")
 }
