@@ -64,6 +64,13 @@ func (l *MyLogger) Error(message string) {
 	}
 }
 
+func (l *MyLogger) Fatal(message string) {
+	if l.logLevel <= logLevelError {
+		l.log("FATAL ERROR", "\033[31;1m", message)
+	}
+	os.Exit(1)
+}
+
 var Logger *MyLogger
 
 func init() {
@@ -75,12 +82,12 @@ func init() {
 	if err != nil {
 		err = os.MkdirAll(logDirectory, 0755)
 		if err != nil {
-			log.Fatalf("FATAL ERROR failed to create log directory: %s\n", err)
+			log.Fatalf("[FATAL ERROR] failed to create log directory: %s\n", err)
 		}
 
 		logFile, err = os.Create(path)
 		if err != nil {
-			log.Fatalf("FATAL ERROR failed to create log file: %s\n", err)
+			log.Fatalf("[FATAL ERROR] failed to create log file: %s\n", err)
 		}
 	}
 

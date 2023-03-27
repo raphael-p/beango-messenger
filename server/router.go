@@ -116,7 +116,7 @@ func buildContext(req *http.Request, paramKeys, paramValues []string) *http.Requ
 func (r *route) handler(w *utils.ResponseWriter, req *http.Request) {
 	// Log request
 	requestString := fmt.Sprint(req.Method, " ", req.URL)
-	utils.Logger.Info(fmt.Sprintf("received %s\n", requestString))
+	utils.Logger.Info(fmt.Sprint("received ", requestString))
 
 	// Authentication
 	if r.authenticate {
@@ -131,7 +131,7 @@ func (r *route) handler(w *utils.ResponseWriter, req *http.Request) {
 	start := time.Now()
 	r.innerHandler(w, req)
 	w.Time = time.Since(start).Milliseconds()
-	utils.Logger.Info(fmt.Sprintf("%s resolved with %s\n", requestString, w))
+	utils.Logger.Info(fmt.Sprintf("%s resolved with %s", requestString, w))
 }
 
 func authentication(w *utils.ResponseWriter, req *http.Request) (*http.Request, error) {
