@@ -9,11 +9,15 @@ import (
 )
 
 func GetChatMessages(w *httputils.ResponseWriter, r *http.Request) {
-	user := extractUser(r)
-	chatId := httputils.GetParamFromContext(r, "chatid")
+	user, err := extractUser(r)
+	if err != nil {
+		w.StringResponse(http.StatusInternalServerError, err.Error())
+	}
+	chatId, err := httputils.GetParamFromContext(r, "chatid")
+	if err != nil {
+		w.StringResponse(http.StatusInternalServerError, err.Error())
+	}
 	chat, _ := database.GetChat(chatId)
-
-	// Check that the user is in the chat
 	if chat == nil || (chat.UserIds[0] != user.Id && chat.UserIds[1] != user.Id) {
 		w.StringResponse(http.StatusNotFound, "chat not found")
 		return
@@ -27,11 +31,15 @@ type SendMessageInput struct {
 }
 
 func SendMessage(w *httputils.ResponseWriter, r *http.Request) {
-	user := extractUser(r)
-	chatId := httputils.GetParamFromContext(r, "chatid")
+	user, err := extractUser(r)
+	if err != nil {
+		w.StringResponse(http.StatusInternalServerError, err.Error())
+	}
+	chatId, err := httputils.GetParamFromContext(r, "chatid")
+	if err != nil {
+		w.StringResponse(http.StatusInternalServerError, err.Error())
+	}
 	chat, _ := database.GetChat(chatId)
-
-	// Check that the user is in the chat
 	if chat == nil || (chat.UserIds[0] != user.Id && chat.UserIds[1] != user.Id) {
 		w.StringResponse(http.StatusNotFound, "chat not found")
 		return

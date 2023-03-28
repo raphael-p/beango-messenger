@@ -10,7 +10,10 @@ import (
 )
 
 func GetChats(w *httputils.ResponseWriter, r *http.Request) {
-	user := extractUser(r)
+	user, err := extractUser(r)
+	if err != nil {
+		w.StringResponse(http.StatusInternalServerError, err.Error())
+	}
 	chats := database.GetChatsByUserId(user.Id)
 	w.JSONResponse(http.StatusOK, chats)
 }
@@ -33,7 +36,10 @@ func CreateChat(w *httputils.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := extractUser(r)
+	user, err := extractUser(r)
+	if err != nil {
+		w.StringResponse(http.StatusInternalServerError, err.Error())
+	}
 	userIds := [2]string{user.Id, input.UserId}
 
 	// Check if chat already exists

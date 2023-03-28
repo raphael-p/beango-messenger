@@ -7,6 +7,7 @@ import (
 
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/httputils"
+	"github.com/raphael-p/beango/utils"
 	"github.com/raphael-p/beango/validators"
 )
 
@@ -26,6 +27,16 @@ func bindRequestJSON(w *httputils.ResponseWriter, r *http.Request, ptr any) bool
 	return true
 }
 
-func extractUser(r *http.Request) *database.User {
-	return httputils.GetUserFromContext(r).(*database.User)
+func extractUser(r *http.Request) (*database.User, error) {
+	rawUser, err := httputils.GetUserFromContext(r)
+	if err != nil {
+		return nil, err
+	}
+	user, ok := rawUser.(*database.User)
+	if !ok {
+		message := "context user not of type User"
+		utils.Logger.Error(message)
+		return nil, fmt.Errorf(message)
+	}
+	return user, nil
 }
