@@ -73,38 +73,30 @@ func (l *MyLogger) Fatal(message string) {
 	os.Exit(1)
 }
 
-// Fatal errors on startup, before the logger can be started
-// Only logs to stdout, not the log file
-func StaticFatal(message string) {
-	reset := "\033[0m"
-	red := "\033[31;1m"
-	createLogger(os.Stdout).Fatalf("%s[%s]%s %s", red, "FATAL_ERROR", reset, message)
-}
-
 var Logger *MyLogger
 
-func createLogger(out io.Writer) *log.Logger {
+func newLogger(out io.Writer) *log.Logger {
 	return log.New(out, "", log.Ldate|log.Ltime|log.Lmicroseconds)
 }
 
-func StartLogger() {
-	logDirectory := "logs"          // TODO: make config variable
-	logFileName := "server.log"     // TODO: make config variable
-	defaultLogLevel := logLevelInfo // TODO: make config variable
+func CreateLogger() {
+	logDirectory := Config.Logger.Directory
+	logFileName := Config.Logger.Filename
+	defaultLogLevel := logLevel(Config.Logger.DefaultLevel)
 	path := filepath.Join(logDirectory, logFileName)
 	logFile, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		err = os.MkdirAll(logDirectory, 0755)
 		if err != nil {
-			StaticFatal(fmt.Sprint("failed to create log directory: ", err))
+			fl.Log(fmt.Sprint("failed to create log directory: ", err))
 		}
 
 		logFile, err = os.Create(path)
 		if err != nil {
-			StaticFatal(fmt.Sprint("failed to create log file: ", err))
+			fl.Log(fmt.Sprint("failed to create log file: ", err))
 		}
 	}
 
-	Logger = &MyLogger{createLogger(os.Stdout), createLogger(logFile), defaultLogLevel}
+	Logger = &MyLogger{newLogger(os.Stdout), newLogger(logFile), defaultLogLevel}
 	Logger.Trace("logger created")
 }

@@ -6,20 +6,16 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/raphael-p/beango/config"
 	"github.com/raphael-p/beango/resolvers"
 	"github.com/raphael-p/beango/utils"
 )
 
 func Start() {
-	// Start up config
-	config.Init()
-
-	// Start up logger
-	utils.StartLogger()
+	utils.CreateFatalLogger()
+	utils.CreateConfig()
+	utils.CreateLogger()
 	defer utils.Logger.Close()
 
-	// Set up router
 	router := newRouter()
 	router.POST("/session", resolvers.CreateSession).noAuth()
 	router.POST("/user", resolvers.CreateUser).noAuth()
@@ -29,9 +25,7 @@ func Start() {
 	router.GET("/messages/:chatid", resolvers.GetChatMessages)
 	router.POST("/message/:chatid", resolvers.SendMessage)
 
-	// Run server
-	port := 8081 // TODO: make config variable
-	l, err := net.Listen("tcp", fmt.Sprint(":", port))
+	l, err := net.Listen("tcp", fmt.Sprint(":", utils.Config.Server.Port))
 	if err != nil {
 		utils.Logger.Error(fmt.Sprint("failed to start server: ", err))
 	}
