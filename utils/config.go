@@ -28,18 +28,18 @@ type SessionConfig struct {
 
 var Config *config
 
-func CreateConfig() {
+func CreateConfig(fail func(string)) {
 	file, err := os.Open("config/default.json")
 	if err != nil {
-		fl.Log(fmt.Sprint("could not open config file: ", err))
+		fail(fmt.Sprint("could not open config file: ", err))
 	}
 	defer file.Close()
 
 	Config = &config{}
 	if err = json.NewDecoder(file).Decode(Config); err != nil {
-		fl.Log(fmt.Sprint("could not parse config file: ", err))
+		fail(fmt.Sprint("could not parse config file: ", err))
 	}
 	if fields := ValidateRequiredFields(Config); len(fields) != 0 {
-		fl.Log(fmt.Sprint("missing required config field(s): ", fields))
+		fail(fmt.Sprint("missing required config field(s): ", fields))
 	}
 }

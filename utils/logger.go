@@ -79,7 +79,7 @@ func newLogger(out io.Writer) *log.Logger {
 	return log.New(out, "", log.Ldate|log.Ltime|log.Lmicroseconds)
 }
 
-func CreateLogger() {
+func CreateLogger(fail func(string)) {
 	logDirectory := Config.Logger.Directory
 	logFileName := Config.Logger.Filename
 	defaultLogLevel := logLevel(Config.Logger.DefaultLevel)
@@ -88,12 +88,12 @@ func CreateLogger() {
 	if err != nil {
 		err = os.MkdirAll(logDirectory, 0755)
 		if err != nil {
-			fl.Log(fmt.Sprint("failed to create log directory: ", err))
+			fail(fmt.Sprint("failed to create log directory: ", err))
 		}
 
 		logFile, err = os.Create(path)
 		if err != nil {
-			fl.Log(fmt.Sprint("failed to create log file: ", err))
+			fail(fmt.Sprint("failed to create log file: ", err))
 		}
 	}
 

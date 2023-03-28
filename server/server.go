@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -10,10 +11,17 @@ import (
 	"github.com/raphael-p/beango/utils"
 )
 
+// Handles failures on startup before the main logger can be created
+func startupFailer(message string) {
+	reset := "\033[0m"
+	red := "\033[31;1m"
+	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lmicroseconds)
+	logger.Fatalf("%s[%s]%s startup failed: %s", red, "FATAL_ERROR", reset, message)
+}
+
 func Start() {
-	utils.CreateFatalLogger()
-	utils.CreateConfig()
-	utils.CreateLogger()
+	utils.CreateConfig(startupFailer)
+	utils.CreateLogger(startupFailer)
 	defer utils.Logger.Close()
 
 	router := newRouter()
