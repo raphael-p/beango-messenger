@@ -107,7 +107,7 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 func buildContext(req *http.Request, paramKeys, paramValues []string) *http.Request {
 	ctx := req.Context()
 	for i := 0; i < len(paramKeys); i++ {
-		ctx = context.WithValue(ctx, utils.ContextParameters(paramKeys[i]), paramValues[i])
+		ctx = context.WithValue(ctx, utils.ContextParameter(paramKeys[i]), paramValues[i])
 	}
 	return req.WithContext(ctx)
 }

@@ -7,7 +7,7 @@ import (
 )
 
 // context keys, used to avoid clashes
-type ContextParameters string
+type ContextParameter string
 type ContextUser string
 
 func GetUserFromContext(r *http.Request) *database.User {
@@ -15,5 +15,5 @@ func GetUserFromContext(r *http.Request) *database.User {
 }
 
 func GetParamFromContext(r *http.Request, key string) string {
-	return r.Context().Value(ContextParameters(key)).(string)
+	return r.Context().Value(ContextParameter(key)).(string)
 }
