@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/raphael-p/beango/config"
 )
 
 type MyLogger struct {
@@ -80,9 +82,9 @@ func newLogger(out io.Writer) *log.Logger {
 }
 
 func CreateLogger(fail func(string)) {
-	logDirectory := Config.Logger.Directory
-	logFileName := Config.Logger.Filename
-	defaultLogLevel := logLevel(Config.Logger.DefaultLevel)
+	logDirectory := config.Values.Logger.Directory
+	logFileName := config.Values.Logger.Filename
+	defaultLogLevel := logLevel(config.Values.Logger.DefaultLevel)
 	path := filepath.Join(logDirectory, logFileName)
 	logFile, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {

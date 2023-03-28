@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/raphael-p/beango/database"
-	"github.com/raphael-p/beango/utils"
+	"github.com/raphael-p/beango/httputils"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -25,7 +25,7 @@ type CreateUserInput struct {
 	Password    string `json:"password"`
 }
 
-func CreateUser(w *utils.ResponseWriter, r *http.Request) {
+func CreateUser(w *httputils.ResponseWriter, r *http.Request) {
 	var input CreateUserInput
 	if ok := bindRequestJSON(w, r, &input); !ok {
 		return
@@ -55,8 +55,8 @@ func CreateUser(w *utils.ResponseWriter, r *http.Request) {
 	w.JSONResponse(http.StatusCreated, stripFields(newUser))
 }
 
-func GetUserByName(w *utils.ResponseWriter, r *http.Request) {
-	username := utils.GetParamFromContext(r, "username")
+func GetUserByName(w *httputils.ResponseWriter, r *http.Request) {
+	username := httputils.GetParamFromContext(r, "username")
 	user, _ := database.GetUserByUsername(username)
 	if user == nil {
 		w.StringResponse(http.StatusNotFound, "user not found")

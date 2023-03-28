@@ -5,8 +5,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/raphael-p/beango/config"
 	"github.com/raphael-p/beango/database"
-	"github.com/raphael-p/beango/utils"
+	"github.com/raphael-p/beango/httputils"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -15,8 +16,8 @@ type SessionInput struct {
 	Password string `json:"password"`
 }
 
-func CreateSession(w *utils.ResponseWriter, r *http.Request) {
-	sessionId, _ := utils.GetCookieValue(utils.AUTH_COOKIE, r)
+func CreateSession(w *httputils.ResponseWriter, r *http.Request) {
+	sessionId, _ := httputils.GetCookieValue(httputils.AUTH_COOKIE, r)
 	if sessionId != "" {
 		_, ok := database.CheckSession(sessionId)
 		if ok {
@@ -35,9 +36,9 @@ func CreateSession(w *utils.ResponseWriter, r *http.Request) {
 		err := bcrypt.CompareHashAndPassword(user.Key, []byte(input.Password))
 		if err == nil {
 			sessionId := uuid.NewString()
-			expiryDuration := time.Duration(utils.Config.Session.SecondsUntilExpiry) * time.Second
+			expiryDuration := time.Duration(config.Values.Session.SecondsUntilExpiry) * time.Second
 			expiryDate := time.Now().Add(expiryDuration)
-			utils.SetCookie(utils.AUTH_COOKIE, sessionId, expiryDate, w)
+			httputils.SetCookie(httputils.AUTH_COOKIE, sessionId, expiryDate, w)
 			database.SetSession(database.Session{
 				Id:         sessionId,
 				UserId:     user.Id,

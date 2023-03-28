@@ -5,12 +5,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/raphael-p/beango/database"
-	"github.com/raphael-p/beango/utils"
+	"github.com/raphael-p/beango/httputils"
 )
 
-func GetChatMessages(w *utils.ResponseWriter, r *http.Request) {
+func GetChatMessages(w *httputils.ResponseWriter, r *http.Request) {
 	user := extractUser(r)
-	chatId := utils.GetParamFromContext(r, "chatid")
+	chatId := httputils.GetParamFromContext(r, "chatid")
 	chat, _ := database.GetChat(chatId)
 
 	// Check that the user is in the chat
@@ -26,9 +26,9 @@ type SendMessageInput struct {
 	Content string `json:"content"`
 }
 
-func SendMessage(w *utils.ResponseWriter, r *http.Request) {
+func SendMessage(w *httputils.ResponseWriter, r *http.Request) {
 	user := extractUser(r)
-	chatId := utils.GetParamFromContext(r, "chatid")
+	chatId := httputils.GetParamFromContext(r, "chatid")
 	chat, _ := database.GetChat(chatId)
 
 	// Check that the user is in the chat

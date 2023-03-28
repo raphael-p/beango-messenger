@@ -1,4 +1,4 @@
-package utils
+package validators
 
 import (
 	"reflect"
@@ -7,7 +7,7 @@ import (
 // Used to validate the deserialisation of a JSON document.
 // Takes a pointer to a struct and finds any fields from the struct's type
 // that are not in the struct itself. Excludes fields with an 'optional' tag.
-func ValidateRequiredFields(ptr any) []string {
+func DeserialisedJSON(ptr any) []string {
 	reflectValue := reflect.ValueOf(ptr).Elem()
 	reflectType := reflectValue.Type()
 	return traverseStructFields(reflectValue, reflectType, "", []string{})

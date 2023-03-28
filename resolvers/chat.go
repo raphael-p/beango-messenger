@@ -6,10 +6,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/raphael-p/beango/database"
-	"github.com/raphael-p/beango/utils"
+	"github.com/raphael-p/beango/httputils"
 )
 
-func GetChats(w *utils.ResponseWriter, r *http.Request) {
+func GetChats(w *httputils.ResponseWriter, r *http.Request) {
 	user := extractUser(r)
 	chats := database.GetChatsByUserId(user.Id)
 	w.JSONResponse(http.StatusOK, chats)
@@ -19,7 +19,7 @@ type CreateChatInput struct {
 	UserId string `json:"userId"`
 }
 
-func CreateChat(w *utils.ResponseWriter, r *http.Request) {
+func CreateChat(w *httputils.ResponseWriter, r *http.Request) {
 	var input CreateChatInput
 	if ok := bindRequestJSON(w, r, &input); !ok {
 		return

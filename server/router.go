@@ -10,10 +10,11 @@ import (
 	"time"
 
 	"github.com/raphael-p/beango/database"
+	"github.com/raphael-p/beango/httputils"
 	"github.com/raphael-p/beango/utils"
 )
 
-type handlerFunc func(*utils.ResponseWriter, *http.Request)
+type handlerFunc func(*httputils.ResponseWriter, *http.Request)
 
 type route struct {
 	method       string
@@ -90,7 +91,7 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 				continue
 			}
 			req = buildContext(req, route.paramKeys, matches[1:])
-			route.handler(utils.NewResponseWriter(w), req)
+			route.handler(httputils.NewResponseWriter(w), req)
 			return
 		}
 	}
@@ -107,13 +108,13 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 func buildContext(req *http.Request, paramKeys, paramValues []string) *http.Request {
 	ctx := req.Context()
 	for i := 0; i < len(paramKeys); i++ {
-		ctx = context.WithValue(ctx, utils.ContextParameter(paramKeys[i]), paramValues[i])
+		ctx = context.WithValue(ctx, httputils.ContextParameter(paramKeys[i]), paramValues[i])
 	}
 	return req.WithContext(ctx)
 }
 
 // A wrapper around a route's handler for request middleware
-func (r *route) handler(w *utils.ResponseWriter, req *http.Request) {
+func (r *route) handler(w *httputils.ResponseWriter, req *http.Request) {
 	// Log request
 	requestString := fmt.Sprint(req.Method, " ", req.URL)
 	utils.Logger.Info(fmt.Sprint("received ", requestString))
@@ -134,7 +135,7 @@ func (r *route) handler(w *utils.ResponseWriter, req *http.Request) {
 	utils.Logger.Info(fmt.Sprintf("%s resolved with %s", requestString, w))
 }
 
-func authentication(w *utils.ResponseWriter, req *http.Request) (*http.Request, error) {
+func authentication(w *httputils.ResponseWriter, req *http.Request) (*http.Request, error) {
 	userId, err := getUserIdFromCookie(w, req)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -145,19 +146,19 @@ func authentication(w *utils.ResponseWriter, req *http.Request) (*http.Request, 
 		w.StringResponse(http.StatusNotFound, "user not found during authentication")
 		return nil, err
 	}
-	contextWithUser := context.WithValue(req.Context(), utils.ContextUser("user"), user)
+	contextWithUser := context.WithValue(req.Context(), httputils.ContextUser("user"), user)
 	return req.WithContext(contextWithUser), nil
 }
 
-func getUserIdFromCookie(w *utils.ResponseWriter, req *http.Request) (string, error) {
-	cookieName := utils.AUTH_COOKIE
-	sessionId, err := utils.GetCookieValue(cookieName, req)
+func getUserIdFromCookie(w *httputils.ResponseWriter, req *http.Request) (string, error) {
+	cookieName := httputils.AUTH_COOKIE
+	sessionId, err := httputils.GetCookieValue(cookieName, req)
 	if err != nil {
 		return "", err
 	}
 	session, ok := database.CheckSession(sessionId)
 	if !ok {
-		utils.InvalidateCookie(cookieName, w)
+		httputils.InvalidateCookie(cookieName, w)
 		return "", errors.New("cookie or session is invalid")
 	}
 	return session.UserId, nil
