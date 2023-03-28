@@ -9,7 +9,7 @@ import (
 )
 
 func GetChatMessages(w *utils.ResponseWriter, r *http.Request) {
-	user := utils.GetUserFromContext(r)
+	user := extractUser(r)
 	chatId := utils.GetParamFromContext(r, "chatid")
 	chat, _ := database.GetChat(chatId)
 
@@ -27,7 +27,7 @@ type SendMessageInput struct {
 }
 
 func SendMessage(w *utils.ResponseWriter, r *http.Request) {
-	user := utils.GetUserFromContext(r)
+	user := extractUser(r)
 	chatId := utils.GetParamFromContext(r, "chatid")
 	chat, _ := database.GetChat(chatId)
 

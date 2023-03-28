@@ -10,7 +10,7 @@ import (
 )
 
 func GetChats(w *utils.ResponseWriter, r *http.Request) {
-	user := utils.GetUserFromContext(r)
+	user := extractUser(r)
 	chats := database.GetChatsByUserId(user.Id)
 	w.JSONResponse(http.StatusOK, chats)
 }
@@ -33,7 +33,7 @@ func CreateChat(w *utils.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := utils.GetUserFromContext(r)
+	user := extractUser(r)
 	userIds := [2]string{user.Id, input.UserId}
 
 	// Check if chat already exists

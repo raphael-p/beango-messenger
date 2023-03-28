@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/utils"
 )
 
@@ -22,4 +23,8 @@ func bindRequestJSON(w *utils.ResponseWriter, r *http.Request, ptr any) bool {
 		return false
 	}
 	return true
+}
+
+func extractUser(r *http.Request) *database.User {
+	return utils.GetUserFromContext(r).(*database.User)
 }
