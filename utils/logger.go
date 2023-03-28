@@ -35,7 +35,9 @@ func (l *MyLogger) Close() {
 func (l *MyLogger) log(level string, ansiColour string, message string) {
 	reset := "\033[0m"
 	l.stdOutLogger.Printf("%s[%s]%s %s", ansiColour, level, reset, message)
-	l.fileLogger.Printf("[%s] %s", level, message)
+	if l.fileLogger != nil {
+		l.fileLogger.Printf("[%s] %s", level, message)
+	}
 }
 
 func (l *MyLogger) Trace(message string) {
@@ -75,7 +77,7 @@ func (l *MyLogger) Fatal(message string) {
 	os.Exit(1)
 }
 
-var Logger *MyLogger
+var Logger *MyLogger = &MyLogger{newLogger(os.Stdout), nil, 5}
 
 func newLogger(out io.Writer) *log.Logger {
 	return log.New(out, "", log.Ldate|log.Ltime|log.Lmicroseconds)

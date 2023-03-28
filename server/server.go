@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"os"
@@ -14,10 +13,7 @@ import (
 
 // Handles failures on startup before the main logger can be created
 func startupFailer(message string) {
-	reset := "\033[0m"
-	red := "\033[31;1m"
-	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lmicroseconds)
-	logger.Fatalf("%s[%s]%s startup failed: %s", red, "FATAL_ERROR", reset, message)
+	utils.Logger.Fatal(fmt.Sprint("startup failed: ", message))
 }
 
 func Start() {
