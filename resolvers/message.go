@@ -9,11 +9,11 @@ import (
 )
 
 func GetChatMessages(w *httputils.ResponseWriter, r *http.Request) {
-	user, err := extractUser(r)
+	user, err := httputils.GetContextUser(r)
 	if err != nil {
 		w.StringResponse(http.StatusInternalServerError, err.Error())
 	}
-	chatId, err := httputils.GetParamFromContext(r, "chatid")
+	chatId, err := httputils.GetContextParam(r, "chatid")
 	if err != nil {
 		w.StringResponse(http.StatusInternalServerError, err.Error())
 	}
@@ -31,11 +31,11 @@ type SendMessageInput struct {
 }
 
 func SendMessage(w *httputils.ResponseWriter, r *http.Request) {
-	user, err := extractUser(r)
+	user, err := httputils.GetContextUser(r)
 	if err != nil {
 		w.StringResponse(http.StatusInternalServerError, err.Error())
 	}
-	chatId, err := httputils.GetParamFromContext(r, "chatid")
+	chatId, err := httputils.GetContextParam(r, "chatid")
 	if err != nil {
 		w.StringResponse(http.StatusInternalServerError, err.Error())
 	}

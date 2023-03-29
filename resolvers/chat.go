@@ -10,7 +10,7 @@ import (
 )
 
 func GetChats(w *httputils.ResponseWriter, r *http.Request) {
-	user, err := extractUser(r)
+	user, err := httputils.GetContextUser(r)
 	if err != nil {
 		w.StringResponse(http.StatusInternalServerError, err.Error())
 	}
@@ -36,7 +36,7 @@ func CreateChat(w *httputils.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := extractUser(r)
+	user, err := httputils.GetContextUser(r)
 	if err != nil {
 		w.StringResponse(http.StatusInternalServerError, err.Error())
 	}

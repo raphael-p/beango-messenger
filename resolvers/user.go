@@ -56,7 +56,7 @@ func CreateUser(w *httputils.ResponseWriter, r *http.Request) {
 }
 
 func GetUserByName(w *httputils.ResponseWriter, r *http.Request) {
-	username, err := httputils.GetParamFromContext(r, "username")
+	username, err := httputils.GetContextParam(r, "username")
 	if err != nil {
 		w.StringResponse(http.StatusInternalServerError, err.Error())
 	}
