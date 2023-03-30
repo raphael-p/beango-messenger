@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/raphael-p/beango/database"
-	assert "github.com/raphael-p/beango/test/assertions"
+	"github.com/raphael-p/beango/test/assert"
 	"github.com/raphael-p/beango/test/mocks"
 )
 
