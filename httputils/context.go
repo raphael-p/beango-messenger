@@ -1,6 +1,7 @@
 package httputils
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -28,6 +29,11 @@ func GetContextUser(r *http.Request) (*database.User, error) {
 	return user, nil
 }
 
+func SetContextUser(r *http.Request, user *database.User) *http.Request {
+	ctx := context.WithValue(r.Context(), ContextUser("user"), user)
+	return r.WithContext(ctx)
+}
+
 func GetContextParam(r *http.Request, key string) (string, error) {
 	value := r.Context().Value(ContextParameter(key))
 	if value == nil {
@@ -42,4 +48,9 @@ func GetContextParam(r *http.Request, key string) (string, error) {
 		return "", fmt.Errorf(message)
 	}
 	return stringValue, nil
+}
+
+func SetContextParam(r *http.Request, key string, value string) *http.Request {
+	ctx := context.WithValue(r.Context(), ContextParameter(key), value)
+	return r.WithContext(ctx)
 }

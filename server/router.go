@@ -40,7 +40,7 @@ func (r *router) addRoute(method, endpoint string, handler handlerFunc) *route {
 	// handle path parameters
 	pathParamPattern := regexp.MustCompile(":([a-z]+)")
 	matches := pathParamPattern.FindAllStringSubmatch(endpoint, -1)
-	paramKeys := []string{}
+	paramKeys := []string{} // TODO: prevent duplicate keys
 	if len(matches) > 0 {
 		// replace path parameter definition with regex pattern to capture any string
 		endpoint = pathParamPattern.ReplaceAllLiteralString(endpoint, "([^/]+)")
@@ -146,8 +146,7 @@ func authentication(w *httputils.ResponseWriter, req *http.Request) (*http.Reque
 		w.StringResponse(http.StatusNotFound, "user not found during authentication")
 		return nil, err
 	}
-	contextWithUser := context.WithValue(req.Context(), httputils.ContextUser("user"), user)
-	return req.WithContext(contextWithUser), nil
+	return httputils.SetContextUser(req, user), nil
 }
 
 func getUserIdFromCookie(w *httputils.ResponseWriter, req *http.Request) (string, error) {
