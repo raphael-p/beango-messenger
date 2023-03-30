@@ -1,4 +1,4 @@
-package database
+package mocks
 
 import (
 	"github.com/google/uuid"
@@ -12,5 +12,4 @@ func MakeUser() *database.User {
 		DisplayName: "john.doe.69",
 		Key:         []byte("supersecrethash"),
 	}
-
 }
