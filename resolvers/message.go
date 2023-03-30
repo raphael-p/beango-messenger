@@ -12,10 +12,12 @@ func GetChatMessages(w *httputils.ResponseWriter, r *http.Request) {
 	user, err := httputils.GetContextUser(r)
 	if err != nil {
 		w.StringResponse(http.StatusInternalServerError, err.Error())
+		return
 	}
 	chatId, err := httputils.GetContextParam(r, "chatid")
 	if err != nil {
 		w.StringResponse(http.StatusInternalServerError, err.Error())
+		return
 	}
 	chat, _ := database.GetChat(chatId)
 	if chat == nil || (chat.UserIds[0] != user.Id && chat.UserIds[1] != user.Id) {
@@ -34,10 +36,12 @@ func SendMessage(w *httputils.ResponseWriter, r *http.Request) {
 	user, err := httputils.GetContextUser(r)
 	if err != nil {
 		w.StringResponse(http.StatusInternalServerError, err.Error())
+		return
 	}
 	chatId, err := httputils.GetContextParam(r, "chatid")
 	if err != nil {
 		w.StringResponse(http.StatusInternalServerError, err.Error())
+		return
 	}
 	chat, _ := database.GetChat(chatId)
 	if chat == nil || (chat.UserIds[0] != user.Id && chat.UserIds[1] != user.Id) {

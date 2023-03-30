@@ -59,6 +59,7 @@ func GetUserByName(w *httputils.ResponseWriter, r *http.Request) {
 	username, err := httputils.GetContextParam(r, "username")
 	if err != nil {
 		w.StringResponse(http.StatusInternalServerError, err.Error())
+		return
 	}
 	user, _ := database.GetUserByUsername(username)
 	if user == nil {

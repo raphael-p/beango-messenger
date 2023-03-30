@@ -13,6 +13,7 @@ func GetChats(w *httputils.ResponseWriter, r *http.Request) {
 	user, err := httputils.GetContextUser(r)
 	if err != nil {
 		w.StringResponse(http.StatusInternalServerError, err.Error())
+		return
 	}
 	chats := database.GetChatsByUserId(user.Id)
 	w.JSONResponse(http.StatusOK, chats)
@@ -39,6 +40,7 @@ func CreateChat(w *httputils.ResponseWriter, r *http.Request) {
 	user, err := httputils.GetContextUser(r)
 	if err != nil {
 		w.StringResponse(http.StatusInternalServerError, err.Error())
+		return
 	}
 	userIds := [2]string{user.Id, input.UserId}
 
