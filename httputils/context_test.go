@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 
 	"github.com/raphael-p/beango/database"
-	"github.com/raphael-p/beango/test/utils/mocks"
+	assert "github.com/raphael-p/beango/test/assertions"
+	"github.com/raphael-p/beango/test/mocks"
 )
 
 func TestGetUser(t *testing.T) {
@@ -17,18 +17,15 @@ func TestGetUser(t *testing.T) {
 	xUser := mocks.MakeUser()
 	req = req.WithContext(context.WithValue(req.Context(), ContextUser("user"), xUser))
 
-	if user, _ := GetContextUser(req); !reflect.DeepEqual(xUser, user) {
-		t.Errorf("expected user %v, but got %v", xUser, user)
-	}
+	user, _ := GetContextUser(req)
+	assert.DeepEquals(t, user, xUser)
 }
 
 func TestGetUserButNotThere(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 
-	xMessage := "context user not found in request"
-	if _, err := GetContextUser(req); err.Error() != xMessage {
-		t.Errorf("expected error %v, but got %v", xMessage, err)
-	}
+	_, err := GetContextUser(req)
+	assert.ErrorHasMessage(t, err, "context user not found in request")
 }
 
 func TestGetUserButCastFails(t *testing.T) {
@@ -36,10 +33,8 @@ func TestGetUserButCastFails(t *testing.T) {
 	xUser := struct{ Id string }{"asada"}
 	req = req.WithContext(context.WithValue(req.Context(), ContextUser("user"), xUser))
 
-	xMessage := "context user not of type User"
-	if _, err := GetContextUser(req); err.Error() != xMessage {
-		t.Errorf("expected error %v, but got %v", xMessage, err)
-	}
+	_, err := GetContextUser(req)
+	assert.ErrorHasMessage(t, err, "context user not of type User")
 }
 
 func TestSetUser(t *testing.T) {
@@ -48,9 +43,7 @@ func TestSetUser(t *testing.T) {
 	req = SetContextUser(req, xUser)
 
 	user := req.Context().Value(ContextUser("user")).(*database.User)
-	if !reflect.DeepEqual(user, xUser) {
-		t.Errorf("expected user %v, but got %v", xUser, user)
-	}
+	assert.DeepEquals(t, user, xUser)
 }
 
 func TestGetParam(t *testing.T) {
@@ -59,20 +52,16 @@ func TestGetParam(t *testing.T) {
 	xValue := "testvalue"
 	req = req.WithContext(context.WithValue(req.Context(), ContextParameter(key), xValue))
 
-	if value, _ := GetContextParam(req, key); value != xValue {
-		t.Errorf("expected %v, but got %v", xValue, value)
-
-	}
+	value, _ := GetContextParam(req, key)
+	assert.DeepEquals(t, value, xValue)
 }
 
 func TestGetParamButNotThere(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	key := "testkey"
 
-	xMessage := fmt.Sprintf("context parameter %s not found in request", key)
-	if _, err := GetContextParam(req, key); err.Error() != xMessage {
-		t.Errorf("expected error %v, but got %v", xMessage, err)
-	}
+	_, err := GetContextParam(req, key)
+	assert.ErrorHasMessage(t, err, fmt.Sprintf("context parameter %s not found in request", key))
 }
 
 func TestGetParamButCastFails(t *testing.T) {
@@ -81,10 +70,8 @@ func TestGetParamButCastFails(t *testing.T) {
 	value := struct{}{}
 	req = req.WithContext(context.WithValue(req.Context(), ContextParameter(key), value))
 
-	xMessage := fmt.Sprintf("context parameter %s not of type string", key)
-	if _, err := GetContextParam(req, key); err.Error() != xMessage {
-		t.Errorf("expected error %v, but got %v", xMessage, err)
-	}
+	_, err := GetContextParam(req, key)
+	assert.ErrorHasMessage(t, err, fmt.Sprintf("context parameter %s not of type string", key))
 }
 
 func TestSetParam(t *testing.T) {
@@ -94,7 +81,5 @@ func TestSetParam(t *testing.T) {
 	req = SetContextParam(req, key, xValue)
 
 	value := req.Context().Value(ContextParameter(key)).(string)
-	if value != xValue {
-		t.Errorf("expected %v, but got %v", xValue, value)
-	}
+	assert.DeepEquals(t, value, xValue)
 }
