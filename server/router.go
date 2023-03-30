@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -90,7 +89,19 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 				allow = append(allow, route.method)
 				continue
 			}
-			req = buildContext(req, route.paramKeys, matches[1:])
+
+			values := matches[1:]
+			if len(values) != len(route.paramKeys) {
+				message := "unexpected number of path parameters in request"
+				utils.Logger.Error(fmt.Sprint(message, " (", req.URL.Path, ")"))
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(message))
+				return
+			}
+			for idx, key := range route.paramKeys {
+				req = httputils.SetContextParam(req, key, values[idx])
+			}
+
 			route.handler(httputils.NewResponseWriter(w), req)
 			return
 		}
@@ -101,16 +112,6 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	http.NotFound(w, req)
-}
-
-// Returns a shallow-copy of the request with an updated context,
-// including path parameters
-func buildContext(req *http.Request, paramKeys, paramValues []string) *http.Request {
-	ctx := req.Context()
-	for i := 0; i < len(paramKeys); i++ {
-		ctx = context.WithValue(ctx, httputils.ContextParameter(paramKeys[i]), paramValues[i])
-	}
-	return req.WithContext(ctx)
 }
 
 // A wrapper around a route's handler for request middleware
