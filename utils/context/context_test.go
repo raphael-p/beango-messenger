@@ -59,6 +59,7 @@ func TestGetParam(t *testing.T) {
 func TestGetParamButNotThere(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	key := "testkey"
+	req = req.WithContext(context.WithValue(req.Context(), paramKey("differekey"), "testvalue"))
 
 	_, err := GetParam(req, key)
 	assert.ErrorHasMessage(t, err, fmt.Sprintf("context parameter %s not found in request", key))
