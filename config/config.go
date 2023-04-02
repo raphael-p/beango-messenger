@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/raphael-p/beango/validators"
+	"github.com/raphael-p/beango/utils/validate"
 )
 
 var Values *config
@@ -17,7 +17,7 @@ func CreateConfig(fail func(string)) {
 	defer file.Close()
 
 	Values = &config{}
-	if fields := validators.DeserialisedJSON(Values); len(fields) != 0 {
+	if fields := validate.DeserialisedJSON(Values); len(fields) != 0 {
 		fail(fmt.Sprint("missing required config field(s): ", fields))
 	}
 }
