@@ -9,11 +9,13 @@ import (
 	"time"
 
 	"github.com/raphael-p/beango/database"
-	"github.com/raphael-p/beango/httputils"
-	"github.com/raphael-p/beango/utils"
+	"github.com/raphael-p/beango/utils/context"
+	"github.com/raphael-p/beango/utils/cookies"
+	"github.com/raphael-p/beango/utils/logger"
+	"github.com/raphael-p/beango/utils/response"
 )
 
-type handlerFunc func(*httputils.ResponseWriter, *http.Request)
+type handlerFunc func(*response.Writer, *http.Request)
 
 type route struct {
 	method       string
@@ -93,16 +95,16 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			values := matches[1:]
 			if len(values) != len(route.paramKeys) {
 				message := "unexpected number of path parameters in request"
-				utils.Logger.Error(fmt.Sprint(message, " (", req.URL.Path, ")"))
+				logger.Error(fmt.Sprint(message, " (", req.URL.Path, ")"))
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(message))
 				return
 			}
 			for idx, key := range route.paramKeys {
-				req = httputils.SetContextParam(req, key, values[idx])
+				req = context.SetParam(req, key, values[idx])
 			}
 
-			route.handler(httputils.NewResponseWriter(w), req)
+			route.handler(response.NewWriter(w), req)
 			return
 		}
 	}
@@ -115,10 +117,10 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 // A wrapper around a route's handler for request middleware
-func (r *route) handler(w *httputils.ResponseWriter, req *http.Request) {
+func (r *route) handler(w *response.Writer, req *http.Request) {
 	// Log request
 	requestString := fmt.Sprint(req.Method, " ", req.URL)
-	utils.Logger.Info(fmt.Sprint("received ", requestString))
+	logger.Info(fmt.Sprint("received ", requestString))
 
 	// Authentication
 	if r.authenticate {
@@ -133,10 +135,10 @@ func (r *route) handler(w *httputils.ResponseWriter, req *http.Request) {
 	start := time.Now()
 	r.innerHandler(w, req)
 	w.Time = time.Since(start).Milliseconds()
-	utils.Logger.Info(fmt.Sprintf("%s resolved with %s", requestString, w))
+	logger.Info(fmt.Sprintf("%s resolved with %s", requestString, w))
 }
 
-func authentication(w *httputils.ResponseWriter, req *http.Request) (*http.Request, error) {
+func authentication(w *response.Writer, req *http.Request) (*http.Request, error) {
 	userId, err := getUserIdFromCookie(w, req)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -144,21 +146,21 @@ func authentication(w *httputils.ResponseWriter, req *http.Request) (*http.Reque
 	}
 	user, err := database.GetUser(userId)
 	if err != nil {
-		w.StringResponse(http.StatusNotFound, "user not found during authentication")
+		w.WriteString(http.StatusNotFound, "user not found during authentication")
 		return nil, err
 	}
-	return httputils.SetContextUser(req, user), nil
+	return context.SetUser(req, user), nil
 }
 
-func getUserIdFromCookie(w *httputils.ResponseWriter, req *http.Request) (string, error) {
-	cookieName := httputils.AUTH_COOKIE
-	sessionId, err := httputils.GetCookieValue(cookieName, req)
+func getUserIdFromCookie(w *response.Writer, req *http.Request) (string, error) {
+	cookieName := cookies.SESSION
+	sessionId, err := cookies.Get(req, cookieName)
 	if err != nil {
 		return "", err
 	}
 	session, ok := database.CheckSession(sessionId)
 	if !ok {
-		httputils.InvalidateCookie(cookieName, w)
+		cookies.Invalidate(w, cookieName)
 		return "", errors.New("cookie or session is invalid")
 	}
 	return session.UserId, nil

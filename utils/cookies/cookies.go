@@ -1,17 +1,19 @@
-package httputils
+package cookies
 
 import (
 	"net/http"
 	"time"
+
+	"github.com/raphael-p/beango/utils/response"
 )
 
 type Cookie string
 
 const (
-	AUTH_COOKIE Cookie = "beango-session"
+	SESSION Cookie = "beango-session"
 )
 
-func GetCookieValue(name Cookie, r *http.Request) (string, error) {
+func Get(r *http.Request, name Cookie) (string, error) {
 	cookie, err := r.Cookie(string(name))
 	if err != nil {
 		return "", err
@@ -19,7 +21,7 @@ func GetCookieValue(name Cookie, r *http.Request) (string, error) {
 	return cookie.Value, nil
 }
 
-func SetCookie(name Cookie, sessionId string, expiryDate time.Time, w *ResponseWriter) {
+func Set(w *response.Writer, name Cookie, sessionId string, expiryDate time.Time) {
 	cookie := &http.Cookie{
 		Name:     string(name),
 		Value:    sessionId,
@@ -32,7 +34,7 @@ func SetCookie(name Cookie, sessionId string, expiryDate time.Time, w *ResponseW
 	http.SetCookie(w, cookie)
 }
 
-func InvalidateCookie(cookie Cookie, w *ResponseWriter) {
+func Invalidate(w *response.Writer, cookie Cookie) {
 	invalidCookie := &http.Cookie{
 		Name:    string(cookie),
 		Value:   "",

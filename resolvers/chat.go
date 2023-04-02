@@ -6,24 +6,25 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/raphael-p/beango/database"
-	"github.com/raphael-p/beango/httputils"
+	"github.com/raphael-p/beango/utils/context"
+	"github.com/raphael-p/beango/utils/response"
 )
 
-func GetChats(w *httputils.ResponseWriter, r *http.Request) {
-	user, err := httputils.GetContextUser(r)
+func GetChats(w *response.Writer, r *http.Request) {
+	user, err := context.GetUser(r)
 	if err != nil {
-		w.StringResponse(http.StatusInternalServerError, err.Error())
+		w.WriteString(http.StatusInternalServerError, err.Error())
 		return
 	}
 	chats := database.GetChatsByUserId(user.Id)
-	w.JSONResponse(http.StatusOK, chats)
+	w.WriteJSON(http.StatusOK, chats)
 }
 
 type CreateChatInput struct {
 	UserId string `json:"userId"`
 }
 
-func CreateChat(w *httputils.ResponseWriter, r *http.Request) {
+func CreateChat(w *response.Writer, r *http.Request) {
 	var input CreateChatInput
 	if ok := bindRequestJSON(w, r, &input); !ok {
 		return
@@ -33,20 +34,20 @@ func CreateChat(w *httputils.ResponseWriter, r *http.Request) {
 	_, err := database.GetUser(input.UserId)
 	if err != nil {
 		message := fmt.Sprintf("userId %s is invalid", input.UserId)
-		w.StringResponse(http.StatusBadRequest, message)
+		w.WriteString(http.StatusBadRequest, message)
 		return
 	}
 
-	user, err := httputils.GetContextUser(r)
+	user, err := context.GetUser(r)
 	if err != nil {
-		w.StringResponse(http.StatusInternalServerError, err.Error())
+		w.WriteString(http.StatusInternalServerError, err.Error())
 		return
 	}
 	userIds := [2]string{user.Id, input.UserId}
 
 	// Check if chat already exists
 	if chat := database.GetChatByUserIds(userIds); chat != nil {
-		w.StringResponse(http.StatusConflict, "chat already exists")
+		w.WriteString(http.StatusConflict, "chat already exists")
 		return
 	}
 
@@ -55,5 +56,5 @@ func CreateChat(w *httputils.ResponseWriter, r *http.Request) {
 		UserIds: userIds,
 	}
 	database.SetChat(newChat)
-	w.JSONResponse(http.StatusCreated, newChat)
+	w.WriteJSON(http.StatusCreated, newChat)
 }

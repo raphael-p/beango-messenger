@@ -5,21 +5,21 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/raphael-p/beango/httputils"
+	"github.com/raphael-p/beango/utils/response"
 	"github.com/raphael-p/beango/validators"
 )
 
 // Decodes JSON from HTTP request body and binds it to a struct pointer
-func bindRequestJSON(w *httputils.ResponseWriter, r *http.Request, ptr any) bool {
+func bindRequestJSON(w *response.Writer, r *http.Request, ptr any) bool {
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(ptr); err != nil {
 		response := fmt.Sprint("malformed request body: ", err)
-		w.StringResponse(http.StatusBadRequest, response)
+		w.WriteString(http.StatusBadRequest, response)
 		return false
 	}
 	if fields := validators.DeserialisedJSON(ptr); len(fields) != 0 {
 		response := fmt.Sprintf("missing required field(s): %s", fields)
-		w.StringResponse(http.StatusBadRequest, response)
+		w.WriteString(http.StatusBadRequest, response)
 		return false
 	}
 	return true

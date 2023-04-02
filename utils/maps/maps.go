@@ -1,4 +1,4 @@
-package utils
+package maps
 
 type MapKey interface {
 	string | int

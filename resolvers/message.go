@@ -5,47 +5,48 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/raphael-p/beango/database"
-	"github.com/raphael-p/beango/httputils"
+	"github.com/raphael-p/beango/utils/context"
+	"github.com/raphael-p/beango/utils/response"
 )
 
-func GetChatMessages(w *httputils.ResponseWriter, r *http.Request) {
-	user, err := httputils.GetContextUser(r)
+func GetChatMessages(w *response.Writer, r *http.Request) {
+	user, err := context.GetUser(r)
 	if err != nil {
-		w.StringResponse(http.StatusInternalServerError, err.Error())
+		w.WriteString(http.StatusInternalServerError, err.Error())
 		return
 	}
-	chatId, err := httputils.GetContextParam(r, "chatid")
+	chatId, err := context.GetParam(r, "chatid")
 	if err != nil {
-		w.StringResponse(http.StatusInternalServerError, err.Error())
+		w.WriteString(http.StatusInternalServerError, err.Error())
 		return
 	}
 	chat, _ := database.GetChat(chatId)
 	if chat == nil || (chat.UserIds[0] != user.Id && chat.UserIds[1] != user.Id) {
-		w.StringResponse(http.StatusNotFound, "chat not found")
+		w.WriteString(http.StatusNotFound, "chat not found")
 		return
 	}
 
-	w.JSONResponse(http.StatusOK, database.GetMessagesByChatId(chat.Id))
+	w.WriteJSON(http.StatusOK, database.GetMessagesByChatId(chat.Id))
 }
 
 type SendMessageInput struct {
 	Content string `json:"content"`
 }
 
-func SendMessage(w *httputils.ResponseWriter, r *http.Request) {
-	user, err := httputils.GetContextUser(r)
+func SendMessage(w *response.Writer, r *http.Request) {
+	user, err := context.GetUser(r)
 	if err != nil {
-		w.StringResponse(http.StatusInternalServerError, err.Error())
+		w.WriteString(http.StatusInternalServerError, err.Error())
 		return
 	}
-	chatId, err := httputils.GetContextParam(r, "chatid")
+	chatId, err := context.GetParam(r, "chatid")
 	if err != nil {
-		w.StringResponse(http.StatusInternalServerError, err.Error())
+		w.WriteString(http.StatusInternalServerError, err.Error())
 		return
 	}
 	chat, _ := database.GetChat(chatId)
 	if chat == nil || (chat.UserIds[0] != user.Id && chat.UserIds[1] != user.Id) {
-		w.StringResponse(http.StatusNotFound, "chat not found")
+		w.WriteString(http.StatusNotFound, "chat not found")
 		return
 	}
 
@@ -60,5 +61,5 @@ func SendMessage(w *httputils.ResponseWriter, r *http.Request) {
 		Content: input.Content,
 	}
 	database.SetMessage(newMessage)
-	w.JSONResponse(http.StatusAccepted, newMessage)
+	w.WriteJSON(http.StatusAccepted, newMessage)
 }

@@ -5,7 +5,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/raphael-p/beango/database"
-	"github.com/raphael-p/beango/httputils"
+	"github.com/raphael-p/beango/utils/context"
+	"github.com/raphael-p/beango/utils/response"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -25,20 +26,20 @@ type CreateUserInput struct {
 	Password    string `json:"password"`
 }
 
-func CreateUser(w *httputils.ResponseWriter, r *http.Request) {
+func CreateUser(w *response.Writer, r *http.Request) {
 	var input CreateUserInput
 	if ok := bindRequestJSON(w, r, &input); !ok {
 		return
 	}
 
 	if user, _ := database.GetUserByUsername(input.Username); user != nil {
-		w.StringResponse(http.StatusConflict, "username is taken")
+		w.WriteString(http.StatusConflict, "username is taken")
 		return
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.MinCost)
 	if err != nil {
-		w.StringResponse(http.StatusBadRequest, err.Error())
+		w.WriteString(http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -52,19 +53,19 @@ func CreateUser(w *httputils.ResponseWriter, r *http.Request) {
 		newUser.DisplayName = input.Username
 	}
 	database.SetUser(newUser)
-	w.JSONResponse(http.StatusCreated, stripFields(newUser))
+	w.WriteJSON(http.StatusCreated, stripFields(newUser))
 }
 
-func GetUserByName(w *httputils.ResponseWriter, r *http.Request) {
-	username, err := httputils.GetContextParam(r, "username")
+func GetUserByName(w *response.Writer, r *http.Request) {
+	username, err := context.GetParam(r, "username")
 	if err != nil {
-		w.StringResponse(http.StatusInternalServerError, err.Error())
+		w.WriteString(http.StatusInternalServerError, err.Error())
 		return
 	}
 	user, _ := database.GetUserByUsername(username)
 	if user == nil {
-		w.StringResponse(http.StatusNotFound, "user not found")
+		w.WriteString(http.StatusNotFound, "user not found")
 		return
 	}
-	w.JSONResponse(http.StatusOK, stripFields(user))
+	w.WriteJSON(http.StatusOK, stripFields(user))
 }

@@ -1,4 +1,4 @@
-package httputils
+package context
 
 import (
 	"context"
@@ -15,34 +15,34 @@ import (
 func TestGetUser(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	xUser := mocks.MakeUser()
-	req = req.WithContext(context.WithValue(req.Context(), ContextUser("user"), xUser))
+	req = req.WithContext(context.WithValue(req.Context(), userKey{}, xUser))
 
-	user, _ := GetContextUser(req)
+	user, _ := GetUser(req)
 	assert.DeepEquals(t, user, xUser)
 }
 
 func TestGetUserButNotThere(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 
-	_, err := GetContextUser(req)
+	_, err := GetUser(req)
 	assert.ErrorHasMessage(t, err, "context user not found in request")
 }
 
 func TestGetUserButCastFails(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	xUser := struct{ Id string }{"asada"}
-	req = req.WithContext(context.WithValue(req.Context(), ContextUser("user"), xUser))
+	req = req.WithContext(context.WithValue(req.Context(), userKey{}, xUser))
 
-	_, err := GetContextUser(req)
+	_, err := GetUser(req)
 	assert.ErrorHasMessage(t, err, "context user not of type User")
 }
 
 func TestSetUser(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	xUser := mocks.MakeUser()
-	req = SetContextUser(req, xUser)
+	req = SetUser(req, xUser)
 
-	user := req.Context().Value(ContextUser("user")).(*database.User)
+	user := req.Context().Value(userKey{}).(*database.User)
 	assert.DeepEquals(t, user, xUser)
 }
 
@@ -50,9 +50,9 @@ func TestGetParam(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	key := "testkey"
 	xValue := "testvalue"
-	req = req.WithContext(context.WithValue(req.Context(), ContextParameter(key), xValue))
+	req = req.WithContext(context.WithValue(req.Context(), paramKey(key), xValue))
 
-	value, _ := GetContextParam(req, key)
+	value, _ := GetParam(req, key)
 	assert.DeepEquals(t, value, xValue)
 }
 
@@ -60,7 +60,7 @@ func TestGetParamButNotThere(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	key := "testkey"
 
-	_, err := GetContextParam(req, key)
+	_, err := GetParam(req, key)
 	assert.ErrorHasMessage(t, err, fmt.Sprintf("context parameter %s not found in request", key))
 }
 
@@ -68,9 +68,9 @@ func TestGetParamButCastFails(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	key := "testkey"
 	value := struct{}{}
-	req = req.WithContext(context.WithValue(req.Context(), ContextParameter(key), value))
+	req = req.WithContext(context.WithValue(req.Context(), paramKey(key), value))
 
-	_, err := GetContextParam(req, key)
+	_, err := GetParam(req, key)
 	assert.ErrorHasMessage(t, err, fmt.Sprintf("context parameter %s not of type string", key))
 }
 
@@ -78,8 +78,8 @@ func TestSetParam(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	key := "foo"
 	xValue := "bar"
-	req = SetContextParam(req, key, xValue)
+	req = SetParam(req, key, xValue)
 
-	value := req.Context().Value(ContextParameter(key)).(string)
+	value := req.Context().Value(paramKey(key)).(string)
 	assert.DeepEquals(t, value, xValue)
 }

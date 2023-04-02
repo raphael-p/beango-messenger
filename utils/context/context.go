@@ -1,4 +1,4 @@
-package httputils
+package context
 
 import (
 	"context"
@@ -6,51 +6,51 @@ import (
 	"net/http"
 
 	"github.com/raphael-p/beango/database"
-	"github.com/raphael-p/beango/utils"
+	"github.com/raphael-p/beango/utils/logger"
 )
 
 // context keys, used to avoid clashes
-type ContextParameter string
-type ContextUser string
+type paramKey string
+type userKey struct{}
 
-func GetContextUser(r *http.Request) (*database.User, error) {
-	rawUser := r.Context().Value(ContextUser("user"))
+func GetUser(r *http.Request) (*database.User, error) {
+	rawUser := r.Context().Value(userKey{})
 	if rawUser == nil {
 		message := "context user not found in request"
-		utils.Logger.Error(message)
+		logger.Error(message)
 		return nil, fmt.Errorf(message)
 	}
 	user, ok := rawUser.(*database.User)
 	if !ok {
 		message := "context user not of type User"
-		utils.Logger.Error(message)
+		logger.Error(message)
 		return nil, fmt.Errorf(message)
 	}
 	return user, nil
 }
 
-func SetContextUser(r *http.Request, user *database.User) *http.Request {
-	ctx := context.WithValue(r.Context(), ContextUser("user"), user)
+func SetUser(r *http.Request, user *database.User) *http.Request {
+	ctx := context.WithValue(r.Context(), userKey{}, user)
 	return r.WithContext(ctx)
 }
 
-func GetContextParam(r *http.Request, key string) (string, error) {
-	value := r.Context().Value(ContextParameter(key))
+func GetParam(r *http.Request, key string) (string, error) {
+	value := r.Context().Value(paramKey(key))
 	if value == nil {
 		message := fmt.Sprintf("context parameter %s not found in request", key)
-		utils.Logger.Error(message)
+		logger.Error(message)
 		return "", fmt.Errorf(message)
 	}
 	stringValue, ok := value.(string)
 	if !ok {
 		message := fmt.Sprintf("context parameter %s not of type string", key)
-		utils.Logger.Error(message)
+		logger.Error(message)
 		return "", fmt.Errorf(message)
 	}
 	return stringValue, nil
 }
 
-func SetContextParam(r *http.Request, key string, value string) *http.Request {
-	ctx := context.WithValue(r.Context(), ContextParameter(key), value)
+func SetParam(r *http.Request, key string, value string) *http.Request {
+	ctx := context.WithValue(r.Context(), paramKey(key), value)
 	return r.WithContext(ctx)
 }

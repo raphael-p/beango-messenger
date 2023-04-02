@@ -8,18 +8,17 @@ import (
 
 	"github.com/raphael-p/beango/config"
 	"github.com/raphael-p/beango/resolvers"
-	"github.com/raphael-p/beango/utils"
+	"github.com/raphael-p/beango/utils/logger"
 )
 
-// Handles failures on startup before the main logger can be created
 func startupFailer(message string) {
-	utils.Logger.Fatal(fmt.Sprint("startup failed: ", message))
+	logger.Fatal(fmt.Sprint("startup failed: ", message))
 }
 
 func Start() {
 	config.CreateConfig(startupFailer)
-	utils.CreateLogger(startupFailer)
-	defer utils.Logger.Close()
+	logger.OpenLogFile(startupFailer)
+	defer logger.CloseLogFile()
 
 	router := newRouter()
 	router.POST("/session", resolvers.CreateSession).noAuth()
@@ -31,11 +30,11 @@ func Start() {
 	router.POST("/message/:chatid", resolvers.SendMessage)
 	l, err := net.Listen("tcp", fmt.Sprint(":", config.Values.Server.Port))
 	if err != nil {
-		utils.Logger.Error(fmt.Sprint("failed to start server: ", err))
+		logger.Error(fmt.Sprint("failed to start server: ", err))
 	}
-	utils.Logger.Info(fmt.Sprintf("🐱‍💻 BeanGo server started on %s", l.Addr().String()))
+	logger.Info(fmt.Sprintf("🐱‍💻 BeanGo server started on %s", l.Addr().String()))
 	if err := http.Serve(l, router); err != nil {
-		utils.Logger.Error(fmt.Sprintf("server closed: %s", err))
+		logger.Error(fmt.Sprintf("server closed: %s", err))
 	}
 	os.Exit(1)
 }
