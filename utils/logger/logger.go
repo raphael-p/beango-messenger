@@ -26,10 +26,43 @@ const (
 	logLevelError
 )
 
-var logger *MyLogger = &MyLogger{newLogger(os.Stdout), nil, logLevel(config.Values.Logger.DefaultLevel)}
-
 func newLogger(out io.Writer) *log.Logger {
 	return log.New(out, "", log.Ldate|log.Ltime|log.Lmicroseconds)
+}
+
+var logger *MyLogger = &MyLogger{newLogger(os.Stdout), nil, logLevel(0)}
+
+func openLogFile(directory, name string) (*os.File, error) {
+	path := filepath.Join(directory, name)
+	logFile, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		err = os.MkdirAll(directory, 0755)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create log directory: %s", err)
+		}
+
+		logFile, err = os.Create(path)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create log file: %s", err)
+		}
+	}
+	return logFile, nil
+}
+
+func Init(fail func(string)) {
+	logger.logLevel = logLevel(config.Values.Logger.DefaultLevel)
+	logFile, err := openLogFile(config.Values.Logger.Directory, config.Values.Logger.Filename)
+	if err != nil {
+		fail(err.Error())
+		return
+	}
+	logger.fileLogger = newLogger(logFile)
+}
+
+func Close() {
+	if file, ok := logger.fileLogger.Writer().(*os.File); ok {
+		file.Close()
+	}
 }
 
 func logMessage(level string, ansiColour string, message string) {
@@ -75,30 +108,4 @@ func Fatal(message string) {
 		logMessage("FATAL ERROR", "\033[31;1m", message)
 	}
 	os.Exit(1)
-}
-
-func OpenLogFile(fail func(string)) {
-	logDirectory := config.Values.Logger.Directory
-	logFileName := config.Values.Logger.Filename
-	path := filepath.Join(logDirectory, logFileName)
-	logFile, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		err = os.MkdirAll(logDirectory, 0755)
-		if err != nil {
-			fail(fmt.Sprint("failed to create log directory: ", err))
-		}
-
-		logFile, err = os.Create(path)
-		if err != nil {
-			fail(fmt.Sprint("failed to create log file: ", err))
-		}
-	}
-
-	logger.fileLogger = newLogger(logFile)
-}
-
-func CloseLogFile() {
-	if file, ok := logger.fileLogger.Writer().(*os.File); ok {
-		file.Close()
-	}
 }

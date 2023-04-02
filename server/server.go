@@ -17,8 +17,8 @@ func startupFailer(message string) {
 
 func Start() {
 	config.CreateConfig(startupFailer)
-	logger.OpenLogFile(startupFailer)
-	defer logger.CloseLogFile()
+	logger.Init(startupFailer)
+	defer logger.Close()
 
 	router := newRouter()
 	router.POST("/session", resolvers.CreateSession).noAuth()
