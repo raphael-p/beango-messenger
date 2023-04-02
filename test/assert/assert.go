@@ -26,6 +26,10 @@ func DeepEquals(t *testing.T, value any, expectedValue any) {
 }
 
 func ErrorHasMessage(t *testing.T, err error, expectedMessage string) {
+	if err == nil {
+		t.Error("expected error, but got nil")
+		return
+	}
 	if err.Error() != expectedMessage {
 		t.Errorf("expected error %v, but got %v", err.Error(), expectedMessage)
 	}
