@@ -5,9 +5,21 @@ import (
 	"testing"
 )
 
+func HasLength[T any](t *testing.T, list []T, expectedLength int) {
+	if length := len(list); length != expectedLength {
+		t.Errorf("expected list to be of length %d, but got %d", expectedLength, length)
+	}
+}
+
+func IsNil(t *testing.T, expectedValue any) {
+	if expectedValue != nil {
+		t.Errorf("expected nil, but got \"%v\"", expectedValue)
+	}
+}
+
 func Equals(t *testing.T, value any, expectedValue any) {
 	if value != expectedValue {
-		t.Errorf("expected %v, but got %v", expectedValue, value)
+		t.Errorf("expected \"%v\", but got \"%v\"", expectedValue, value)
 	}
 }
 
