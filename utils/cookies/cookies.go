@@ -1,7 +1,9 @@
 package cookies
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/raphael-p/beango/utils/response"
@@ -14,14 +16,34 @@ const (
 )
 
 func Get(r *http.Request, name Cookie) (string, error) {
-	cookie, err := r.Cookie(string(name))
-	if err != nil {
-		return "", err
+	cookies := r.Cookies()
+	var matchingCookies []string
+	for _, cookie := range cookies {
+		if cookie.Name == string(name) {
+			matchingCookies = append(matchingCookies, cookie.Value)
+		}
 	}
-	return cookie.Value, nil
+	numberOfMatches := len(matchingCookies)
+
+	if numberOfMatches == 0 {
+		return "", fmt.Errorf("no cookie found with the name %s", name)
+	}
+	if numberOfMatches > 1 {
+		return "", fmt.Errorf("%d cookies found with the name %s", numberOfMatches, name)
+	}
+	return matchingCookies[0], nil
 }
 
-func Set(w *response.Writer, name Cookie, sessionId string, expiryDate time.Time) {
+func Set(w *response.Writer, name Cookie, sessionId string, expiryDate time.Time) error {
+	if name == "" {
+		return fmt.Errorf("a cookie cannot have an empty name")
+	}
+	for _, cookieInResponse := range w.Header()["Set-Cookie"] {
+		if strings.Contains(cookieInResponse, fmt.Sprint(string(name)+"=")) {
+			return fmt.Errorf("response header already sets a cookie with the name %s", name)
+		}
+	}
+
 	cookie := &http.Cookie{
 		Name:     string(name),
 		Value:    sessionId,
@@ -32,14 +54,9 @@ func Set(w *response.Writer, name Cookie, sessionId string, expiryDate time.Time
 		SameSite: http.SameSiteStrictMode,
 	}
 	http.SetCookie(w, cookie)
+	return nil
 }
 
-func Invalidate(w *response.Writer, cookie Cookie) {
-	invalidCookie := &http.Cookie{
-		Name:    string(cookie),
-		Value:   "",
-		Expires: time.Unix(0, 0),
-		Path:    "/",
-	}
-	w.Header().Set("Set-Cookie", invalidCookie.String()+"; SameSite=Strict; Secure")
+func Invalidate(w *response.Writer, name Cookie) error {
+	return Set(w, name, "", time.Unix(0, 0))
 }
