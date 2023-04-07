@@ -5,21 +5,17 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/raphael-p/beango/database"
-	"github.com/raphael-p/beango/utils/context"
 	"github.com/raphael-p/beango/utils/response"
 )
 
 func GetChatMessages(w *response.Writer, r *http.Request) {
-	user, err := context.GetUser(r)
-	if err != nil {
-		w.WriteString(http.StatusInternalServerError, err.Error())
+	paramKeys := []string{"chatid"}
+	user, params, ok := getRequestContext(w, r, true, paramKeys...)
+	if !ok {
 		return
 	}
-	chatId, err := context.GetParam(r, "chatid")
-	if err != nil {
-		w.WriteString(http.StatusInternalServerError, err.Error())
-		return
-	}
+	chatId := params[paramKeys[0]]
+
 	chat, _ := database.GetChat(chatId)
 	if chat == nil || (chat.UserIds[0] != user.Id && chat.UserIds[1] != user.Id) {
 		w.WriteString(http.StatusNotFound, "chat not found")
@@ -34,16 +30,13 @@ type SendMessageInput struct {
 }
 
 func SendMessage(w *response.Writer, r *http.Request) {
-	user, err := context.GetUser(r)
-	if err != nil {
-		w.WriteString(http.StatusInternalServerError, err.Error())
+	paramKeys := []string{"chatid"}
+	user, params, ok := getRequestContext(w, r, true, paramKeys...)
+	if !ok {
 		return
 	}
-	chatId, err := context.GetParam(r, "chatid")
-	if err != nil {
-		w.WriteString(http.StatusInternalServerError, err.Error())
-		return
-	}
+	chatId := params[paramKeys[0]]
+
 	chat, _ := database.GetChat(chatId)
 	if chat == nil || (chat.UserIds[0] != user.Id && chat.UserIds[1] != user.Id) {
 		w.WriteString(http.StatusNotFound, "chat not found")

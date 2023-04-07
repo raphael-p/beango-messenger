@@ -33,6 +33,9 @@ func DeleteSession(id string) {
 }
 
 func CheckSession(id string) (*Session, bool) {
+	if id == "" {
+		return nil, false
+	}
 	session := GetSession(id)
 	if session == nil {
 		return nil, false

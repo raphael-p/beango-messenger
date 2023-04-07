@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/raphael-p/beango/database"
-	"github.com/raphael-p/beango/utils/context"
 	"github.com/raphael-p/beango/utils/response"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -57,11 +56,13 @@ func CreateUser(w *response.Writer, r *http.Request) {
 }
 
 func GetUserByName(w *response.Writer, r *http.Request) {
-	username, err := context.GetParam(r, "username")
-	if err != nil {
-		w.WriteString(http.StatusInternalServerError, err.Error())
+	paramKeys := []string{"username"}
+	_, params, ok := getRequestContext(w, r, false, paramKeys...)
+	if !ok {
 		return
 	}
+	username := params[paramKeys[0]]
+
 	user, _ := database.GetUserByUsername(username)
 	if user == nil {
 		w.WriteString(http.StatusNotFound, "user not found")

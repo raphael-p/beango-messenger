@@ -6,14 +6,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/raphael-p/beango/database"
-	"github.com/raphael-p/beango/utils/context"
 	"github.com/raphael-p/beango/utils/response"
 )
 
 func GetChats(w *response.Writer, r *http.Request) {
-	user, err := context.GetUser(r)
-	if err != nil {
-		w.WriteString(http.StatusInternalServerError, err.Error())
+	user, _, ok := getRequestContext(w, r, true)
+	if !ok {
 		return
 	}
 	chats := database.GetChatsByUserId(user.Id)
@@ -38,9 +36,8 @@ func CreateChat(w *response.Writer, r *http.Request) {
 		return
 	}
 
-	user, err := context.GetUser(r)
-	if err != nil {
-		w.WriteString(http.StatusInternalServerError, err.Error())
+	user, _, ok := getRequestContext(w, r, true)
+	if !ok {
 		return
 	}
 	userIds := [2]string{user.Id, input.UserId}
