@@ -10,7 +10,7 @@ import (
 )
 
 func GetChats(w *response.Writer, r *http.Request) {
-	user, _, ok := getRequestContext(w, r, true)
+	user, _, ok := getRequestContext(w, r)
 	if !ok {
 		return
 	}
@@ -36,7 +36,7 @@ func CreateChat(w *response.Writer, r *http.Request) {
 		return
 	}
 
-	user, _, ok := getRequestContext(w, r, true)
+	user, _, ok := getRequestContext(w, r)
 	if !ok {
 		return
 	}

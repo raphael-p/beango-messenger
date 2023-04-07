@@ -57,7 +57,7 @@ func CreateUser(w *response.Writer, r *http.Request) {
 
 func GetUserByName(w *response.Writer, r *http.Request) {
 	paramKeys := []string{"username"}
-	_, params, ok := getRequestContext(w, r, false, paramKeys...)
+	_, params, ok := getRequestContext(w, r, paramKeys...)
 	if !ok {
 		return
 	}

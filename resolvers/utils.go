@@ -35,18 +35,13 @@ func bindRequestJSON(w *response.Writer, r *http.Request, ptr any) bool {
 func getRequestContext(
 	w *response.Writer,
 	r *http.Request,
-	returnUser bool,
 	keys ...string,
 ) (*database.User, map[string]string, bool) {
-	var err error
-	var user *database.User
-	if returnUser {
-		user, err = context.GetUser(r)
-		if err != nil {
-			logger.Error(err.Error())
-			w.WriteString(http.StatusInternalServerError, "failed to get user from context")
-			return nil, nil, false
-		}
+	user, err := context.GetUser(r)
+	if err != nil {
+		logger.Error(err.Error())
+		w.WriteString(http.StatusInternalServerError, "failed to get user from context")
+		return nil, nil, false
 	}
 
 	params := make(map[string]string)
