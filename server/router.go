@@ -182,7 +182,7 @@ func getUserIDFromCookie(w *response.Writer, req *http.Request) (string, error) 
 		if err != nil {
 			logger.Error(err.Error())
 		}
-		return "", errors.New("cookie or session is invalid") // TODO: replace some fmt.Errorf with errors.New
+		return "", errors.New("cookie or session is invalid")
 	}
 	return session.UserID, nil
 }

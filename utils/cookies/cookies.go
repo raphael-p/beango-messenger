@@ -1,6 +1,7 @@
 package cookies
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -36,7 +37,7 @@ func Get(r *http.Request, name Cookie) (string, error) {
 
 func Set(w *response.Writer, name Cookie, sessionID string, expiryDate time.Time) error {
 	if name == "" {
-		return fmt.Errorf("a cookie cannot have an empty name")
+		return errors.New("a cookie cannot have an empty name")
 	}
 	for _, cookieInResponse := range w.Header()["Set-Cookie"] {
 		if strings.Contains(cookieInResponse, fmt.Sprint(string(name)+"=")) {
