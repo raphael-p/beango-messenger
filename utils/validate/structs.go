@@ -48,14 +48,14 @@ func traverseStructFields(
 // Validates that the input is a pointer to a struct
 // where all fields are strings.
 func PointerToStringStruct(ptr any) bool {
-	v := reflect.ValueOf(ptr)
-	if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Struct {
+	reflectValue := reflect.ValueOf(ptr)
+	if reflectValue.Kind() != reflect.Ptr || reflectValue.Elem().Kind() != reflect.Struct {
 		return false
 	}
 
-	t := v.Elem().Type()
-	for i := 0; i < t.NumField(); i++ {
-		if t.Field(i).Type.Kind() != reflect.String {
+	reflectType := reflectValue.Elem().Type()
+	for i := 0; i < reflectType.NumField(); i++ {
+		if reflectType.Field(i).Type.Kind() != reflect.String {
 			return false
 		}
 	}
