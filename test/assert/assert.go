@@ -17,7 +17,7 @@ func IsNil(t *testing.T, expectedValue any) {
 	}
 }
 
-func Equals(t *testing.T, value any, expectedValue any) {
+func Equals[T comparable](t *testing.T, value T, expectedValue T) {
 	if value != expectedValue {
 		t.Errorf("expected \"%v\", but got \"%v\"", expectedValue, value)
 	}
