@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -17,6 +18,9 @@ func CreateConfig(fail func(string)) {
 	defer file.Close()
 
 	Values = &config{}
+	if err = json.NewDecoder(file).Decode(Values); err != nil {
+		fail(fmt.Sprint("could not parse config file: ", err))
+	}
 	if fields := validate.DeserialisedJSON(Values); len(fields) != 0 {
 		fail(fmt.Sprint("missing required config field(s): ", fields))
 	}
