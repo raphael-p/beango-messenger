@@ -13,6 +13,27 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
+func findCookies(w *response.Writer, names ...string) []string {
+	var matches []string
+	for _, cookieInResponse := range w.Header()["Set-Cookie"] {
+		for _, name := range names {
+			if strings.Contains(cookieInResponse, fmt.Sprint(name+"=")) {
+				matches = append(matches, cookieInResponse)
+			}
+		}
+	}
+	return matches
+}
+
+func cookieString(name, value string, expiry time.Time) string {
+	return fmt.Sprintf(
+		"%s=%s; Path=/; Expires=%s; HttpOnly; Secure; SameSite=Strict",
+		name,
+		value,
+		expiry.Format("Mon, 02 Jan 2006 15:04:05 GMT"),
+	)
+}
+
 func TestGet(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	name := "my-session"
@@ -47,10 +68,8 @@ func TestGetDifferentNames(t *testing.T) {
 func TestGetSameNames(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	name := "name"
-	xValue1 := "value-1"
-	xValue2 := "value-2"
-	cookie1 := &http.Cookie{Name: name, Value: xValue1}
-	cookie2 := &http.Cookie{Name: name, Value: xValue2}
+	cookie1 := &http.Cookie{Name: name, Value: "value-1"}
+	cookie2 := &http.Cookie{Name: name, Value: "value-2"}
 	req.AddCookie(cookie1)
 	req.AddCookie(cookie2)
 
@@ -66,34 +85,13 @@ func TestGetButNotFound(t *testing.T) {
 	cookie := &http.Cookie{
 		Name:    "test-cookie",
 		Value:   "test-session-id",
-		Expires: time.Now().Add(5 * time.Second),
+		Expires: time.Now().UTC().Add(5 * time.Second),
 		Path:    "/",
 	}
 	req.AddCookie(cookie)
 
 	_, err := Get(req, SESSION)
 	assert.ErrorHasMessage(t, err, fmt.Sprint("no cookie found with the name ", SESSION))
-}
-
-func findCookies(w *response.Writer, names ...string) []string {
-	var matches []string
-	for _, cookieInResponse := range w.Header()["Set-Cookie"] {
-		for _, name := range names {
-			if strings.Contains(cookieInResponse, fmt.Sprint(name+"=")) {
-				matches = append(matches, cookieInResponse)
-			}
-		}
-	}
-	return matches
-}
-
-func cookieString(name, value string, expiry time.Time) string {
-	return fmt.Sprintf(
-		"%s=%s; Path=/; Expires=%s; HttpOnly; Secure; SameSite=Strict",
-		name,
-		value,
-		expiry.Format("Mon, 02 Jan 2006 15:04:05 GMT"),
-	)
 }
 
 func TestSet(t *testing.T) {
@@ -104,8 +102,8 @@ func TestSet(t *testing.T) {
 
 	err := Set(w, Cookie(name), value, expiry)
 	assert.IsNil(t, err)
-	xCookies := []string{cookieString(name, value, expiry)}
 	cookies := findCookies(w, name)
+	xCookies := []string{cookieString(name, value, expiry)}
 	assert.DeepEquals(t, cookies, xCookies)
 }
 
@@ -131,11 +129,11 @@ func TestSetDifferentNames(t *testing.T) {
 	assert.IsNil(t, err)
 	err = Set(w, Cookie(name2), value2, expiry)
 	assert.IsNil(t, err)
+	cookies := findCookies(w, name1, name2)
 	xCookies := []string{
 		cookieString(name1, value1, expiry),
 		cookieString(name2, value2, expiry),
 	}
-	cookies := findCookies(w, name1, name2)
 	assert.DeepEquals(t, cookies, xCookies)
 }
 
@@ -157,7 +155,7 @@ func TestInvalidate(t *testing.T) {
 	name := "test-name"
 	Invalidate(w, Cookie(name))
 
-	xCookie := cookieString(name, "", time.Unix(0, 0).UTC())
 	cookie := w.Header().Get("Set-Cookie")
+	xCookie := cookieString(name, "", time.Unix(0, 0).UTC())
 	assert.Equals(t, cookie, xCookie)
 }

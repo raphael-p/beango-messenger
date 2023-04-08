@@ -12,12 +12,17 @@ import (
 	"github.com/raphael-p/beango/test/mocks"
 )
 
+// TODO: assert error is nil
+// TODO: handle param key clashes
+// TODO: param key is "user"
+
 func TestGetUser(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	xUser := mocks.MakeUser()
 	req = req.WithContext(context.WithValue(req.Context(), userKey{}, xUser))
 
-	user, _ := GetUser(req)
+	user, err := GetUser(req)
+	assert.IsNil(t, err)
 	assert.DeepEquals(t, user, xUser)
 }
 
@@ -30,7 +35,7 @@ func TestGetUserButNotThere(t *testing.T) {
 
 func TestGetUserButCastFails(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	xUser := struct{ Id string }{"asada"}
+	xUser := struct{ ID string }{"a-unique-id"}
 	req = req.WithContext(context.WithValue(req.Context(), userKey{}, xUser))
 
 	_, err := GetUser(req)
@@ -52,7 +57,8 @@ func TestGetParam(t *testing.T) {
 	xValue := "testvalue"
 	req = req.WithContext(context.WithValue(req.Context(), paramKey(key), xValue))
 
-	value, _ := GetParam(req, key)
+	value, err := GetParam(req, key)
+	assert.IsNil(t, err)
 	assert.DeepEquals(t, value, xValue)
 }
 
