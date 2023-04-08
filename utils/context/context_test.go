@@ -37,7 +37,7 @@ func TestGetUserButNotThere(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 
 	_, err := GetUser(req)
-	assert.ErrorHasMessage(t, err, "context user not found in request")
+	assert.ErrorHasMessage(t, err, "user not found in request context")
 }
 
 func TestGetUserButCastFails(t *testing.T) {
@@ -46,7 +46,7 @@ func TestGetUserButCastFails(t *testing.T) {
 	req = req.WithContext(context.WithValue(req.Context(), userKey{}, xUser))
 
 	_, err := GetUser(req)
-	assert.ErrorHasMessage(t, err, "context user not of type User")
+	assert.ErrorHasMessage(t, err, "user in request context not of type User")
 }
 
 func TestSetUser(t *testing.T) {
@@ -66,7 +66,7 @@ func TestSetMultipleUsers(t *testing.T) {
 	req, err := SetUser(req, xUser)
 	assert.IsNil(t, err)
 	req, err = SetUser(req, mocks.MakeUser())
-	assert.ErrorHasMessage(t, err, "context user already set")
+	assert.ErrorHasMessage(t, err, "user already in request context")
 	user := req.Context().Value(userKey{}).(*database.User)
 	assert.DeepEquals(t, user, xUser)
 }
@@ -121,7 +121,7 @@ func TestGetParamButNotThere(t *testing.T) {
 	req = req.WithContext(context.WithValue(req.Context(), paramKey("differekey"), "testvalue"))
 
 	_, err := GetParam(req, key)
-	assert.ErrorHasMessage(t, err, fmt.Sprintf("context parameter %s not found in request", key))
+	assert.ErrorHasMessage(t, err, fmt.Sprintf("path parameter %s not found", key))
 }
 
 func TestGetParamButCastFails(t *testing.T) {
@@ -131,7 +131,7 @@ func TestGetParamButCastFails(t *testing.T) {
 	req = req.WithContext(context.WithValue(req.Context(), paramKey(key), value))
 
 	_, err := GetParam(req, key)
-	assert.ErrorHasMessage(t, err, fmt.Sprintf("context parameter %s not of type string", key))
+	assert.ErrorHasMessage(t, err, fmt.Sprintf("path parameter %s not of type string", key))
 }
 
 func TestSetParam(t *testing.T) {
@@ -159,7 +159,7 @@ func TestSetSameParams(t *testing.T) {
 	req, err := SetParam(req, key, xValue)
 	assert.IsNil(t, err)
 	req, err = SetParam(req, key, "test-value-2")
-	assert.ErrorHasMessage(t, err, fmt.Sprintf("context parameter %s already set", key))
+	assert.ErrorHasMessage(t, err, fmt.Sprintf("path parameter %s already set", key))
 	value := req.Context().Value(paramKey(key)).(string)
 	assert.Equals(t, value, xValue)
 }
