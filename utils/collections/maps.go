@@ -1,10 +1,6 @@
-package maps
+package collections
 
-type MapKey interface {
-	string | int
-}
-
-func MapValues[K MapKey, V any](thisMap map[K]V) ([]K, []V) {
+func MapEntries[K comparable, V any](thisMap map[K]V) ([]K, []V) {
 	keys := make([]K, 0, len(thisMap))
 	values := make([]V, 0, len(thisMap))
 	for key, value := range thisMap {
