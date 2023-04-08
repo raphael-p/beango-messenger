@@ -101,7 +101,14 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 				return
 			}
 			for idx, key := range route.paramKeys {
-				req = context.SetParam(req, key, values[idx])
+				var err error
+				req, err = context.SetParam(req, key, values[idx])
+				if err != nil {
+					logger.Error(err.Error())
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(err.Error()))
+					return
+				}
 			}
 
 			route.handler(response.NewWriter(w), req)
@@ -124,8 +131,8 @@ func (r *route) handler(w *response.Writer, req *http.Request) {
 
 	// Authentication
 	if r.authenticate {
-		reqWithUser, err := authentication(w, req)
-		if err != nil {
+		reqWithUser, ok := authentication(w, req)
+		if !ok {
 			return
 		}
 		req = reqWithUser
@@ -138,18 +145,24 @@ func (r *route) handler(w *response.Writer, req *http.Request) {
 	logger.Info(fmt.Sprintf("%s resolved with %s", requestString, w))
 }
 
-func authentication(w *response.Writer, req *http.Request) (*http.Request, error) {
+func authentication(w *response.Writer, req *http.Request) (*http.Request, bool) {
 	userID, err := getUserIDFromCookie(w, req)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		return nil, err
+		return nil, false
 	}
 	user, err := database.GetUser(userID)
 	if err != nil {
 		w.WriteString(http.StatusNotFound, "user not found during authentication")
-		return nil, err
+		return nil, false
 	}
-	return context.SetUser(req, user), nil
+	req, err = context.SetUser(req, user)
+	if err != nil {
+		logger.Error(err.Error())
+		w.WriteString(http.StatusInternalServerError, err.Error())
+		return nil, false
+	}
+	return req, true
 }
 
 func getUserIDFromCookie(w *response.Writer, req *http.Request) (string, error) {
