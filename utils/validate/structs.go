@@ -4,9 +4,11 @@ import (
 	"reflect"
 )
 
+// TODO: rename DeserialisedJSON (PointerToStructFromJSON? PointerToJSONStruct? StructFromJSON?) + check that JSON tags are present
+
+// Finds any fields from the struct's type that are not in the struct itself.
+// `ptr` must point to a `struct` where fields have `json` and `optional` tags.
 // Used to validate the deserialisation of a JSON document.
-// Takes a pointer to a struct and finds any fields from the struct's type
-// that are not in the struct itself. Excludes fields with an 'optional' tag.
 func DeserialisedJSON(ptr any) []string {
 	reflectValue := reflect.ValueOf(ptr).Elem()
 	reflectType := reflectValue.Type()
@@ -41,4 +43,22 @@ func traverseStructFields(
 		}
 	}
 	return missingFields
+}
+
+// Validates that the input is a pointer to a struct
+// where all fields are strings.
+func PointerToStringStruct(ptr any) bool {
+	v := reflect.ValueOf(ptr)
+	if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Struct {
+		return false
+	}
+
+	t := v.Elem().Type()
+	for i := 0; i < t.NumField(); i++ {
+		if t.Field(i).Type.Kind() != reflect.String {
+			return false
+		}
+	}
+
+	return true
 }
