@@ -139,12 +139,12 @@ func (r *route) handler(w *response.Writer, req *http.Request) {
 }
 
 func authentication(w *response.Writer, req *http.Request) (*http.Request, error) {
-	userId, err := getUserIdFromCookie(w, req)
+	userID, err := getUserIDFromCookie(w, req)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return nil, err
 	}
-	user, err := database.GetUser(userId)
+	user, err := database.GetUser(userID)
 	if err != nil {
 		w.WriteString(http.StatusNotFound, "user not found during authentication")
 		return nil, err
@@ -152,13 +152,13 @@ func authentication(w *response.Writer, req *http.Request) (*http.Request, error
 	return context.SetUser(req, user), nil
 }
 
-func getUserIdFromCookie(w *response.Writer, req *http.Request) (string, error) {
+func getUserIDFromCookie(w *response.Writer, req *http.Request) (string, error) {
 	cookieName := cookies.SESSION
-	sessionId, err := cookies.Get(req, cookieName)
+	sessionID, err := cookies.Get(req, cookieName)
 	if err != nil {
 		return "", err
 	}
-	session, ok := database.CheckSession(sessionId)
+	session, ok := database.CheckSession(sessionID)
 	if !ok {
 		err := cookies.Invalidate(w, cookieName)
 		if err != nil {
@@ -166,5 +166,5 @@ func getUserIdFromCookie(w *response.Writer, req *http.Request) (string, error) 
 		}
 		return "", errors.New("cookie or session is invalid") // TODO: replace some fmt.Errorf with errors.New
 	}
-	return session.UserId, nil
+	return session.UserID, nil
 }

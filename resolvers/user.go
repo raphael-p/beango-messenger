@@ -10,13 +10,13 @@ import (
 )
 
 type UserOutput struct {
-	Id          string `json:"id"`
+	ID          string `json:"id"`
 	Username    string `json:"username"`
 	DisplayName string `json:"displayName"`
 }
 
 func stripFields(user *database.User) *UserOutput {
-	return &UserOutput{user.Id, user.Username, user.DisplayName}
+	return &UserOutput{user.ID, user.Username, user.DisplayName}
 }
 
 type CreateUserInput struct {
@@ -43,7 +43,7 @@ func CreateUser(w *response.Writer, r *http.Request) {
 	}
 
 	newUser := &database.User{
-		Id:          uuid.New().String(),
+		ID:          uuid.New().String(),
 		Username:    input.Username,
 		DisplayName: input.DisplayName,
 		Key:         hash,

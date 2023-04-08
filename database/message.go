@@ -1,16 +1,16 @@
 package database
 
 type Message struct {
-	Id      string `json:"id"`
-	UserId  string `json:"userId"`
-	ChatId  string `json:"chatId"`
+	ID      string `json:"id"`
+	UserID  string `json:"userID"`
+	ChatID  string `json:"chatID"`
 	Content string `json:"content"`
 }
 
-func GetMessagesByChatId(chatId string) []Message {
+func GetMessagesByChatID(chatID string) []Message {
 	var messages []Message
 	for _, message := range Messages {
-		if message.ChatId == chatId {
+		if message.ChatID == chatID {
 			messages = append(messages, message)
 		}
 	}
@@ -18,5 +18,5 @@ func GetMessagesByChatId(chatId string) []Message {
 }
 
 func SetMessage(message *Message) {
-	Messages[message.Id] = *message
+	Messages[message.ID] = *message
 }

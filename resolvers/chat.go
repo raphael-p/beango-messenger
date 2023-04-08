@@ -14,12 +14,12 @@ func GetChats(w *response.Writer, r *http.Request) {
 	if !ok {
 		return
 	}
-	chats := database.GetChatsByUserId(user.Id)
+	chats := database.GetChatsByUserID(user.ID)
 	w.WriteJSON(http.StatusOK, chats)
 }
 
 type CreateChatInput struct {
-	UserId string `json:"userId"`
+	UserID string `json:"userID"`
 }
 
 func CreateChat(w *response.Writer, r *http.Request) {
@@ -29,9 +29,9 @@ func CreateChat(w *response.Writer, r *http.Request) {
 	}
 
 	// Check that user id exists
-	_, err := database.GetUser(input.UserId)
+	_, err := database.GetUser(input.UserID)
 	if err != nil {
-		message := fmt.Sprintf("userId %s is invalid", input.UserId)
+		message := fmt.Sprintf("userID %s is invalid", input.UserID)
 		w.WriteString(http.StatusBadRequest, message)
 		return
 	}
@@ -40,17 +40,17 @@ func CreateChat(w *response.Writer, r *http.Request) {
 	if !ok {
 		return
 	}
-	userIds := [2]string{user.Id, input.UserId}
+	userIDs := [2]string{user.ID, input.UserID}
 
 	// Check if chat already exists
-	if chat := database.GetChatByUserIds(userIds); chat != nil {
+	if chat := database.GetChatByUserIDs(userIDs); chat != nil {
 		w.WriteString(http.StatusConflict, "chat already exists")
 		return
 	}
 
 	newChat := &database.Chat{
-		Id:      uuid.NewString(),
-		UserIds: userIds,
+		ID:      uuid.NewString(),
+		UserIDs: userIDs,
 	}
 	database.SetChat(newChat)
 	w.WriteJSON(http.StatusCreated, newChat)

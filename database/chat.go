@@ -5,8 +5,8 @@ import (
 )
 
 type Chat struct {
-	Id      string    `json:"id"`
-	UserIds [2]string `json:"userIds"`
+	ID      string    `json:"id"`
+	UserIDs [2]string `json:"userIDs"`
 }
 
 func GetChat(id string) (*Chat, error) {
@@ -18,11 +18,11 @@ func GetChat(id string) (*Chat, error) {
 	}
 }
 
-func GetChatsByUserId(userId string) []Chat {
+func GetChatsByUserID(userID string) []Chat {
 	var chats []Chat
 	for _, chat := range Chats {
-		for _, chatUserId := range chat.UserIds {
-			if chatUserId == userId {
+		for _, chatUserID := range chat.UserIDs {
+			if chatUserID == userID {
 				chats = append(chats, chat)
 			}
 		}
@@ -30,12 +30,12 @@ func GetChatsByUserId(userId string) []Chat {
 	return chats
 }
 
-func GetChatByUserIds(userIds [2]string) *Chat {
+func GetChatByUserIDs(userIDs [2]string) *Chat {
 	for _, chat := range Chats {
-		if (chat.UserIds[0] == userIds[0] &&
-			chat.UserIds[1] == userIds[1]) ||
-			(chat.UserIds[0] == userIds[1] &&
-				chat.UserIds[1] == userIds[0]) {
+		if (chat.UserIDs[0] == userIDs[0] &&
+			chat.UserIDs[1] == userIDs[1]) ||
+			(chat.UserIDs[0] == userIDs[1] &&
+				chat.UserIDs[1] == userIDs[0]) {
 			return &chat
 		}
 
@@ -44,5 +44,5 @@ func GetChatByUserIds(userIds [2]string) *Chat {
 }
 
 func SetChat(chat *Chat) {
-	Chats[chat.Id] = *chat
+	Chats[chat.ID] = *chat
 }

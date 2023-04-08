@@ -3,7 +3,7 @@ package database
 import "fmt"
 
 type User struct {
-	Id          string `json:"id"`
+	ID          string `json:"id"`
 	Username    string `json:"username"`
 	DisplayName string `json:"displayName"`
 	Key         []byte `json:"key"`
@@ -28,5 +28,5 @@ func GetUserByUsername(username string) (*User, error) {
 }
 
 func SetUser(user *User) {
-	Users[user.Id] = *user
+	Users[user.ID] = *user
 }

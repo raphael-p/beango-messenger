@@ -6,8 +6,8 @@ import (
 )
 
 type Session struct {
-	Id         string    `json:"id"`
-	UserId     string    `json:"userId"`
+	ID         string    `json:"id"`
+	UserID     string    `json:"userID"`
 	ExpiryDate time.Time `json:"expiryDate"`
 }
 
@@ -21,11 +21,11 @@ func GetSession(id string) *Session {
 }
 
 func SetSession(session Session) {
-	if session, err := GetSessionByUserId(session.UserId); err == nil {
-		DeleteSession(session.Id)
+	if session, err := GetSessionByUserID(session.UserID); err == nil {
+		DeleteSession(session.ID)
 	}
 
-	Sessions[session.Id] = session
+	Sessions[session.ID] = session
 }
 
 func DeleteSession(id string) {
@@ -41,17 +41,17 @@ func CheckSession(id string) (*Session, bool) {
 		return nil, false
 	}
 	if session.ExpiryDate.Before(time.Now()) {
-		DeleteSession(session.Id)
+		DeleteSession(session.ID)
 		return nil, false
 	}
 	return session, true
 }
 
-func GetSessionByUserId(userId string) (*Session, error) {
+func GetSessionByUserID(userID string) (*Session, error) {
 	for _, session := range Sessions {
-		if session.UserId == userId {
+		if session.UserID == userID {
 			return &session, nil
 		}
 	}
-	return nil, fmt.Errorf("no session found for user ID %s", userId)
+	return nil, fmt.Errorf("no session found for user ID %s", userID)
 }

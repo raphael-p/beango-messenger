@@ -7,7 +7,7 @@ import (
 
 func MakeUser() *database.User {
 	return &database.User{
-		Id:          uuid.New().String(),
+		ID:          uuid.New().String(),
 		Username:    "john doe",
 		DisplayName: "john.doe.69",
 		Key:         []byte("supersecrethash"),

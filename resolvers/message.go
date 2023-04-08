@@ -9,20 +9,20 @@ import (
 )
 
 func GetChatMessages(w *response.Writer, r *http.Request) {
-	paramKeys := []string{"chatid"}
+	paramKeys := []string{"chatID"}
 	user, params, ok := getRequestContext(w, r, paramKeys...)
 	if !ok {
 		return
 	}
-	chatId := params[paramKeys[0]]
+	chatID := params[paramKeys[0]]
 
-	chat, _ := database.GetChat(chatId)
-	if chat == nil || (chat.UserIds[0] != user.Id && chat.UserIds[1] != user.Id) {
+	chat, _ := database.GetChat(chatID)
+	if chat == nil || (chat.UserIDs[0] != user.ID && chat.UserIDs[1] != user.ID) {
 		w.WriteString(http.StatusNotFound, "chat not found")
 		return
 	}
 
-	w.WriteJSON(http.StatusOK, database.GetMessagesByChatId(chat.Id))
+	w.WriteJSON(http.StatusOK, database.GetMessagesByChatID(chat.ID))
 }
 
 type SendMessageInput struct {
@@ -30,15 +30,15 @@ type SendMessageInput struct {
 }
 
 func SendMessage(w *response.Writer, r *http.Request) {
-	paramKeys := []string{"chatid"}
+	paramKeys := []string{"chatID"}
 	user, params, ok := getRequestContext(w, r, paramKeys...)
 	if !ok {
 		return
 	}
-	chatId := params[paramKeys[0]]
+	chatID := params[paramKeys[0]]
 
-	chat, _ := database.GetChat(chatId)
-	if chat == nil || (chat.UserIds[0] != user.Id && chat.UserIds[1] != user.Id) {
+	chat, _ := database.GetChat(chatID)
+	if chat == nil || (chat.UserIDs[0] != user.ID && chat.UserIDs[1] != user.ID) {
 		w.WriteString(http.StatusNotFound, "chat not found")
 		return
 	}
@@ -49,8 +49,8 @@ func SendMessage(w *response.Writer, r *http.Request) {
 	}
 
 	newMessage := &database.Message{
-		Id:      uuid.NewString(),
-		ChatId:  chatId,
+		ID:      uuid.NewString(),
+		ChatID:  chatID,
 		Content: input.Content,
 	}
 	database.SetMessage(newMessage)

@@ -20,9 +20,9 @@ type SessionInput struct {
 }
 
 func CreateSession(w *response.Writer, r *http.Request) {
-	sessionId, err := cookies.Get(r, cookies.SESSION)
+	sessionID, err := cookies.Get(r, cookies.SESSION)
 	if err == nil {
-		_, ok := database.CheckSession(sessionId)
+		_, ok := database.CheckSession(sessionID)
 		if ok {
 			w.WriteString(http.StatusBadRequest, "there already is a valid session cookie in the request")
 			return
@@ -37,18 +37,18 @@ func CreateSession(w *response.Writer, r *http.Request) {
 	if user, err := database.GetUserByUsername(input.Username); err == nil {
 		err := bcrypt.CompareHashAndPassword(user.Key, []byte(input.Password))
 		if err == nil {
-			sessionId := uuid.NewString()
+			sessionID := uuid.NewString()
 			expiryDuration := time.Duration(config.Values.Session.SecondsUntilExpiry) * time.Second
 			expiryDate := time.Now().Add(expiryDuration)
-			err = cookies.Set(w, cookies.SESSION, sessionId, expiryDate)
+			err = cookies.Set(w, cookies.SESSION, sessionID, expiryDate)
 			if err != nil {
 				logger.Error(fmt.Sprint("session cookie creation failed: ", err))
 				w.WriteString(http.StatusInternalServerError, "")
 				return
 			}
 			database.SetSession(database.Session{
-				Id:         sessionId,
-				UserId:     user.Id,
+				ID:         sessionID,
+				UserID:     user.ID,
 				ExpiryDate: expiryDate,
 			})
 			w.WriteHeader(http.StatusNoContent)

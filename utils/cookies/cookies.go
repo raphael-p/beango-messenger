@@ -34,7 +34,7 @@ func Get(r *http.Request, name Cookie) (string, error) {
 	return matchingCookies[0], nil
 }
 
-func Set(w *response.Writer, name Cookie, sessionId string, expiryDate time.Time) error {
+func Set(w *response.Writer, name Cookie, sessionID string, expiryDate time.Time) error {
 	if name == "" {
 		return fmt.Errorf("a cookie cannot have an empty name")
 	}
@@ -46,7 +46,7 @@ func Set(w *response.Writer, name Cookie, sessionId string, expiryDate time.Time
 
 	cookie := &http.Cookie{
 		Name:     string(name),
-		Value:    sessionId,
+		Value:    sessionID,
 		Expires:  expiryDate,
 		Path:     "/",
 		Secure:   true,
