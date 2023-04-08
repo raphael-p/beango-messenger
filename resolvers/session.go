@@ -39,7 +39,7 @@ func CreateSession(w *response.Writer, r *http.Request) {
 		if err == nil {
 			sessionID := uuid.NewString()
 			expiryDuration := time.Duration(config.Values.Session.SecondsUntilExpiry) * time.Second
-			expiryDate := time.Now().Add(expiryDuration)
+			expiryDate := time.Now().UTC().Add(expiryDuration)
 			err = cookies.Set(w, cookies.SESSION, sessionID, expiryDate)
 			if err != nil {
 				logger.Error(fmt.Sprint("session cookie creation failed: ", err))

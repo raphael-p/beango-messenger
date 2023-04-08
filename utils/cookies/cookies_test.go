@@ -98,7 +98,7 @@ func TestSet(t *testing.T) {
 	w := mocks.MakeResponseWriter()
 	name := "test-name"
 	value := "test-value"
-	expiry := time.Now().UTC().Add(24 * time.Hour) // TODO: make UTC
+	expiry := time.Now().UTC().Add(24 * time.Hour)
 
 	err := Set(w, Cookie(name), value, expiry)
 	assert.IsNil(t, err)
@@ -111,7 +111,7 @@ func TestSetEmptyName(t *testing.T) {
 	w := mocks.MakeResponseWriter()
 	name := ""
 	value := "test-value"
-	expiry := time.Now().UTC().Add(24 * time.Hour) // TODO: make UTC
+	expiry := time.Now().UTC().Add(24 * time.Hour)
 
 	err := Set(w, Cookie(name), value, expiry)
 	assert.ErrorHasMessage(t, err, "a cookie cannot have an empty name")
@@ -123,7 +123,7 @@ func TestSetDifferentNames(t *testing.T) {
 	value1 := "test-value-1"
 	name2 := "test-name-2"
 	value2 := "test-value-2"
-	expiry := time.Now().UTC().Add(24 * time.Hour) // TODO: make UTC
+	expiry := time.Now().UTC().Add(24 * time.Hour)
 
 	err := Set(w, Cookie(name1), value1, expiry)
 	assert.IsNil(t, err)
@@ -141,7 +141,7 @@ func TestSetSameNames(t *testing.T) {
 	w := mocks.MakeResponseWriter()
 	name := "test-name"
 	value := "test-value"
-	expiry := time.Now().UTC().Add(24 * time.Hour) // TODO: make UTC
+	expiry := time.Now().UTC().Add(24 * time.Hour)
 
 	err := Set(w, Cookie(name), value, expiry)
 	assert.IsNil(t, err)

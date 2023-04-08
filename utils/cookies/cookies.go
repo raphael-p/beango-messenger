@@ -59,5 +59,5 @@ func Set(w *response.Writer, name Cookie, sessionID string, expiryDate time.Time
 }
 
 func Invalidate(w *response.Writer, name Cookie) error {
-	return Set(w, name, "", time.Unix(0, 0))
+	return Set(w, name, "", time.Unix(0, 0).UTC())
 }

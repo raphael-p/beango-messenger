@@ -40,7 +40,7 @@ func CheckSession(id string) (*Session, bool) {
 	if session == nil {
 		return nil, false
 	}
-	if session.ExpiryDate.Before(time.Now()) {
+	if session.ExpiryDate.Before(time.Now().UTC()) {
 		DeleteSession(session.ID)
 		return nil, false
 	}
