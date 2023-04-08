@@ -13,6 +13,7 @@ import (
 	"github.com/raphael-p/beango/utils/cookies"
 	"github.com/raphael-p/beango/utils/logger"
 	"github.com/raphael-p/beango/utils/response"
+	"github.com/raphael-p/beango/utils/validate"
 )
 
 type handlerFunc func(*response.Writer, *http.Request)
@@ -39,21 +40,25 @@ func newRouter() *router {
 
 func (r *router) addRoute(method, endpoint string, handler handlerFunc) *route {
 	// handle path parameters
-	pathParamPattern := regexp.MustCompile(":([a-zA-Z]+)")
-	matches := pathParamPattern.FindAllStringSubmatch(endpoint, -1)
-	paramKeys := []string{} // TODO: prevent duplicate keys
+	pathParamMatcher := regexp.MustCompile(":([a-zA-Z]+)")
+	matches := pathParamMatcher.FindAllStringSubmatch(endpoint, -1)
+	paramKeys := []string{}
+	pattern := endpoint
 	if len(matches) > 0 {
 		// replace path parameter definition with regex pattern to capture any string
-		endpoint = pathParamPattern.ReplaceAllLiteralString(endpoint, "([^/]+)")
+		pattern = pathParamMatcher.ReplaceAllLiteralString(endpoint, "([^/]+)")
 		// store the names of path parameters, to later be used as context keys
 		for i := 0; i < len(matches); i++ {
 			paramKeys = append(paramKeys, matches[i][1])
 		}
 	}
+	if !validate.UniqueList(paramKeys) {
+		logger.Fatal(fmt.Sprint("duplicate path parameters in route: ", endpoint))
+	}
 
 	route := &route{
 		method,
-		regexp.MustCompile("^" + endpoint + "$"),
+		regexp.MustCompile("^" + pattern + "$"),
 		handler,
 		paramKeys,
 		true,
