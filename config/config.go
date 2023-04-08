@@ -21,7 +21,7 @@ func CreateConfig(fail func(string)) {
 	if err = json.NewDecoder(file).Decode(Values); err != nil {
 		fail(fmt.Sprint("could not parse config file: ", err))
 	}
-	if fields := validate.DeserialisedJSON(Values); len(fields) != 0 {
+	if fields := validate.PointerToStructFromJSON(Values); len(fields) != 0 {
 		fail(fmt.Sprint("missing required config field(s): ", fields))
 	}
 }

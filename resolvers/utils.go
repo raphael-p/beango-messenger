@@ -22,7 +22,7 @@ func bindRequestJSON(w *response.Writer, r *http.Request, ptr any) bool {
 		w.WriteString(http.StatusBadRequest, response)
 		return false
 	}
-	if fields := validate.DeserialisedJSON(ptr); len(fields) != 0 {
+	if fields := validate.PointerToStructFromJSON(ptr); len(fields) != 0 {
 		response := fmt.Sprintf("missing required field(s): %s", fields)
 		w.WriteString(http.StatusBadRequest, response)
 		return false

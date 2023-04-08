@@ -4,12 +4,10 @@ import (
 	"reflect"
 )
 
-// TODO: rename DeserialisedJSON (PointerToStructFromJSON? PointerToJSONStruct? StructFromJSON?) + check that JSON tags are present
-
 // Finds any fields from the struct's type that are not in the struct itself.
-// `ptr` must point to a `struct` where fields have `json` and `optional` tags.
+// `ptr` must point to a `struct` where fields may have `json` and `optional` tags.
 // Used to validate the deserialisation of a JSON document.
-func DeserialisedJSON(ptr any) []string {
+func PointerToStructFromJSON(ptr any) []string {
 	reflectValue := reflect.ValueOf(ptr).Elem()
 	reflectType := reflectValue.Type()
 	return traverseStructFields(reflectValue, reflectType, "", []string{})
@@ -27,8 +25,12 @@ func traverseStructFields(
 			continue
 		}
 
+		tag := field.Tag.Get("json")
+		if tag == "" {
+			tag = field.Name
+		}
 		if field.Type.Kind() == reflect.Struct {
-			newJsonPath := jsonPath + field.Tag.Get("json") + "."
+			newJsonPath := jsonPath + tag + "."
 			missingFields = traverseStructFields(
 				reflectValue.FieldByName(field.Name),
 				field.Type,
@@ -37,7 +39,7 @@ func traverseStructFields(
 			)
 		} else {
 			if reflectValue.FieldByName(field.Name).IsZero() {
-				fullFieldPath := jsonPath + field.Tag.Get("json")
+				fullFieldPath := jsonPath + tag
 				missingFields = append(missingFields, fullFieldPath)
 			}
 		}
