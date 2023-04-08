@@ -26,8 +26,8 @@ func Start() {
 	router.GET("/user/:username", resolvers.GetUserByName)
 	router.GET("/chats", resolvers.GetChats)
 	router.POST("/chat", resolvers.CreateChat)
-	router.GET("/messages/:chatid", resolvers.GetChatMessages)
-	router.POST("/message/:chatid", resolvers.SendMessage)
+	router.GET("/messages/:chatID", resolvers.GetChatMessages)
+	router.POST("/message/:chatID", resolvers.SendMessage)
 	l, err := net.Listen("tcp", fmt.Sprint(":", config.Values.Server.Port))
 	if err != nil {
 		logger.Error(fmt.Sprint("failed to start server: ", err))

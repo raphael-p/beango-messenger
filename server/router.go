@@ -39,7 +39,7 @@ func newRouter() *router {
 
 func (r *router) addRoute(method, endpoint string, handler handlerFunc) *route {
 	// handle path parameters
-	pathParamPattern := regexp.MustCompile(":([a-z]+)")
+	pathParamPattern := regexp.MustCompile(":([a-zA-Z]+)")
 	matches := pathParamPattern.FindAllStringSubmatch(endpoint, -1)
 	paramKeys := []string{} // TODO: prevent duplicate keys
 	if len(matches) > 0 {
