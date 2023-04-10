@@ -25,7 +25,7 @@ func findCookies(w *response.Writer, names ...string) []string {
 	return matches
 }
 
-func cookieString(name, value string, expiry time.Time) string {
+func makeCookie(name, value string, expiry time.Time) string {
 	return fmt.Sprintf(
 		"%s=%s; Path=/; Expires=%s; HttpOnly; Secure; SameSite=Strict",
 		name,
@@ -103,7 +103,7 @@ func TestSet(t *testing.T) {
 	err := Set(w, Cookie(name), value, expiry)
 	assert.IsNil(t, err)
 	cookies := findCookies(w, name)
-	xCookies := []string{cookieString(name, value, expiry)}
+	xCookies := []string{makeCookie(name, value, expiry)}
 	assert.DeepEquals(t, cookies, xCookies)
 }
 
@@ -131,8 +131,8 @@ func TestSetDifferentNames(t *testing.T) {
 	assert.IsNil(t, err)
 	cookies := findCookies(w, name1, name2)
 	xCookies := []string{
-		cookieString(name1, value1, expiry),
-		cookieString(name2, value2, expiry),
+		makeCookie(name1, value1, expiry),
+		makeCookie(name2, value2, expiry),
 	}
 	assert.DeepEquals(t, cookies, xCookies)
 }
@@ -156,6 +156,6 @@ func TestInvalidate(t *testing.T) {
 	Invalidate(w, Cookie(name))
 
 	cookie := w.Header().Get("Set-Cookie")
-	xCookie := cookieString(name, "", time.Unix(0, 0).UTC())
+	xCookie := makeCookie(name, "", time.Unix(0, 0).UTC())
 	assert.Equals(t, cookie, xCookie)
 }
