@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/raphael-p/beango/config"
 )
@@ -26,8 +27,14 @@ const (
 	logLevelError
 )
 
+type nowFunc func() string
+
+var now nowFunc = func() string {
+	return time.Now().UTC().Format("2006-01-02 15:04:05.000")
+}
+
 func newLogger(out io.Writer) *log.Logger {
-	return log.New(out, "", log.Ldate|log.Ltime|log.Lmicroseconds)
+	return log.New(out, "", 0)
 }
 
 var logger *MyLogger = &MyLogger{newLogger(os.Stdout), nil, logLevel(0)}
@@ -67,9 +74,10 @@ func Close() {
 
 func logMessage(level string, ansiColour string, message string) {
 	reset := "\033[0m"
-	logger.stdOutLogger.Printf("%s[%s]%s %s", ansiColour, level, reset, message)
+	time := now()
+	logger.stdOutLogger.Printf("%s %s[%s]%s %s", time, ansiColour, level, reset, message)
 	if logger.fileLogger != nil {
-		logger.fileLogger.Printf("[%s] %s", level, message)
+		logger.fileLogger.Printf("%s [%s] %s", time, level, message)
 	}
 }
 
