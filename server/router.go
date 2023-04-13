@@ -53,7 +53,7 @@ func (r *router) addRoute(method, endpoint string, handler handlerFunc) *route {
 		}
 	}
 	if !validate.UniqueList(paramKeys) {
-		logger.Fatal(fmt.Sprint("duplicate path parameters in route: ", endpoint))
+		panic(fmt.Sprint("duplicate path parameters in route: ", endpoint))
 	}
 
 	route := &route{

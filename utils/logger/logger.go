@@ -56,18 +56,21 @@ func openLogFile(directory, name string) (*os.File, error) {
 	return logFile, nil
 }
 
-func Init(fail func(string)) {
+func Init() {
 	logger.logLevel = logLevel(config.Values.Logger.DefaultLevel)
 	logFile, err := openLogFile(config.Values.Logger.Directory, config.Values.Logger.Filename)
 	if err != nil {
-		fail(err.Error())
-		return
+		panic(err.Error())
 	}
 	logger.fileLogger = newLogger(logFile)
 }
 
 func Close() {
+	if logger.fileLogger == nil {
+		return
+	}
 	if file, ok := logger.fileLogger.Writer().(*os.File); ok {
+		Trace("closing file logger")
 		file.Close()
 	}
 }
@@ -109,11 +112,4 @@ func Error(message string) {
 	if logger.logLevel <= logLevelError {
 		logMessage("ERROR", "\033[31;1m", message)
 	}
-}
-
-func Fatal(message string) {
-	if logger.logLevel <= logLevelError {
-		logMessage("FATAL ERROR", "\033[31;1m", message)
-	}
-	os.Exit(1)
 }

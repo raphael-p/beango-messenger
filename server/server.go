@@ -11,16 +11,19 @@ import (
 	"github.com/raphael-p/beango/utils/logger"
 )
 
-func startupFailer(message string) {
-	logger.Fatal(fmt.Sprint("startup failed: ", message))
-}
+func setup() (router *router, ok bool) {
+	ok = true
+	defer func() {
+		if r := recover(); r != nil {
+			ok = false
+			logger.Error(fmt.Sprint("setup failed: ", r))
+		}
+	}()
 
-func Start() {
-	config.CreateConfig(startupFailer)
-	logger.Init(startupFailer)
-	defer logger.Close()
+	config.CreateConfig()
+	logger.Init()
 
-	router := newRouter()
+	router = newRouter()
 	router.POST("/session", resolvers.CreateSession).noAuth()
 	router.POST("/user", resolvers.CreateUser).noAuth()
 	router.GET("/user/:username", resolvers.GetUserByName)
@@ -28,13 +31,25 @@ func Start() {
 	router.POST("/chat", resolvers.CreateChat)
 	router.GET("/messages/:chatID", resolvers.GetChatMessages)
 	router.POST("/message/:chatID", resolvers.SendMessage)
+	return router, ok
+}
+
+func Start() {
+	defer logger.Close()
+	defer os.Exit(1)
+	router, ok := setup()
+	fmt.Println("ok: ", ok)
+	if !ok {
+		return
+	}
+
 	l, err := net.Listen("tcp", fmt.Sprint(":", config.Values.Server.Port))
 	if err != nil {
 		logger.Error(fmt.Sprint("failed to start server: ", err))
+		return
 	}
 	logger.Info(fmt.Sprintf("🐱‍💻 BeanGo server started on %s", l.Addr().String()))
 	if err := http.Serve(l, router); err != nil {
-		logger.Error(fmt.Sprintf("server closed: %s", err))
+		logger.Error(fmt.Sprint("server closed: ", err))
 	}
-	os.Exit(1)
 }
