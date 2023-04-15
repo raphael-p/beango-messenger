@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/utils/response"
+	"github.com/raphael-p/beango/utils/validate"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,9 +21,9 @@ func stripFields(user *database.User) *UserOutput {
 }
 
 type CreateUserInput struct {
-	Username    string `json:"username"`
-	DisplayName string `json:"displayName" optional:"true"`
-	Password    string `json:"password"`
+	Username    string                     `json:"username"`
+	DisplayName validate.JSONField[string] `json:"displayName" optional:"true"`
+	Password    string                     `json:"password"`
 }
 
 func CreateUser(w *response.Writer, r *http.Request) {
@@ -45,7 +46,7 @@ func CreateUser(w *response.Writer, r *http.Request) {
 	newUser := &database.User{
 		ID:          uuid.New().String(),
 		Username:    input.Username,
-		DisplayName: input.DisplayName,
+		DisplayName: input.DisplayName.Value,
 		Key:         hash,
 	}
 	if newUser.DisplayName == "" {

@@ -57,7 +57,7 @@ func openLogFile(directory, name string) (*os.File, error) {
 }
 
 func Init() {
-	logger.logLevel = logLevel(config.Values.Logger.DefaultLevel)
+	logger.logLevel = logLevel(config.Values.Logger.DefaultLevel.Value)
 	logFile, err := openLogFile(config.Values.Logger.Directory, config.Values.Logger.Filename)
 	if err != nil {
 		panic(err.Error())

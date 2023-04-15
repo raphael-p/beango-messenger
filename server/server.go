@@ -38,7 +38,6 @@ func Start() {
 	defer logger.Close()
 	defer os.Exit(1)
 	router, ok := setup()
-	fmt.Println("ok: ", ok)
 	if !ok {
 		return
 	}
