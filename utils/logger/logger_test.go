@@ -9,12 +9,23 @@ import (
 	"github.com/raphael-p/beango/test/assert"
 )
 
-// TODO: test each log level method
-// TODO: test that messages dont get logged if log level is higher
-
 func makeMessage(level, colour, message string) string {
 	reset := "\033[0m"
 	return fmt.Sprintf("%s %s[%s]%s %s\n", now(), colour, level, reset, message)
+}
+
+func getLogBuffer(t *testing.T) *bytes.Buffer {
+	oldStdOutLogger := *logger.stdOutLogger
+	t.Cleanup(func() { logger.stdOutLogger = &oldStdOutLogger })
+	var buf bytes.Buffer
+	logger.stdOutLogger = newLogger(&buf)
+	return &buf
+}
+
+func checkLog(t *testing.T, buf *bytes.Buffer, level, colour, message string) {
+	log := buf.String()
+	xLog := makeMessage(level, colour, message)
+	assert.Equals(t, log, xLog)
 }
 
 func TestMain(m *testing.M) {
@@ -27,16 +38,36 @@ func TestMain(m *testing.M) {
 }
 
 func TestLogMessage(t *testing.T) {
-	oldStdOutLogger := *logger.stdOutLogger
-	t.Cleanup(func() { logger.stdOutLogger = &oldStdOutLogger })
-	var buf bytes.Buffer
-	logger.stdOutLogger = newLogger(&buf)
+	buf := getLogBuffer(t)
 	level := "TEST"
 	message := "a test log"
 	purple := "\033[0;35m"
-
 	logMessage(level, purple, message)
-	log := buf.String()
-	xLog := makeMessage(level, purple, message)
-	assert.Equals(t, log, xLog)
+	checkLog(t, buf, level, purple, message)
 }
+
+func logTest(t *testing.T, level, colour string, fn func(string)) {
+	buf := getLogBuffer(t)
+	message := "a test log"
+	fn(message)
+	checkLog(t, buf, level, colour, message)
+}
+func TestTrace(t *testing.T)   { logTest(t, "TRACE", "", Trace) }
+func TestDebug(t *testing.T)   { logTest(t, "DEBUG", "\033[34m", Debug) }
+func TestInfo(t *testing.T)    { logTest(t, "INFO", "\033[36m", Info) }
+func TestWarning(t *testing.T) { logTest(t, "WARNING", "\033[33;1m", Warning) }
+func TestError(t *testing.T)   { logTest(t, "ERROR", "\033[31;1m", Error) }
+
+func logTestBelowLevel(t *testing.T, level logLevel, fn func(string)) {
+	oldLogLevel := logger.logLevel
+	t.Cleanup(func() { logger.logLevel = oldLogLevel })
+	logger.logLevel = level + 1
+	buf := getLogBuffer(t)
+	fn("a test log")
+	assert.Equals(t, buf.String(), "")
+}
+func TestTraceButLogLevelIsHigher(t *testing.T)   { logTestBelowLevel(t, logLevelTrace, Trace) }
+func TestDebugButLogLevelIsHigher(t *testing.T)   { logTestBelowLevel(t, logLevelDebug, Debug) }
+func TestInfoButLogLevelIsHigher(t *testing.T)    { logTestBelowLevel(t, logLevelInfo, Info) }
+func TestWarningButLogLevelIsHigher(t *testing.T) { logTestBelowLevel(t, logLevelWarning, Warning) }
+func TestErrorButLogLevelIsHigher(t *testing.T)   { logTestBelowLevel(t, logLevelError, Error) }
