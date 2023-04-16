@@ -9,15 +9,15 @@ type config struct {
 }
 
 type serverConfig struct {
-	Port int `json:"port"`
+	Port uint16 `json:"port"`
 }
 
 type loggerConfig struct {
-	Directory    string                  `json:"directory"`
-	Filename     string                  `json:"filename"`
-	DefaultLevel validate.JSONField[int] `json:"defaulLevel" zeroable:"true"`
+	Directory    string                    `json:"directory"`
+	Filename     string                    `json:"filename"`
+	DefaultLevel validate.JSONField[uint8] `json:"defaulLevel" zeroable:"true"`
 }
 
 type sessionConfig struct {
-	SecondsUntilExpiry int `json:"secondsUntilExpiry"`
+	SecondsUntilExpiry uint16 `json:"secondsUntilExpiry"`
 }

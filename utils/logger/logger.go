@@ -17,7 +17,7 @@ type MyLogger struct {
 	logLevel     logLevel
 }
 
-type logLevel int
+type logLevel uint8
 
 const (
 	logLevelTrace logLevel = iota
