@@ -33,12 +33,15 @@ func (w *Writer) WriteString(code int, response string) {
 }
 
 func (w *Writer) WriteJSON(code int, responseObject any) {
-	w.WriteHeader(code)
 	response, err := json.Marshal(responseObject)
 	if err != nil {
-		w.WriteString(http.StatusBadRequest, err.Error())
+		errCode := http.StatusBadRequest
+		w.WriteHeader(errCode)
+		w.WriteString(errCode, err.Error())
+		return
 	}
 	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(code)
 	w.writeBody(response)
 }
 
