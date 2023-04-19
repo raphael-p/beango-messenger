@@ -66,8 +66,8 @@ func logTestBelowLevel(t *testing.T, level logLevel, fn func(string)) {
 	fn("a test log")
 	assert.Equals(t, buf.String(), "")
 }
-func TestTraceButLogLevelIsHigher(t *testing.T)   { logTestBelowLevel(t, logLevelTrace, Trace) }
-func TestDebugButLogLevelIsHigher(t *testing.T)   { logTestBelowLevel(t, logLevelDebug, Debug) }
-func TestInfoButLogLevelIsHigher(t *testing.T)    { logTestBelowLevel(t, logLevelInfo, Info) }
-func TestWarningButLogLevelIsHigher(t *testing.T) { logTestBelowLevel(t, logLevelWarning, Warning) }
-func TestErrorButLogLevelIsHigher(t *testing.T)   { logTestBelowLevel(t, logLevelError, Error) }
+func TestTrace_LogLevelIsHigher(t *testing.T)   { logTestBelowLevel(t, logLevelTrace, Trace) }
+func TestDebug_LogLevelIsHigher(t *testing.T)   { logTestBelowLevel(t, logLevelDebug, Debug) }
+func TestInfo_LogLevelIsHigher(t *testing.T)    { logTestBelowLevel(t, logLevelInfo, Info) }
+func TestWarning_LogLevelIsHigher(t *testing.T) { logTestBelowLevel(t, logLevelWarning, Warning) }
+func TestError_LogLevelIsHigher(t *testing.T)   { logTestBelowLevel(t, logLevelError, Error) }

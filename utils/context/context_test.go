@@ -12,7 +12,7 @@ import (
 	"github.com/raphael-p/beango/test/mocks"
 )
 
-func TestGetUser(t *testing.T) {
+func TestGetUser_Single(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	xUser := mocks.MakeUser()
 	req = req.WithContext(context.WithValue(req.Context(), userKey{}, xUser))
@@ -22,7 +22,7 @@ func TestGetUser(t *testing.T) {
 	assert.DeepEquals(t, user, xUser)
 }
 
-func TestGetMultipleUsers(t *testing.T) {
+func TestGetUser_Multiple(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	xUser := mocks.MakeUser()
 	req = req.WithContext(context.WithValue(req.Context(), userKey{}, mocks.MakeUser()))
@@ -33,14 +33,14 @@ func TestGetMultipleUsers(t *testing.T) {
 	assert.DeepEquals(t, user, xUser)
 }
 
-func TestGetUserButNotThere(t *testing.T) {
+func TestGetUser_Missing(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 
 	_, err := GetUser(req)
 	assert.ErrorHasMessage(t, err, "user not found in request context")
 }
 
-func TestGetUserButCastFails(t *testing.T) {
+func TestGetUser_CastFails(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	xUser := struct{ ID string }{"a-unique-id"}
 	req = req.WithContext(context.WithValue(req.Context(), userKey{}, xUser))
@@ -49,7 +49,7 @@ func TestGetUserButCastFails(t *testing.T) {
 	assert.ErrorHasMessage(t, err, "user in request context not of type User")
 }
 
-func TestSetUser(t *testing.T) {
+func TestSetUser_Single(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	xUser := mocks.MakeUser()
 
@@ -59,7 +59,7 @@ func TestSetUser(t *testing.T) {
 	assert.DeepEquals(t, user, xUser)
 }
 
-func TestSetMultipleUsers(t *testing.T) {
+func TestSetUser_Multiple(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	xUser := mocks.MakeUser()
 
@@ -71,7 +71,7 @@ func TestSetMultipleUsers(t *testing.T) {
 	assert.DeepEquals(t, user, xUser)
 }
 
-func TestGetParams(t *testing.T) {
+func TestGetParam_Multiple(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	key1 := "testkey1"
 	key2 := "testkey2"
@@ -88,7 +88,7 @@ func TestGetParams(t *testing.T) {
 	assert.Equals(t, value2, xValue2)
 }
 
-func TestGetSameParams(t *testing.T) {
+func TestGetParam_SameKey(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	key := "testkey"
 	xValue := "testvalue2"
@@ -103,7 +103,7 @@ func TestGetSameParams(t *testing.T) {
 	assert.Equals(t, value2, xValue)
 }
 
-func TestGetParamCalledUser(t *testing.T) {
+func TestGetParam_User(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	key := "user"
 	xValue := "testvalue"
@@ -115,7 +115,7 @@ func TestGetParamCalledUser(t *testing.T) {
 	assert.Equals(t, value, xValue)
 }
 
-func TestGetParamButNotThere(t *testing.T) {
+func TestGetParam_Missing(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	key := "testkey"
 	req = req.WithContext(context.WithValue(req.Context(), paramKey("differekey"), "testvalue"))
@@ -124,7 +124,7 @@ func TestGetParamButNotThere(t *testing.T) {
 	assert.ErrorHasMessage(t, err, fmt.Sprintf("path parameter %s not found", key))
 }
 
-func TestGetParamButCastFails(t *testing.T) {
+func TestGetParam_CastFails(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	key := "testkey"
 	value := struct{}{}
@@ -134,7 +134,7 @@ func TestGetParamButCastFails(t *testing.T) {
 	assert.ErrorHasMessage(t, err, fmt.Sprintf("path parameter %s not of type string", key))
 }
 
-func TestSetParam(t *testing.T) {
+func TestSetParam_Multiple(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	key1 := "foo"
 	key2 := "secondkey"
@@ -151,7 +151,7 @@ func TestSetParam(t *testing.T) {
 	assert.Equals(t, value2, xValue2)
 }
 
-func TestSetSameParams(t *testing.T) {
+func TestSetSameParam_SameKey(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	key := "samekey"
 	xValue := "test-value-1"

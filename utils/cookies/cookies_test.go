@@ -34,7 +34,7 @@ func makeCookie(name, value string, expiry time.Time) string {
 	)
 }
 
-func TestGet(t *testing.T) {
+func TestGet_Single(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	name := "my-session"
 	xSessionID := "session-id"
@@ -46,7 +46,7 @@ func TestGet(t *testing.T) {
 	assert.Equals(t, sessionID, xSessionID)
 }
 
-func TestGetDifferentNames(t *testing.T) {
+func TestGet_DifferentNames(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	name1 := "name-1"
 	name2 := "name-2"
@@ -65,7 +65,7 @@ func TestGetDifferentNames(t *testing.T) {
 	assert.Equals(t, value2, xValue2)
 }
 
-func TestGetSameNames(t *testing.T) {
+func TestGet_SameName(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	name := "name"
 	cookie1 := &http.Cookie{Name: name, Value: "value-1"}
@@ -80,7 +80,7 @@ func TestGetSameNames(t *testing.T) {
 	assert.ErrorHasMessage(t, err2, xErrorMessage)
 }
 
-func TestGetButNotFound(t *testing.T) {
+func TestGet_Missing(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	cookie := &http.Cookie{
 		Name:    "test-cookie",
@@ -94,7 +94,7 @@ func TestGetButNotFound(t *testing.T) {
 	assert.ErrorHasMessage(t, err, fmt.Sprint("no cookie found with the name ", SESSION))
 }
 
-func TestSet(t *testing.T) {
+func TestSet_Single(t *testing.T) {
 	w := mocks.MakeResponseWriter()
 	name := "test-name"
 	value := "test-value"
@@ -107,7 +107,7 @@ func TestSet(t *testing.T) {
 	assert.DeepEquals(t, cookies, xCookies)
 }
 
-func TestSetEmptyName(t *testing.T) {
+func TestSet_EmptyName(t *testing.T) {
 	w := mocks.MakeResponseWriter()
 	name := ""
 	value := "test-value"
@@ -117,7 +117,7 @@ func TestSetEmptyName(t *testing.T) {
 	assert.ErrorHasMessage(t, err, "a cookie cannot have an empty name")
 }
 
-func TestSetDifferentNames(t *testing.T) {
+func TestSet_DifferentNames(t *testing.T) {
 	w := mocks.MakeResponseWriter()
 	name1 := "test-name-1"
 	value1 := "test-value-1"
@@ -137,7 +137,7 @@ func TestSetDifferentNames(t *testing.T) {
 	assert.DeepEquals(t, cookies, xCookies)
 }
 
-func TestSetSameNames(t *testing.T) {
+func TestSet_SameName(t *testing.T) {
 	w := mocks.MakeResponseWriter()
 	name := "test-name"
 	value := "test-value"

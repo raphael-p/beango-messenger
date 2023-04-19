@@ -45,7 +45,7 @@ func TestWriteJSON(t *testing.T) {
 	assert.Equals(t, recorder.Body.String(), "{\"message\":\"Hello, world!\"}")
 }
 
-func TestWriteJSONButMarshalErrors(t *testing.T) {
+func TestWriteJSON_MarshalErrors(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	writer := NewWriter(recorder)
 
