@@ -46,28 +46,51 @@ func TestLogMessage(t *testing.T) {
 	checkLog(t, buf, level, purple, message)
 }
 
-func logTest(t *testing.T, level, colour string, fn func(string)) {
-	buf := getLogBuffer(t)
-	message := "a test log"
-	fn(message)
-	checkLog(t, buf, level, colour, message)
-}
-func TestTrace(t *testing.T)   { logTest(t, "TRACE", "", Trace) }
-func TestDebug(t *testing.T)   { logTest(t, "DEBUG", "\033[34m", Debug) }
-func TestInfo(t *testing.T)    { logTest(t, "INFO", "\033[36m", Info) }
-func TestWarning(t *testing.T) { logTest(t, "WARNING", "\033[33;1m", Warning) }
-func TestError(t *testing.T)   { logTest(t, "ERROR", "\033[31;1m", Error) }
+func TestLogFunctions_Valid(t *testing.T) {
+	testCases := []struct {
+		name, level, colour string
+		logFunction         func(string)
+	}{
+		{"Trace", "TRACE", "", Trace},
+		{"Debug", "DEBUG", "\033[34m", Debug},
+		{"Info", "INFO", "\033[36m", Info},
+		{"Warning", "WARNING", "\033[33;1m", Warning},
+		{"Error", "ERROR", "\033[31;1m", Error},
+	}
 
-func logTestBelowLevel(t *testing.T, level logLevel, fn func(string)) {
-	oldLogLevel := logger.logLevel
-	t.Cleanup(func() { logger.logLevel = oldLogLevel })
-	logger.logLevel = level + 1
-	buf := getLogBuffer(t)
-	fn("a test log")
-	assert.Equals(t, buf.String(), "")
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			buf := getLogBuffer(t)
+			message := "a test log"
+			testCase.logFunction(message)
+			checkLog(t, buf, testCase.level, testCase.colour, message)
+		})
+	}
+
 }
-func TestTrace_LogLevelIsHigher(t *testing.T)   { logTestBelowLevel(t, logLevelTrace, Trace) }
-func TestDebug_LogLevelIsHigher(t *testing.T)   { logTestBelowLevel(t, logLevelDebug, Debug) }
-func TestInfo_LogLevelIsHigher(t *testing.T)    { logTestBelowLevel(t, logLevelInfo, Info) }
-func TestWarning_LogLevelIsHigher(t *testing.T) { logTestBelowLevel(t, logLevelWarning, Warning) }
-func TestError_LogLevelIsHigher(t *testing.T)   { logTestBelowLevel(t, logLevelError, Error) }
+
+func TestLogFunctions_LogLevelTooHigh(t *testing.T) {
+	testCases := []struct {
+		name        string
+		logLevel    logLevel
+		logFunction func(string)
+	}{
+		{"Trace", logLevelTrace, Trace},
+		{"Debug", logLevelDebug, Debug},
+		{"Info", logLevelInfo, Info},
+		{"Warning", logLevelWarning, Warning},
+		{"Error", logLevelError, Error},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			oldLogLevel := logger.logLevel
+			t.Cleanup(func() { logger.logLevel = oldLogLevel })
+			logger.logLevel = testCase.logLevel + 1
+			buf := getLogBuffer(t)
+			testCase.logFunction("a test log")
+			assert.Equals(t, buf.String(), "")
+		})
+	}
+
+}
