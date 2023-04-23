@@ -9,10 +9,12 @@ import (
 // Finds any fields from the struct's type that are not in the struct itself.
 // `ptr` must point to a `struct`.
 // Accepted tags:
-// - `json:"nameInJson"` -> maps JSON to struct fields when deserialising JSON
-// - `optional:"true"` -> for JSONField only, allows field to not be set
-// - `nullable:"true"` -> for JSONField only, allows field to be set to null
-// - `zeroable:"true"` -> for JSONField only, allows field to be set to zero-value
+//
+//	`json:"nameInJson"` -> maps JSON to struct fields when deserialising JSON
+//	`optional:"true"` -> for JSONField only, allows field to not be set
+//	`nullable:"true"` -> for JSONField only, allows field to be set to null
+//	`zeroable:"true"` -> for JSONField only, allows field to be set to zero-value
+//
 // Used to validate the deserialisation of a JSON document.
 func PointerToStructFromJSON(ptr any) []string {
 	reflectValue := reflect.ValueOf(ptr).Elem()
@@ -76,6 +78,13 @@ func traverseStructFields(
 	return missingFields
 }
 
+// Type wrapper used to validate the struct which a JSON document is
+// unmarshaled to. Accepted tags:
+//
+//	`json:"nameInJson"` -> maps JSON to struct fields when deserialising JSON
+//	`optional:"true"` -> allows field to not be set
+//	`nullable:"true"` -> allows field to be set to null
+//	`zeroable:"true"` -> allows field to be set to zero-value
 type JSONField[T any] struct {
 	Value T
 	Null  bool
@@ -100,8 +109,7 @@ func (i *JSONField[any]) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Validates that the input is a pointer to a struct
-// where all fields are strings.
+// Validates that the input is a pointer to a struct where all fields are strings.
 func PointerToStringStruct(ptr any) bool {
 	reflectValue := reflect.ValueOf(ptr)
 	if reflectValue.Kind() != reflect.Ptr || reflectValue.Elem().Kind() != reflect.Struct {
