@@ -37,17 +37,28 @@ func traverseStructFields(
 		}
 
 		if isJSONField.MatchString(field.Type.Name()) {
-			value := reflectValue.FieldByName(field.Name)
+			jsonField := reflectValue.FieldByName(field.Name)
 			isOptional := tags.Get("optional") == "true"
 			isNullable := tags.Get("nullable") == "true"
 			isZeroable := isOptional || isNullable || tags.Get("zeroable") == "true"
-			isSet := value.FieldByName("Set").Bool()
-			isNull := value.FieldByName("Null").Bool()
-			isZero := value.FieldByName("Value").IsZero()
+			isSet := jsonField.FieldByName("Set").Bool()
+			isNull := jsonField.FieldByName("Null").Bool()
+			value := jsonField.FieldByName("Value")
+			_type := value.Type()
+			isZero := value.IsZero()
+			isStruct := _type.Kind() == reflect.Struct
 			if (!isSet && !isOptional) ||
 				(isNull && !isNullable) ||
-				(isZero && !isZeroable) {
+				(isZero && !isZeroable && !isStruct) {
 				missingFields = append(missingFields, jsonPath+jsonName)
+			}
+			if isStruct {
+				missingFields = traverseStructFields(
+					value,
+					_type,
+					jsonPath+jsonName+".",
+					missingFields,
+				)
 			}
 		} else if field.Type.Kind() == reflect.Struct {
 			missingFields = traverseStructFields(
@@ -71,6 +82,7 @@ type JSONField[T any] struct {
 	Set   bool
 }
 
+// this is called implicitly when unmarshalling into a struct containing JSONField
 func (i *JSONField[any]) UnmarshalJSON(data []byte) error {
 	i.Set = true
 
