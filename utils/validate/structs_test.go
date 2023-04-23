@@ -1,6 +1,7 @@
 package validate
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/raphael-p/beango/test/assert"
@@ -46,8 +47,28 @@ func TestPointerToStructFromJSON(t *testing.T) {
 		JSONField[[]int]{[]int{-100, 30, 255}, false, true},
 	}
 
-	t.Run("Normal", func(t *testing.T) {
-		missingFields := PointerToStructFromJSON(&validStruct)
+	t.Run("NormalWithPointer", func(t *testing.T) {
+		missingFields, err := StructFromJSON(&validStruct)
+		assert.IsNil(t, err)
+		assert.HasLength(t, missingFields, 0)
+	})
+
+	t.Run("NormalWithStruct", func(t *testing.T) {
+		missingFields, err := StructFromJSON(validStruct)
+		assert.IsNil(t, err)
+		assert.HasLength(t, missingFields, 0)
+	})
+
+	t.Run("NonStruct", func(t *testing.T) {
+		testMap := map[string]string{"key1": "val1", "key2": "val2"}
+		errString := "expected `value` to be a struct or its pointer, got %T"
+
+		missingFields, err := StructFromJSON(testMap)
+		assert.ErrorHasMessage(t, err, fmt.Sprintf(errString, testMap))
+		assert.HasLength(t, missingFields, 0)
+
+		missingFields, err = StructFromJSON(&testMap)
+		assert.ErrorHasMessage(t, err, fmt.Sprintf(errString, &testMap))
 		assert.HasLength(t, missingFields, 0)
 	})
 
@@ -56,7 +77,8 @@ func TestPointerToStructFromJSON(t *testing.T) {
 		input.RegularWithJSON = ""
 		input.RegularPlain = ""
 
-		missingFields := PointerToStructFromJSON(&input)
+		missingFields, err := StructFromJSON(&input)
+		assert.IsNil(t, err)
 		xMissingFields := []string{"nameOnJSONTag", "RegularPlain"}
 		assert.DeepEquals(t, missingFields, xMissingFields)
 	})
@@ -66,7 +88,8 @@ func TestPointerToStructFromJSON(t *testing.T) {
 		input.RegularZeroable = false
 
 		// zeroable has no effect on regular fields
-		missingFields := PointerToStructFromJSON(&input)
+		missingFields, err := StructFromJSON(&input)
+		assert.IsNil(t, err)
 		assert.DeepEquals(t, missingFields, []string{"RegularZeroable"})
 	})
 
@@ -75,7 +98,8 @@ func TestPointerToStructFromJSON(t *testing.T) {
 		input.Nested.Regular.Leaf1 = ""
 		input.Nested.Plain.Value.Leaf1 = ""
 
-		missingFields := PointerToStructFromJSON(&input)
+		missingFields, err := StructFromJSON(&input)
+		assert.IsNil(t, err)
 		xMissingFields := []string{"Nested.Regular.Leaf1", "Nested.Plain.Leaf1"}
 		assert.DeepEquals(t, missingFields, xMissingFields)
 	})
@@ -85,7 +109,8 @@ func TestPointerToStructFromJSON(t *testing.T) {
 		input.Nested.Regular = Nest2{}
 		input.Nested.Plain.Value = Nest2{}
 
-		missingFields := PointerToStructFromJSON(&input)
+		missingFields, err := StructFromJSON(&input)
+		assert.IsNil(t, err)
 		xMissingFields := []string{
 			"Nested.Regular.Leaf1",
 			"Nested.Regular.Leaf2",
@@ -132,7 +157,8 @@ func TestPointerToStructFromJSON(t *testing.T) {
 				input.Plain.Value = nil
 			}
 
-			missingFields := PointerToStructFromJSON(&input)
+			missingFields, err := StructFromJSON(&input)
+			assert.IsNil(t, err)
 			assert.DeepEquals(t, missingFields, testCase.xMissingFields)
 		}
 	})
