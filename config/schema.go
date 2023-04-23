@@ -19,5 +19,5 @@ type loggerConfig struct {
 }
 
 type sessionConfig struct {
-	SecondsUntilExpiry uint16 `json:"secondsUntilExpiry"`
+	SecondsUntilExpiry uint32 `json:"secondsUntilExpiry"`
 }
