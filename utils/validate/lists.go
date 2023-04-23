@@ -1,8 +1,8 @@
 package validate
 
-func UniqueList[K comparable](s []K) bool {
+func UniqueList[K comparable](list []K) bool {
 	seen := make(map[K]bool)
-	for _, str := range s {
+	for _, str := range list {
 		if _, ok := seen[str]; ok {
 			return false
 		}

@@ -99,10 +99,10 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 			values := matches[1:]
 			if len(values) != len(route.paramKeys) {
-				message := "unexpected number of path parameters in request"
-				logger.Error(fmt.Sprint(message, " (", req.URL.Path, ")"))
+				errorResponse := "unexpected number of path parameters in request"
+				logger.Error(fmt.Sprint(errorResponse, " (", req.URL.Path, ")"))
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(message))
+				w.Write([]byte(errorResponse))
 				return
 			}
 			for idx, key := range route.paramKeys {

@@ -31,8 +31,8 @@ func CreateChat(w *response.Writer, r *http.Request) {
 	// Check that user id exists
 	_, err := database.GetUser(input.UserID)
 	if err != nil {
-		message := fmt.Sprintf("userID %s is invalid", input.UserID)
-		w.WriteString(http.StatusBadRequest, message)
+		errorResponse := fmt.Sprintf("userID %s is invalid", input.UserID)
+		w.WriteString(http.StatusBadRequest, errorResponse)
 		return
 	}
 
