@@ -35,8 +35,8 @@ func setup() (router *router, ok bool) {
 }
 
 func Start() {
-	defer logger.Close()
 	defer os.Exit(1)
+	defer logger.Close()
 	router, ok := setup()
 	if !ok {
 		return
