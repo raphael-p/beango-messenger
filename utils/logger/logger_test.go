@@ -3,18 +3,14 @@ package logger
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"os"
 	"testing"
 
 	"github.com/raphael-p/beango/test/assert"
 )
 
-func makeMessage(level, colour, message string) string {
-	reset := "\033[0m"
-	return fmt.Sprintf("%s %s[%s]%s %s\n", now(), colour, level, reset, message)
-}
-
-func getLogBuffer(t *testing.T) *bytes.Buffer {
+func mockConsoleLogger(t *testing.T) *bytes.Buffer {
 	oldStdOutLogger := *logger.stdOutLogger
 	t.Cleanup(func() { logger.stdOutLogger = &oldStdOutLogger })
 	var buf bytes.Buffer
@@ -22,9 +18,27 @@ func getLogBuffer(t *testing.T) *bytes.Buffer {
 	return &buf
 }
 
-func checkLog(t *testing.T, buf *bytes.Buffer, level, colour, message string) {
+func mockFileLogger(t *testing.T) *bytes.Buffer {
+	var oldFileLogger *log.Logger
+	if logger.fileLogger != nil {
+		loggerCopy := *logger.fileLogger
+		oldFileLogger = &loggerCopy
+	}
+	t.Cleanup(func() { logger.fileLogger = oldFileLogger })
+	var buf bytes.Buffer
+	logger.fileLogger = newLogger(&buf)
+	return &buf
+}
+
+func checkLog(t *testing.T, buf *bytes.Buffer, level, colour, message string, isConsole bool) {
 	log := buf.String()
-	xLog := makeMessage(level, colour, message)
+	var xLog string
+	if isConsole {
+		reset := "\033[0m"
+		xLog = fmt.Sprintf("%s %s[%s]%s %s\n", now(), colour, level, reset, message)
+	} else {
+		xLog = fmt.Sprintf("%s [%s] %s\n", now(), level, message)
+	}
 	assert.Equals(t, log, xLog)
 }
 
@@ -39,12 +53,14 @@ func TestMain(m *testing.M) {
 
 func TestLogMessage(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
-		buf := getLogBuffer(t)
+		consoleBuffer := mockConsoleLogger(t)
+		fileBuffer := mockFileLogger(t)
 		level := "TEST"
 		message := "a test log"
 		purple := "\033[0;35m"
 		logMessage(level, purple, message)
-		checkLog(t, buf, level, purple, message)
+		checkLog(t, consoleBuffer, level, purple, message, true)
+		checkLog(t, fileBuffer, level, "", message, false)
 	})
 }
 
@@ -63,10 +79,10 @@ func TestLogFunctions(t *testing.T) {
 
 		for _, testCase := range testCases {
 			t.Run(testCase.name, func(t *testing.T) {
-				buf := getLogBuffer(t)
+				buf := mockConsoleLogger(t)
 				message := "a test log"
 				testCase.logFunction(message)
-				checkLog(t, buf, testCase.level, testCase.colour, message)
+				checkLog(t, buf, testCase.level, testCase.colour, message, true)
 			})
 		}
 	})
@@ -89,7 +105,7 @@ func TestLogFunctions(t *testing.T) {
 				oldLogLevel := logger.logLevel
 				t.Cleanup(func() { logger.logLevel = oldLogLevel })
 				logger.logLevel = testCase.logLevel + 1
-				buf := getLogBuffer(t)
+				buf := mockConsoleLogger(t)
 				testCase.logFunction("a test log")
 				assert.Equals(t, buf.String(), "")
 			})
