@@ -70,8 +70,11 @@ func Close() {
 		return
 	}
 	if file, ok := logger.fileLogger.Writer().(*os.File); ok {
-		Trace("closing file logger")
-		file.Close()
+		Trace("closing log file")
+		err := file.Close()
+		if err != nil {
+			Error(fmt.Sprint("failed to close log file: ", err))
+		}
 	}
 }
 
