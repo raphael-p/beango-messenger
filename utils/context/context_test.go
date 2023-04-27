@@ -41,13 +41,24 @@ func TestGetUser(t *testing.T) {
 		assert.ErrorHasMessage(t, err, "user not found in request context")
 	})
 
+	t.Run("NilPointer", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		var nilPointer *database.User
+		req = req.WithContext(context.WithValue(req.Context(), userKey{}, nilPointer))
+
+		user, err := GetUser(req)
+		assert.ErrorHasMessage(t, err, "user in request context is nil")
+		assert.IsNil(t, user)
+	})
+
 	t.Run("CastFails", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
 		xUser := struct{ ID string }{"a-unique-id"}
 		req = req.WithContext(context.WithValue(req.Context(), userKey{}, xUser))
 
-		_, err := GetUser(req)
+		user, err := GetUser(req)
 		assert.ErrorHasMessage(t, err, "user in request context not of type User")
+		assert.IsNil(t, user)
 	})
 }
 
@@ -72,6 +83,16 @@ func TestSetUser(t *testing.T) {
 		assert.ErrorHasMessage(t, err, "user already in request context")
 		user := req.Context().Value(userKey{}).(*database.User)
 		assert.DeepEquals(t, user, xUser)
+	})
+
+	t.Run("NilPointer", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		var xUser *database.User
+
+		req, err := SetUser(req, xUser)
+		assert.ErrorHasMessage(t, err, "cannot set nil user to request context")
+		user := req.Context().Value(userKey{})
+		assert.IsNil(t, user)
 	})
 }
 
@@ -108,7 +129,7 @@ func TestGetParam(t *testing.T) {
 		assert.Equals(t, value2, xValue)
 	})
 
-	t.Run("User", func(t *testing.T) {
+	t.Run("DoesNotClashWithUser", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
 		key := "user"
 		xValue := "testvalue"
@@ -125,18 +146,19 @@ func TestGetParam(t *testing.T) {
 		key := "testkey"
 		req = req.WithContext(context.WithValue(req.Context(), paramKey("differekey"), "testvalue"))
 
-		_, err := GetParam(req, key)
+		value, err := GetParam(req, key)
 		assert.ErrorHasMessage(t, err, fmt.Sprintf("path parameter %s not found", key))
+		assert.Equals(t, value, "")
 	})
 
 	t.Run("CastFails", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
 		key := "testkey"
-		value := struct{}{}
-		req = req.WithContext(context.WithValue(req.Context(), paramKey(key), value))
+		req = req.WithContext(context.WithValue(req.Context(), paramKey(key), struct{}{}))
 
-		_, err := GetParam(req, key)
+		value, err := GetParam(req, key)
 		assert.ErrorHasMessage(t, err, fmt.Sprintf("path parameter %s not of type string", key))
+		assert.Equals(t, value, "")
 	})
 }
 
