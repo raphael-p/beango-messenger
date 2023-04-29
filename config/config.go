@@ -13,12 +13,12 @@ import (
 var Values *config
 
 func CreateConfig() {
-	filePath := os.Getenv("BG_CONFIG_FILEPATH")
+	filePath := os.Getenv(envars.configFilepath)
 	if filePath == "" {
-		fmt.Println("No config filepath specified in BG_CONFIG_FILEPATH, using default")
+		fmt.Printf("$%s not set, using default config\n", envars.configFilepath)
 		_, dirname, _, ok := runtime.Caller(0)
 		if !ok {
-			panic("Could get absolute path for config directory")
+			panic("could get absolute path for config directory")
 		}
 		filePath = filepath.Join(filepath.Dir(dirname), "default.json")
 	}

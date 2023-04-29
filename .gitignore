@@ -1,1 +1,7 @@
 logs/
+
+config/*
+!config/config.go
+!config/default.json
+!config/envars.go
+!config/schema.go

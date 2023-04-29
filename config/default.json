@@ -5,7 +5,7 @@
     "logger": {
         "directory": "logs",
         "filename": "server.log",
-        "defaulLevel": 2
+        "defaulLevel": 0
     },
     "session": {
         "secondsUntilExpiry": 86400
