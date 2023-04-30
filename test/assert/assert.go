@@ -2,6 +2,7 @@ package assert
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -26,6 +27,14 @@ func IsNotNil(t *testing.T, value any) {
 func Equals[T comparable](t *testing.T, value T, expectedValue T) {
 	if value != expectedValue {
 		t.Errorf("expected \"%v\", got \"%v\"", expectedValue, value)
+	}
+}
+
+func Contains(t *testing.T, value string, expectedValues ...string) {
+	for _, expectedValue := range expectedValues {
+		if !strings.Contains(value, expectedValue) {
+			t.Errorf("expected to find \"%v\" in \"%v\"", expectedValue, value)
+		}
 	}
 }
 
