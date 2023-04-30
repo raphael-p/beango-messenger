@@ -3,32 +3,11 @@ package logger
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"os"
 	"testing"
 
 	"github.com/raphael-p/beango/test/assert"
 )
-
-func mockConsoleLogger(t *testing.T) *bytes.Buffer {
-	oldStdOutLogger := *logger.stdOutLogger
-	t.Cleanup(func() { logger.stdOutLogger = &oldStdOutLogger })
-	var buf bytes.Buffer
-	logger.stdOutLogger = newLogger(&buf)
-	return &buf
-}
-
-func mockFileLogger(t *testing.T) *bytes.Buffer {
-	var oldFileLogger *log.Logger
-	if logger.fileLogger != nil {
-		loggerCopy := *logger.fileLogger
-		oldFileLogger = &loggerCopy
-	}
-	t.Cleanup(func() { logger.fileLogger = oldFileLogger })
-	var buf bytes.Buffer
-	logger.fileLogger = newLogger(&buf)
-	return &buf
-}
 
 func checkLog(t *testing.T, buf *bytes.Buffer, level, colour, message string, isConsole bool) {
 	log := buf.String()
@@ -53,8 +32,8 @@ func TestMain(m *testing.M) {
 
 func TestLogMessage(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
-		consoleBuffer := mockConsoleLogger(t)
-		fileBuffer := mockFileLogger(t)
+		consoleBuffer := MockConsoleLogger(t)
+		fileBuffer := MockFileLogger(t)
 		level := "TEST"
 		message := "a test log"
 		purple := "\033[0;35m"
@@ -62,53 +41,42 @@ func TestLogMessage(t *testing.T) {
 		checkLog(t, consoleBuffer, level, purple, message, true)
 		checkLog(t, fileBuffer, level, "", message, false)
 	})
-}
 
-func TestLogFunctions(t *testing.T) {
-	t.Run("Normal", func(t *testing.T) {
+	t.Run("Wrappers", func(t *testing.T) {
 		testCases := []struct {
 			name, level, colour string
-			logFunction         func(string)
+			logLevel            logLevel
+			logMessageWrapper   func(string)
 		}{
-			{"Trace", "TRACE", "", Trace},
-			{"Debug", "DEBUG", "\033[34m", Debug},
-			{"Info", "INFO", "\033[36m", Info},
-			{"Warning", "WARNING", "\033[33;1m", Warning},
-			{"Error", "ERROR", "\033[31;1m", Error},
+			{"Trace", "TRACE", "", logLevelTrace, Trace},
+			{"Debug", "DEBUG", "\033[34m", logLevelDebug, Debug},
+			{"Info", "INFO", "\033[36m", logLevelInfo, Info},
+			{"Warning", "WARNING", "\033[33;1m", logLevelWarning, Warning},
+			{"Error", "ERROR", "\033[31;1m", logLevelError, Error},
 		}
 
-		for _, testCase := range testCases {
-			t.Run(testCase.name, func(t *testing.T) {
-				buf := mockConsoleLogger(t)
-				message := "a test log"
-				testCase.logFunction(message)
-				checkLog(t, buf, testCase.level, testCase.colour, message, true)
-			})
-		}
-	})
+		t.Run("Normal", func(t *testing.T) {
+			for _, testCase := range testCases {
+				t.Run(testCase.name, func(t *testing.T) {
+					buf := MockConsoleLogger(t)
+					message := "a test log"
+					testCase.logMessageWrapper(message)
+					checkLog(t, buf, testCase.level, testCase.colour, message, true)
+				})
+			}
+		})
 
-	t.Run("LogLevelTooHigh", func(t *testing.T) {
-		testCases := []struct {
-			name        string
-			logLevel    logLevel
-			logFunction func(string)
-		}{
-			{"Trace", logLevelTrace, Trace},
-			{"Debug", logLevelDebug, Debug},
-			{"Info", logLevelInfo, Info},
-			{"Warning", logLevelWarning, Warning},
-			{"Error", logLevelError, Error},
-		}
-
-		for _, testCase := range testCases {
-			t.Run(testCase.name, func(t *testing.T) {
-				oldLogLevel := logger.logLevel
-				t.Cleanup(func() { logger.logLevel = oldLogLevel })
-				logger.logLevel = testCase.logLevel + 1
-				buf := mockConsoleLogger(t)
-				testCase.logFunction("a test log")
-				assert.Equals(t, buf.String(), "")
-			})
-		}
+		t.Run("LogLevelTooHigh", func(t *testing.T) {
+			for _, testCase := range testCases {
+				t.Run(testCase.name, func(t *testing.T) {
+					oldLogLevel := Logger.logLevel
+					t.Cleanup(func() { Logger.logLevel = oldLogLevel })
+					Logger.logLevel = testCase.logLevel + 1
+					buf := MockConsoleLogger(t)
+					testCase.logMessageWrapper("a test log")
+					assert.Equals(t, buf.String(), "")
+				})
+			}
+		})
 	})
 }

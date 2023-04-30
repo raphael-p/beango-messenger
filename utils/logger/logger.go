@@ -12,8 +12,8 @@ import (
 )
 
 type MyLogger struct {
-	stdOutLogger *log.Logger
-	fileLogger   *log.Logger
+	StdOutLogger *log.Logger
+	FileLogger   *log.Logger
 	logLevel     logLevel
 }
 
@@ -33,11 +33,11 @@ var now nowFunc = func() string {
 	return time.Now().UTC().Format("2006-01-02 15:04:05.000")
 }
 
-func newLogger(out io.Writer) *log.Logger {
+func NewLogger(out io.Writer) *log.Logger {
 	return log.New(out, "", 0)
 }
 
-var logger *MyLogger = &MyLogger{newLogger(os.Stdout), nil, logLevel(0)}
+var Logger *MyLogger = &MyLogger{NewLogger(os.Stdout), nil, logLevel(0)}
 
 func openLogFile(directory, name string) (*os.File, error) {
 	path := filepath.Join(directory, name)
@@ -57,19 +57,19 @@ func openLogFile(directory, name string) (*os.File, error) {
 }
 
 func Init() {
-	logger.logLevel = logLevel(config.Values.Logger.DefaultLevel.Value)
+	Logger.logLevel = logLevel(config.Values.Logger.DefaultLevel.Value)
 	logFile, err := openLogFile(config.Values.Logger.Directory, config.Values.Logger.Filename)
 	if err != nil {
 		panic(err.Error())
 	}
-	logger.fileLogger = newLogger(logFile)
+	Logger.FileLogger = NewLogger(logFile)
 }
 
 func Close() {
-	if logger.fileLogger == nil {
+	if Logger.FileLogger == nil {
 		return
 	}
-	if file, ok := logger.fileLogger.Writer().(*os.File); ok {
+	if file, ok := Logger.FileLogger.Writer().(*os.File); ok {
 		Trace("closing log file")
 		err := file.Close()
 		if err != nil {
@@ -81,38 +81,38 @@ func Close() {
 func logMessage(level string, ansiColour string, message string) {
 	reset := "\033[0m"
 	time := now()
-	logger.stdOutLogger.Printf("%s %s[%s]%s %s", time, ansiColour, level, reset, message)
-	if logger.fileLogger != nil {
-		logger.fileLogger.Printf("%s [%s] %s", time, level, message)
+	Logger.StdOutLogger.Printf("%s %s[%s]%s %s", time, ansiColour, level, reset, message)
+	if Logger.FileLogger != nil {
+		Logger.FileLogger.Printf("%s [%s] %s", time, level, message)
 	}
 }
 
 func Trace(message string) {
-	if logger.logLevel <= logLevelTrace {
+	if Logger.logLevel <= logLevelTrace {
 		logMessage("TRACE", "", message)
 	}
 }
 
 func Debug(message string) {
-	if logger.logLevel <= logLevelDebug {
+	if Logger.logLevel <= logLevelDebug {
 		logMessage("DEBUG", "\033[34m", message)
 	}
 }
 
 func Info(message string) {
-	if logger.logLevel <= logLevelInfo {
+	if Logger.logLevel <= logLevelInfo {
 		logMessage("INFO", "\033[36m", message)
 	}
 }
 
 func Warning(message string) {
-	if logger.logLevel <= logLevelWarning {
+	if Logger.logLevel <= logLevelWarning {
 		logMessage("WARNING", "\033[33;1m", message)
 	}
 }
 
 func Error(message string) {
-	if logger.logLevel <= logLevelError {
+	if Logger.logLevel <= logLevelError {
 		logMessage("ERROR", "\033[31;1m", message)
 	}
 }
