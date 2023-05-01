@@ -66,20 +66,34 @@ func TestAddRoute(t *testing.T) {
 		assertRoute(t, router.routes[0], xRoute)
 	})
 
+	t.Run("DuplicateRoute", func(t *testing.T) {
+		router := NewRouter()
+		method := http.MethodGet
+		pathDef := "/from/:place/to/:newPlace/move"
+
+		defer func() {
+			reason, ok := recover().(string)
+			assert.Equals(t, ok, true)
+			xReason := fmt.Sprintf("route already exists: %s %s", method, pathDef)
+			assert.Equals(t, reason, xReason)
+		}()
+		router.addRoute(method, pathDef, handler)
+		router.addRoute(method, pathDef, handler)
+	})
+
 	t.Run("DuplicateParamKeys", func(t *testing.T) {
 		pathDef := "/foo/:id/bar/:id/b"
+
 		defer func() {
 			reason, ok := recover().(string)
 			assert.Equals(t, ok, true)
 			xReason := fmt.Sprint("duplicate parameters in path definition: ", pathDef)
 			assert.Equals(t, reason, xReason)
 		}()
-
 		NewRouter().addRoute(http.MethodGet, pathDef, handler)
 	})
 
 	t.Run("NormalNoParams", func(t *testing.T) {
-
 		route := NewRouter().addRoute(http.MethodGet, "/path/with/no/params", handler)
 		assert.Equals(t, route.pattern.String(), "^/path/with/no/params$")
 	})

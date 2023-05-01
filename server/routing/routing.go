@@ -55,16 +55,23 @@ func (r *Router) addRoute(method, pathDef string, handler handlerFunc) *route {
 		panic(fmt.Sprint("duplicate parameters in path definition: ", pathDef))
 	}
 
-	route := &route{
+	// check for duplicates: same method and regex pattern
+	regex := regexp.MustCompile("^" + pattern + "$")
+	for _, route := range r.routes {
+		if route.method == method && route.pattern.String() == regex.String() {
+			panic(fmt.Sprintf("route already exists: %s %s", method, pathDef))
+		}
+	}
+
+	newRoute := &route{
 		method,
-		regexp.MustCompile("^" + pattern + "$"),
+		regex,
 		handler,
 		paramKeys,
 		true,
 	}
-	r.routes = append(r.routes, route)
-	// TODO check for dupes
-	return route
+	r.routes = append(r.routes, newRoute)
+	return newRoute
 }
 
 func (r *Router) GET(pattern string, handler handlerFunc) *route {
