@@ -1,4 +1,4 @@
-package auth
+package authenticate
 
 import (
 	"errors"
@@ -11,32 +11,27 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-type Connection interface {
-	GetUser(id string) (*database.User, error)
-	CheckSession(id string) (*database.Session, bool)
-}
-
-func Authentication(w *response.Writer, req *http.Request, conn Connection) (*http.Request, bool) {
+func FromCookie(w *response.Writer, req *http.Request, conn database.Connection) (*http.Request, bool) {
 	userID, err := getUserIDFromCookie(w, req, conn)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		return nil, false
+		return req, false
 	}
 	user, err := conn.GetUser(userID)
 	if err != nil {
 		w.WriteString(http.StatusNotFound, "user not found during authentication")
-		return nil, false
+		return req, false
 	}
 	req, err = context.SetUser(req, user)
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteString(http.StatusInternalServerError, err.Error())
-		return nil, false
+		return req, false
 	}
 	return req, true
 }
 
-func getUserIDFromCookie(w *response.Writer, req *http.Request, conn Connection) (string, error) {
+func getUserIDFromCookie(w *response.Writer, req *http.Request, conn database.Connection) (string, error) {
 	cookieName := cookies.SESSION
 	sessionID, err := cookies.Get(req, cookieName)
 	if err != nil {

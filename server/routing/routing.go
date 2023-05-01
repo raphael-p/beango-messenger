@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/raphael-p/beango/database"
-	"github.com/raphael-p/beango/server/auth"
+	"github.com/raphael-p/beango/server/authenticate"
 	"github.com/raphael-p/beango/utils/context"
 	"github.com/raphael-p/beango/utils/logger"
 	"github.com/raphael-p/beango/utils/response"
@@ -144,7 +144,7 @@ func (r *route) handler(w *response.Writer, req *http.Request, conn database.Con
 
 	// Authentication
 	if r.authenticate {
-		reqWithUser, ok := auth.Authentication(w, req, conn)
+		reqWithUser, ok := authenticate.FromCookie(w, req, conn)
 		if !ok {
 			return
 		}
