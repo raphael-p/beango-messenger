@@ -42,9 +42,8 @@ func (tc *MockConnection) CheckSession(id string) (*database.Session, bool) {
 	session := tc.GetSession(id)
 	if session == nil {
 		return nil, false
-	} else {
-		return session, true
 	}
+	return session, true
 }
 
 func (*MockConnection) DeleteSession(id string) {}
@@ -66,7 +65,10 @@ func (*MockConnection) GetMessagesByChatID(chatID string) []database.Message {
 }
 
 func (*MockConnection) GetSession(id string) *database.Session {
-	session := testSessions[id]
+	session, ok := testSessions[id]
+	if !ok {
+		return nil
+	}
 	return &session
 }
 

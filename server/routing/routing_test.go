@@ -295,7 +295,14 @@ func TestRouteHandler(t *testing.T) {
 	params := []string{}
 	authRoute := makeRoute(method, path, handler, params, true)
 	noAuthRoute := makeRoute(method, path, handler, params, false)
-	conn := mocks.MakeMockConnection(t)
+
+	setup := func(t *testing.T) (*response.Writer, *http.Request, *bytes.Buffer, database.Connection) {
+		req := httptest.NewRequest(method, path, nil)
+		w := response.NewWriter(httptest.NewRecorder())
+		buf := logger.MockFileLogger(t)
+		conn := mocks.MakeMockConnection(t)
+		return w, req, buf, conn
+	}
 
 	assertSuccess := func(t *testing.T, w *response.Writer, buf *bytes.Buffer) {
 		assert.Equals(t, w.Status, status)
@@ -307,20 +314,16 @@ func TestRouteHandler(t *testing.T) {
 	}
 
 	t.Run("AuthSucceeds", func(t *testing.T) {
-		req := httptest.NewRequest(method, path, nil)
+		w, req, buf, conn := setup(t)
 		cookie := &http.Cookie{Name: string(cookies.SESSION), Value: mocks.AdminSesh.ID}
 		req.AddCookie(cookie)
-		w := response.NewWriter(httptest.NewRecorder())
-		buf := logger.MockFileLogger(t)
 
 		authRoute.handler(w, req, conn)
 		assertSuccess(t, w, buf)
 	})
 
 	t.Run("AuthFails", func(t *testing.T) {
-		req := httptest.NewRequest(method, path, nil)
-		w := response.NewWriter(httptest.NewRecorder())
-		buf := logger.MockFileLogger(t)
+		w, req, buf, conn := setup(t)
 
 		authRoute.handler(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusUnauthorized)
@@ -331,9 +334,7 @@ func TestRouteHandler(t *testing.T) {
 	})
 
 	t.Run("AuthSkipped", func(t *testing.T) {
-		req := httptest.NewRequest(method, path, nil)
-		w := response.NewWriter(httptest.NewRecorder())
-		buf := logger.MockFileLogger(t)
+		w, req, buf, conn := setup(t)
 
 		noAuthRoute.handler(w, req, conn)
 		assertSuccess(t, w, buf)
