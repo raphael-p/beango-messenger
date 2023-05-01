@@ -9,7 +9,7 @@ type Chat struct {
 	UserIDs [2]string `json:"userIDs"`
 }
 
-func GetChat(id string) (*Chat, error) {
+func (c *MongoConnection) GetChat(id string) (*Chat, error) {
 	chat, ok := Chats[id]
 	if !ok {
 		return nil, fmt.Errorf("no chat found with id %s", id)
@@ -18,7 +18,7 @@ func GetChat(id string) (*Chat, error) {
 	}
 }
 
-func GetChatsByUserID(userID string) []Chat {
+func (c *MongoConnection) GetChatsByUserID(userID string) []Chat {
 	var chats []Chat
 	for _, chat := range Chats {
 		for _, chatUserID := range chat.UserIDs {
@@ -30,7 +30,7 @@ func GetChatsByUserID(userID string) []Chat {
 	return chats
 }
 
-func GetChatByUserIDs(userIDs [2]string) *Chat {
+func (conn *MongoConnection) GetChatByUserIDs(userIDs [2]string) *Chat {
 	for _, chat := range Chats {
 		if (chat.UserIDs[0] == userIDs[0] &&
 			chat.UserIDs[1] == userIDs[1]) ||
@@ -43,6 +43,6 @@ func GetChatByUserIDs(userIDs [2]string) *Chat {
 	return nil
 }
 
-func SetChat(chat *Chat) {
+func (conn *MongoConnection) SetChat(chat *Chat) {
 	Chats[chat.ID] = *chat
 }

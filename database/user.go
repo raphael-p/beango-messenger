@@ -9,7 +9,7 @@ type User struct {
 	Key         []byte `json:"key"`
 }
 
-func GetUser(id string) (*User, error) {
+func (conn *MongoConnection) GetUser(id string) (*User, error) {
 	user, ok := Users[id]
 	if !ok {
 		return nil, fmt.Errorf("no user found with id %s", id)
@@ -18,7 +18,7 @@ func GetUser(id string) (*User, error) {
 	}
 }
 
-func GetUserByUsername(username string) (*User, error) {
+func (conn *MongoConnection) GetUserByUsername(username string) (*User, error) {
 	for _, user := range Users {
 		if user.Username == username {
 			return &user, nil
@@ -27,6 +27,6 @@ func GetUserByUsername(username string) (*User, error) {
 	return nil, fmt.Errorf("no user found with username %s", username)
 }
 
-func SetUser(user *User) {
+func (conn *MongoConnection) SetUser(user *User) {
 	Users[user.ID] = *user
 }

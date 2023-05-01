@@ -8,10 +8,11 @@ import (
 
 	"github.com/raphael-p/beango/config"
 	"github.com/raphael-p/beango/resolvers"
+	"github.com/raphael-p/beango/server/routing"
 	"github.com/raphael-p/beango/utils/logger"
 )
 
-func setup() (router *router, ok bool) {
+func setup() (router *routing.Router, ok bool) {
 	ok = true
 	defer func() {
 		if r := recover(); r != nil {
@@ -23,9 +24,9 @@ func setup() (router *router, ok bool) {
 	config.CreateConfig()
 	logger.Init()
 
-	router = newRouter()
-	router.POST("/session", resolvers.CreateSession).noAuth()
-	router.POST("/user", resolvers.CreateUser).noAuth()
+	router = routing.NewRouter()
+	router.POST("/session", resolvers.CreateSession).NoAuth()
+	router.POST("/user", resolvers.CreateUser).NoAuth()
 	router.GET("/user/:username", resolvers.GetUserByName)
 	router.GET("/chats", resolvers.GetChats)
 	router.POST("/chat", resolvers.CreateChat)

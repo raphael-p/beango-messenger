@@ -9,12 +9,12 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-func GetChats(w *response.Writer, r *http.Request) {
+func GetChats(w *response.Writer, r *http.Request, conn database.Connection) {
 	user, ok := getRequestContext(w, r, &struct{}{})
 	if !ok {
 		return
 	}
-	chats := database.GetChatsByUserID(user.ID)
+	chats := conn.GetChatsByUserID(user.ID)
 	w.WriteJSON(http.StatusOK, chats)
 }
 
@@ -22,14 +22,14 @@ type CreateChatInput struct {
 	UserID string `json:"userID"`
 }
 
-func CreateChat(w *response.Writer, r *http.Request) {
+func CreateChat(w *response.Writer, r *http.Request, conn database.Connection) {
 	var input CreateChatInput
 	if ok := bindRequestJSON(w, r, &input); !ok {
 		return
 	}
 
 	// Check that user id exists
-	_, err := database.GetUser(input.UserID)
+	_, err := conn.GetUser(input.UserID)
 	if err != nil {
 		errorResponse := fmt.Sprintf("userID %s is invalid", input.UserID)
 		w.WriteString(http.StatusBadRequest, errorResponse)
@@ -43,7 +43,7 @@ func CreateChat(w *response.Writer, r *http.Request) {
 	userIDs := [2]string{user.ID, input.UserID}
 
 	// Check if chat already exists
-	if chat := database.GetChatByUserIDs(userIDs); chat != nil {
+	if chat := conn.GetChatByUserIDs(userIDs); chat != nil {
 		w.WriteString(http.StatusConflict, "chat already exists")
 		return
 	}
@@ -52,6 +52,6 @@ func CreateChat(w *response.Writer, r *http.Request) {
 		ID:      uuid.NewString(),
 		UserIDs: userIDs,
 	}
-	database.SetChat(newChat)
+	conn.SetChat(newChat)
 	w.WriteJSON(http.StatusCreated, newChat)
 }

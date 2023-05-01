@@ -26,13 +26,13 @@ type CreateUserInput struct {
 	Password    string                     `json:"password"`
 }
 
-func CreateUser(w *response.Writer, r *http.Request) {
+func CreateUser(w *response.Writer, r *http.Request, conn database.Connection) {
 	var input CreateUserInput
 	if ok := bindRequestJSON(w, r, &input); !ok {
 		return
 	}
 
-	if user, _ := database.GetUserByUsername(input.Username); user != nil {
+	if user, _ := conn.GetUserByUsername(input.Username); user != nil {
 		w.WriteString(http.StatusConflict, "username is taken")
 		return
 	}
@@ -52,18 +52,18 @@ func CreateUser(w *response.Writer, r *http.Request) {
 	if newUser.DisplayName == "" {
 		newUser.DisplayName = input.Username
 	}
-	database.SetUser(newUser)
+	conn.SetUser(newUser)
 	w.WriteJSON(http.StatusCreated, stripFields(newUser))
 }
 
-func GetUserByName(w *response.Writer, r *http.Request) {
+func GetUserByName(w *response.Writer, r *http.Request, conn database.Connection) {
 	params := struct{ username string }{}
 	_, ok := getRequestContext(w, r, params)
 	if !ok {
 		return
 	}
 
-	user, _ := database.GetUserByUsername(params.username)
+	user, _ := conn.GetUserByUsername(params.username)
 	if user == nil {
 		w.WriteString(http.StatusNotFound, "user not found")
 		return

@@ -19,10 +19,10 @@ type SessionInput struct {
 	Password string `json:"password"`
 }
 
-func CreateSession(w *response.Writer, r *http.Request) {
+func CreateSession(w *response.Writer, r *http.Request, conn database.Connection) {
 	sessionID, err := cookies.Get(r, cookies.SESSION)
 	if err == nil {
-		_, ok := database.CheckSession(sessionID)
+		_, ok := conn.CheckSession(sessionID)
 		if ok {
 			w.WriteString(http.StatusBadRequest, "there already is a valid session cookie in the request")
 			return
@@ -34,7 +34,7 @@ func CreateSession(w *response.Writer, r *http.Request) {
 		return
 	}
 
-	if user, err := database.GetUserByUsername(input.Username); err == nil {
+	if user, err := conn.GetUserByUsername(input.Username); err == nil {
 		err := bcrypt.CompareHashAndPassword(user.Key, []byte(input.Password))
 		if err == nil {
 			sessionID := uuid.NewString()
@@ -46,7 +46,7 @@ func CreateSession(w *response.Writer, r *http.Request) {
 				w.WriteString(http.StatusInternalServerError, "")
 				return
 			}
-			database.SetSession(database.Session{
+			conn.SetSession(database.Session{
 				ID:         sessionID,
 				UserID:     user.ID,
 				ExpiryDate: expiryDate,

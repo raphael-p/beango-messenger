@@ -1,7 +1,6 @@
-package server
+package routing
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -9,14 +8,14 @@ import (
 	"time"
 
 	"github.com/raphael-p/beango/database"
+	"github.com/raphael-p/beango/server/auth"
 	"github.com/raphael-p/beango/utils/context"
-	"github.com/raphael-p/beango/utils/cookies"
 	"github.com/raphael-p/beango/utils/logger"
 	"github.com/raphael-p/beango/utils/response"
 	"github.com/raphael-p/beango/utils/validate"
 )
 
-type handlerFunc func(*response.Writer, *http.Request)
+type handlerFunc func(*response.Writer, *http.Request, database.Connection)
 
 type route struct {
 	method       string
@@ -26,34 +25,34 @@ type route struct {
 	authenticate bool
 }
 
-func (r *route) noAuth() {
+func (r *route) NoAuth() {
 	r.authenticate = false
 }
 
-type router struct {
+type Router struct {
 	routes []*route
 }
 
-func newRouter() *router {
-	return &router{routes: []*route{}}
+func NewRouter() *Router {
+	return &Router{routes: []*route{}}
 }
 
-func (r *router) addRoute(method, endpoint string, handler handlerFunc) *route {
+func (r *Router) addRoute(method, pathDef string, handler handlerFunc) *route {
 	// handle path parameters
 	pathParamMatcher := regexp.MustCompile(":([a-zA-Z]+)")
-	matches := pathParamMatcher.FindAllStringSubmatch(endpoint, -1)
+	matches := pathParamMatcher.FindAllStringSubmatch(pathDef, -1)
 	paramKeys := []string{}
-	pattern := endpoint
+	pattern := pathDef
 	if len(matches) > 0 {
 		// replace path parameter definition with regex pattern to capture any string
-		pattern = pathParamMatcher.ReplaceAllLiteralString(endpoint, "([^/]+)")
+		pattern = pathParamMatcher.ReplaceAllLiteralString(pathDef, "([^/]+)")
 		// store the names of path parameters, to later be used as context keys
 		for i := 0; i < len(matches); i++ {
 			paramKeys = append(paramKeys, matches[i][1])
 		}
 	}
 	if !validate.UniqueList(paramKeys) {
-		panic(fmt.Sprint("duplicate path parameters in route: ", endpoint))
+		panic(fmt.Sprint("duplicate parameters in path definition: ", pathDef))
 	}
 
 	route := &route{
@@ -64,30 +63,31 @@ func (r *router) addRoute(method, endpoint string, handler handlerFunc) *route {
 		true,
 	}
 	r.routes = append(r.routes, route)
+	// TODO check for dupes
 	return route
 }
 
-func (r *router) GET(pattern string, handler handlerFunc) *route {
+func (r *Router) GET(pattern string, handler handlerFunc) *route {
 	return r.addRoute(http.MethodGet, pattern, handler)
 }
 
-func (r *router) POST(pattern string, handler handlerFunc) *route {
+func (r *Router) POST(pattern string, handler handlerFunc) *route {
 	return r.addRoute(http.MethodPost, pattern, handler)
 }
 
-func (r *router) PUT(pattern string, handler handlerFunc) *route {
+func (r *Router) PUT(pattern string, handler handlerFunc) *route {
 	return r.addRoute(http.MethodPut, pattern, handler)
 }
 
-func (r *router) PATCH(pattern string, handler handlerFunc) *route {
+func (r *Router) PATCH(pattern string, handler handlerFunc) *route {
 	return r.addRoute(http.MethodPatch, pattern, handler)
 }
 
-func (r *router) DELETE(pattern string, handler handlerFunc) *route {
+func (r *Router) DELETE(pattern string, handler handlerFunc) *route {
 	return r.addRoute(http.MethodDelete, pattern, handler)
 }
 
-func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var allow []string
 	for _, route := range r.routes {
 		matches := route.pattern.FindStringSubmatch(req.URL.Path)
@@ -100,7 +100,7 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			values := matches[1:]
 			if len(values) != len(route.paramKeys) {
 				errorResponse := "unexpected number of path parameters in request"
-				logger.Error(fmt.Sprint(errorResponse, " (", req.URL.Path, ")"))
+				logger.Error(fmt.Sprintf("%s (%s)", errorResponse, req.URL.Path))
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(errorResponse))
 				return
@@ -116,7 +116,8 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 				}
 			}
 
-			route.handler(response.NewWriter(w), req)
+			conn := database.NewConnection()
+			route.handler(response.NewWriter(w), req, conn)
 			return
 		}
 	}
@@ -129,14 +130,14 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 // A wrapper around a route's handler for request middleware
-func (r *route) handler(w *response.Writer, req *http.Request) {
+func (r *route) handler(w *response.Writer, req *http.Request, conn database.Connection) {
 	// Log request
 	requestString := fmt.Sprint(req.Method, " ", req.URL)
 	logger.Info(fmt.Sprint("received ", requestString))
 
 	// Authentication
 	if r.authenticate {
-		reqWithUser, ok := authentication(w, req)
+		reqWithUser, ok := auth.Authentication(w, req, conn)
 		if !ok {
 			return
 		}
@@ -145,44 +146,7 @@ func (r *route) handler(w *response.Writer, req *http.Request) {
 
 	// Log response
 	start := time.Now()
-	r.innerHandler(w, req)
+	r.innerHandler(w, req, conn)
 	w.Time = time.Since(start).Milliseconds()
 	logger.Info(fmt.Sprintf("%s resolved with %s", requestString, w))
-}
-
-func authentication(w *response.Writer, req *http.Request) (*http.Request, bool) {
-	userID, err := getUserIDFromCookie(w, req)
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return nil, false
-	}
-	user, err := database.GetUser(userID)
-	if err != nil {
-		w.WriteString(http.StatusNotFound, "user not found during authentication")
-		return nil, false
-	}
-	req, err = context.SetUser(req, user)
-	if err != nil {
-		logger.Error(err.Error())
-		w.WriteString(http.StatusInternalServerError, err.Error())
-		return nil, false
-	}
-	return req, true
-}
-
-func getUserIDFromCookie(w *response.Writer, req *http.Request) (string, error) {
-	cookieName := cookies.SESSION
-	sessionID, err := cookies.Get(req, cookieName)
-	if err != nil {
-		return "", err
-	}
-	session, ok := database.CheckSession(sessionID)
-	if !ok {
-		err := cookies.Invalidate(w, cookieName)
-		if err != nil {
-			logger.Error(err.Error())
-		}
-		return "", errors.New("cookie or session is invalid")
-	}
-	return session.UserID, nil
 }

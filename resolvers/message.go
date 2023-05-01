@@ -8,34 +8,34 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-func GetChatMessages(w *response.Writer, r *http.Request) {
+func GetChatMessages(w *response.Writer, r *http.Request, conn database.Connection) {
 	params := struct{ chatID string }{}
 	user, ok := getRequestContext(w, r, params)
 	if !ok {
 		return
 	}
 
-	chat, _ := database.GetChat(params.chatID)
+	chat, _ := conn.GetChat(params.chatID)
 	if chat == nil || (chat.UserIDs[0] != user.ID && chat.UserIDs[1] != user.ID) {
 		w.WriteString(http.StatusNotFound, "chat not found")
 		return
 	}
 
-	w.WriteJSON(http.StatusOK, database.GetMessagesByChatID(chat.ID))
+	w.WriteJSON(http.StatusOK, conn.GetMessagesByChatID(chat.ID))
 }
 
 type SendMessageInput struct {
 	Content string `json:"content"`
 }
 
-func SendMessage(w *response.Writer, r *http.Request) {
+func SendMessage(w *response.Writer, r *http.Request, conn database.Connection) {
 	params := struct{ chatID string }{}
 	user, ok := getRequestContext(w, r, params)
 	if !ok {
 		return
 	}
 
-	chat, _ := database.GetChat(params.chatID)
+	chat, _ := conn.GetChat(params.chatID)
 	if chat == nil || (chat.UserIDs[0] != user.ID && chat.UserIDs[1] != user.ID) {
 		w.WriteString(http.StatusNotFound, "chat not found")
 		return
@@ -51,6 +51,6 @@ func SendMessage(w *response.Writer, r *http.Request) {
 		ChatID:  params.chatID,
 		Content: input.Content,
 	}
-	database.SetMessage(newMessage)
+	conn.SetMessage(newMessage)
 	w.WriteJSON(http.StatusAccepted, newMessage)
 }

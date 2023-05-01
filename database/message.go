@@ -7,7 +7,7 @@ type Message struct {
 	Content string `json:"content"`
 }
 
-func GetMessagesByChatID(chatID string) []Message {
+func (conn *MongoConnection) GetMessagesByChatID(chatID string) []Message {
 	var messages []Message
 	for _, message := range Messages {
 		if message.ChatID == chatID {
@@ -17,6 +17,6 @@ func GetMessagesByChatID(chatID string) []Message {
 	return messages
 }
 
-func SetMessage(message *Message) {
+func (conn *MongoConnection) SetMessage(message *Message) {
 	Messages[message.ID] = *message
 }
