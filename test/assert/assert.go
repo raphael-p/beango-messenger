@@ -30,10 +30,24 @@ func Equals[T comparable](t *testing.T, value T, expectedValue T) {
 	}
 }
 
+func NotEquals[T comparable](t *testing.T, value T, expectedValue T) {
+	if value == expectedValue {
+		t.Errorf("expected not \"%v\"", value)
+	}
+}
+
 func Contains(t *testing.T, value string, expectedValues ...string) {
 	for _, expectedValue := range expectedValues {
 		if !strings.Contains(value, expectedValue) {
 			t.Errorf("expected to find \"%v\" in \"%v\"", expectedValue, value)
+		}
+	}
+}
+
+func NotContains(t *testing.T, value string, expectedValues ...string) {
+	for _, expectedValue := range expectedValues {
+		if strings.Contains(value, expectedValue) {
+			t.Errorf("expected not to find \"%v\" in \"%v\"", expectedValue, value)
 		}
 	}
 }

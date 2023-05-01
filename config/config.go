@@ -18,7 +18,7 @@ func CreateConfig() {
 		fmt.Printf("$%s not set, using default config\n", envars.configFilepath)
 		_, dirname, _, ok := runtime.Caller(0)
 		if !ok {
-			panic("could get absolute path for config directory")
+			panic("could not get absolute path for config directory")
 		}
 		filePath = filepath.Join(filepath.Dir(dirname), "default.json")
 	}
