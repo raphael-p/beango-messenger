@@ -3,6 +3,7 @@ package routing
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -127,7 +128,6 @@ func TestAddRoute(t *testing.T) {
 }
 
 func TestServeHTTP(t *testing.T) {
-	//TODO: test req with body
 	method := http.MethodGet
 	pattern := "^/user/([^/]+)/name/([^/]+)$"
 	path := func(id, name string) string {
@@ -135,15 +135,17 @@ func TestServeHTTP(t *testing.T) {
 	}
 	code := http.StatusAccepted
 	params := []string{"id", "name"}
-	xBody := func(id, name string) string {
-		return fmt.Sprintf("got user %s with name %s", id, name)
+	xBody := func(id, name, body string) string {
+		return fmt.Sprintf("user: %s, name: %s, body: %s", id, name, body)
 	}
 	handler := func(w *response.Writer, req *http.Request, conn database.Connection) {
 		id, err := context.GetParam(req, params[0])
 		assert.IsNil(t, err)
 		name, err := context.GetParam(req, params[1])
 		assert.IsNil(t, err)
-		w.WriteString(code, xBody(id, name))
+		body, err := io.ReadAll(req.Body)
+		assert.IsNil(t, err)
+		w.WriteString(code, xBody(id, name, string(body)))
 	}
 
 	newRoute := makeRoute(method, pattern, handler, params, false)
@@ -154,12 +156,14 @@ func TestServeHTTP(t *testing.T) {
 	t.Run("ValidRequest", func(t *testing.T) {
 		id := "19"
 		name := "patrick"
-		req := httptest.NewRequest(method, path(id, name), nil)
+		reqBody := `{"key": "value"}`
+		bodyBuf := bytes.NewBufferString(reqBody)
+		req := httptest.NewRequest(method, path(id, name), bodyBuf)
 		res := httptest.NewRecorder()
 
 		router.ServeHTTP(res, req)
 		assert.Equals(t, res.Code, code)
-		assert.Equals(t, res.Body.String(), xBody(id, name))
+		assert.Equals(t, res.Body.String(), xBody(id, name, reqBody))
 	})
 
 	t.Run("PicksCorrectRoute", func(t *testing.T) {
