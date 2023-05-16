@@ -7,7 +7,7 @@ import (
 	"github.com/raphael-p/beango/test/assert"
 )
 
-func TestPointerToStructFromJSON(t *testing.T) {
+func TestStructFromJSON(t *testing.T) {
 	type Nest2 struct {
 		Leaf1 string
 		Leaf2 string

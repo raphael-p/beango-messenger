@@ -16,6 +16,13 @@ import (
 // Decodes JSON from HTTP request body and binds it to a struct pointer.
 // Writes an HTTP error response on failure.
 func bindRequestJSON(w *response.Writer, r *http.Request, ptr any) bool {
+	value := reflect.ValueOf(ptr)
+	if value.Kind() != reflect.Ptr || value.Elem().Kind() != reflect.Struct {
+		errorResponse := fmt.Sprintf("expected `ptr` to be a pointer to a struct, got %T", ptr)
+		w.WriteString(http.StatusBadRequest, errorResponse)
+		return false
+	}
+
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(ptr); err != nil {
 		errorResponse := fmt.Sprint("malformed request body: ", err)
