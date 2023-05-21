@@ -75,20 +75,19 @@ func TestBindRequestJSON(t *testing.T) {
 }
 
 func TestGetRequestContext(t *testing.T) {
-	type param = struct{ key, value string }
-	setup := func(user *database.User, params []param) (
+	setup := func(user *database.User, params map[string]string) (
 		*http.Request,
 		*response.Writer,
 		*bytes.Buffer,
 	) {
-		req := httptest.NewRequest("GET", "/test", nil)
+		req := httptest.NewRequest(http.MethodGet, "/test", nil)
 		if user != nil {
 			newReq, err := context.SetUser(req, user)
 			assert.IsNil(t, err)
 			req = newReq
 		}
-		for _, param := range params {
-			newReq, err := context.SetParam(req, param.key, param.value)
+		for key, value := range params {
+			newReq, err := context.SetParam(req, key, value)
 			assert.IsNil(t, err)
 			req = newReq
 		}
@@ -99,64 +98,56 @@ func TestGetRequestContext(t *testing.T) {
 
 	t.Run("Normal", func(t *testing.T) {
 		xUser := mocks.MakeUser()
-		param1 := "value1"
-		param2 := "value2"
-		params := []param{{"Param1", param1}, {"Param2", param2}}
-		req, _, _ := setup(xUser, params)
+		key1 := "Param1"
+		key2 := "param2"
+		xParams := map[string]string{key1: "value1", key2: "value2"}
+		req, _, _ := setup(xUser, xParams)
 
-		type TestStruct struct{ Param1, Param2 string }
-		var testStruct TestStruct
-		user, ok := getRequestContext(nil, req, &testStruct)
+		user, params, ok := getRequestContext(nil, req, []string{key1, key2})
 		assert.Equals(t, ok, true)
 		assert.DeepEquals(t, user, xUser)
-		assert.DeepEquals(t, testStruct, TestStruct{param1, param2})
+		assert.DeepEquals(t, params, xParams)
 	})
 
-	t.Run("ParamMissingInPointer", func(t *testing.T) {
-		param1 := "value1"
-		params := []param{{"Param1", param1}, {"Param2", "value2"}}
-		req, _, _ := setup(mocks.MakeUser(), params)
-		type TestStruct struct{ Param1 string }
-		var testStruct TestStruct
+	t.Run("ExtraRequestParam", func(t *testing.T) {
+		key := "param1"
+		extraKey := "extra"
+		xParams := map[string]string{key: "value1", extraKey: "value2"}
+		req, _, _ := setup(mocks.MakeUser(), xParams)
 
-		_, ok := getRequestContext(nil, req, &testStruct)
+		_, params, ok := getRequestContext(nil, req, []string{key})
 		assert.Equals(t, ok, true)
-		assert.DeepEquals(t, testStruct, TestStruct{param1})
+		delete(xParams, extraKey)
+		assert.DeepEquals(t, params, xParams)
+	})
+
+	t.Run("NilKeySlice", func(t *testing.T) {
+		req, _, _ := setup(mocks.MakeUser(), map[string]string{"param1": "value1"})
+
+		_, params, ok := getRequestContext(nil, req, nil)
+		assert.Equals(t, ok, true)
+		assert.DeepEquals(t, params, map[string]string{})
+	})
+
+	t.Run("MissingRequestParam", func(t *testing.T) {
+		key1 := "param1"
+		key2 := "param2"
+		req, w, buf := setup(mocks.MakeUser(), map[string]string{key1: "some-value"})
+
+		_, _, ok := getRequestContext(w, req, []string{key1, key2})
+		assert.Equals(t, ok, false)
+		assert.Equals(t, w.Status, http.StatusInternalServerError)
+		assert.Equals(t, w.Body, fmt.Sprint("failed to fetch path parameter: ", key2))
+		assert.Contains(t, buf.String(), "[ERROR]", fmt.Sprintf("path parameter %s not found", key2))
 	})
 
 	t.Run("NoUser", func(t *testing.T) {
 		req, w, buf := setup(nil, nil)
 
-		_, ok := getRequestContext(w, req, nil)
+		_, _, ok := getRequestContext(w, req, []string{})
 		assert.Equals(t, ok, false)
 		assert.Equals(t, w.Status, http.StatusInternalServerError)
 		assert.Equals(t, w.Body, "failed to fetch user")
 		assert.Contains(t, buf.String(), "[ERROR]", "user not found in request context")
-	})
-
-	t.Run("InvalidPointer", func(t *testing.T) {
-		req, w, buf := setup(mocks.MakeUser(), nil)
-		type TestStruct struct {
-			Param1 string
-			Param2 int
-		}
-
-		_, ok := getRequestContext(w, req, &TestStruct{})
-		assert.Equals(t, ok, false)
-		assert.Equals(t, w.Status, http.StatusInternalServerError)
-		assert.Equals(t, w.Body, "failed to fetch path parameters")
-		xMessage := "path param variable must point to a struct of strings"
-		assert.Contains(t, buf.String(), "[ERROR]", xMessage)
-	})
-
-	t.Run("ParamMissingInRequest", func(t *testing.T) {
-		req, w, buf := setup(mocks.MakeUser(), []param{{"Param1", "value1"}})
-		type TestStruct struct{ Param1, Param2 string }
-
-		_, ok := getRequestContext(w, req, &TestStruct{})
-		assert.Equals(t, ok, false)
-		assert.Equals(t, w.Status, http.StatusInternalServerError)
-		assert.Equals(t, w.Body, "failed to fetch path parameter: Param2")
-		assert.Contains(t, buf.String(), "[ERROR]", "path parameter Param2 not found")
 	})
 }

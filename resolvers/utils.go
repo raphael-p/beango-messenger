@@ -44,27 +44,17 @@ func bindRequestJSON(w *response.Writer, r *http.Request, ptr any) bool {
 }
 
 // Gets all requested context attached to a request.
-// `ptr` must be a pointer to a struct where all fields are strings.
 // Writes an HTTP error response + logs on failure.
-func getRequestContext(w *response.Writer, r *http.Request, ptr any) (*database.User, bool) {
+func getRequestContext(w *response.Writer, r *http.Request, keys []string) (*database.User, map[string]string, bool) {
 	user, err := context.GetUser(r)
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteString(http.StatusInternalServerError, "failed to fetch user")
-		return nil, false
+		return nil, nil, false
 	}
 
-	if !validate.PointerToStringStruct(ptr) {
-		logger.Error("path param variable must point to a struct of strings")
-		w.WriteString(http.StatusInternalServerError, "failed to fetch path parameters")
-		return nil, false
-	}
-
-	reflectValue := reflect.ValueOf(ptr).Elem()
-	reflectType := reflectValue.Type()
-	for i := 0; i < reflectType.NumField(); i++ {
-		field := reflectValue.Field(i)
-		key := reflectType.Field(i).Name
+	params := make(map[string]string)
+	for _, key := range keys {
 		value, err := context.GetParam(r, key)
 		if err != nil {
 			logger.Error(err.Error())
@@ -72,9 +62,10 @@ func getRequestContext(w *response.Writer, r *http.Request, ptr any) (*database.
 				http.StatusInternalServerError,
 				fmt.Sprint("failed to fetch path parameter: ", key),
 			)
-			return nil, false
+			return nil, nil, false
 		}
-		field.SetString(value)
+		params[key] = value
 	}
-	return user, true
+
+	return user, params, true
 }
