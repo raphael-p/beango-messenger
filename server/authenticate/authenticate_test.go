@@ -16,10 +16,10 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-func setup(name, sessionId string, t *testing.T) (*response.Writer, *http.Request, database.Connection) {
+func setup(name, sessionId string) (*response.Writer, *http.Request, database.Connection) {
 	w := response.NewWriter(httptest.NewRecorder())
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	conn := mocks.MakeMockConnection(t)
+	conn := mocks.MakeMockConnection()
 	if name != "" {
 		if sessionId == "" {
 			sessionId = mocks.AdminSesh.ID
@@ -34,7 +34,7 @@ var sessionCookie string = string(cookies.SESSION)
 
 func TestFromCookie(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
-		w, req, conn := setup(sessionCookie, "", t)
+		w, req, conn := setup(sessionCookie, "")
 
 		req, ok := FromCookie(w, req, conn)
 		assert.Equals(t, ok, true)
@@ -44,7 +44,7 @@ func TestFromCookie(t *testing.T) {
 	})
 
 	t.Run("InvalidCookie", func(t *testing.T) {
-		w, req, conn := setup("raisin", "", t)
+		w, req, conn := setup("raisin", "")
 		reqCopy := *req
 
 		req, ok := FromCookie(w, req, conn)
@@ -56,7 +56,7 @@ func TestFromCookie(t *testing.T) {
 	t.Run("UserNotFound", func(t *testing.T) {
 		user := mocks.MakeUser()
 		sesh := mocks.MakeSession(user.ID)
-		w, req, conn := setup(sessionCookie, sesh.ID, t)
+		w, req, conn := setup(sessionCookie, sesh.ID)
 		reqCopy := *req
 		conn.SetSession(sesh)
 
@@ -68,7 +68,7 @@ func TestFromCookie(t *testing.T) {
 	})
 
 	t.Run("CannotSetNewContext", func(t *testing.T) {
-		w, req, conn := setup(sessionCookie, "", t)
+		w, req, conn := setup(sessionCookie, "")
 		buf := logger.MockFileLogger(t)
 
 		req, ok := FromCookie(w, req, conn) // adds user to request context
@@ -87,19 +87,19 @@ func TestFromCookie(t *testing.T) {
 
 func TestGetUserIdFromCookie(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
-		userID, err := getUserIDFromCookie(setup(sessionCookie, "", t))
+		userID, err := getUserIDFromCookie(setup(sessionCookie, ""))
 		assert.IsNil(t, err)
 		assert.Equals(t, userID, mocks.Admin.ID)
 	})
 
 	t.Run("WrongCookie", func(t *testing.T) {
-		userID, err := getUserIDFromCookie(setup("raisin", "", t))
+		userID, err := getUserIDFromCookie(setup("raisin", ""))
 		assert.ErrorHasMessage(t, err, "no cookie found with the name beango-session")
 		assert.Equals(t, userID, "")
 	})
 
 	t.Run("NoCookie", func(t *testing.T) {
-		userID, err := getUserIDFromCookie(setup("raisin", "", t))
+		userID, err := getUserIDFromCookie(setup("raisin", ""))
 		assert.ErrorHasMessage(t, err, "no cookie found with the name beango-session")
 		assert.Equals(t, userID, "")
 	})
@@ -107,7 +107,7 @@ func TestGetUserIdFromCookie(t *testing.T) {
 	t.Run("NoSession", func(t *testing.T) {
 		noSeshUser := mocks.MakeUser()
 		buf := logger.MockFileLogger(t)
-		w, req, conn := setup(sessionCookie, noSeshUser.ID, t)
+		w, req, conn := setup(sessionCookie, noSeshUser.ID)
 
 		userID, err := getUserIDFromCookie(w, req, conn)
 		assert.ErrorHasMessage(t, err, "cookie or session is invalid")

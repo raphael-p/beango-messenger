@@ -300,7 +300,7 @@ func TestRouteHandler(t *testing.T) {
 		req := httptest.NewRequest(method, path, nil)
 		w := response.NewWriter(httptest.NewRecorder())
 		buf := logger.MockFileLogger(t)
-		conn := mocks.MakeMockConnection(t)
+		conn := mocks.MakeMockConnection()
 		return w, req, buf, conn
 	}
 

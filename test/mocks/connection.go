@@ -2,18 +2,12 @@ package mocks
 
 import (
 	"errors"
-	"testing"
 
 	"github.com/raphael-p/beango/database"
 )
 
 var Admin *database.User
 var AdminSesh database.Session
-
-var testUsers = make(map[string]database.User)
-var testChats = make(map[string]database.Chat)
-var testMessages = make(map[string]database.Message)
-var testSessions = make(map[string]database.Session)
 
 func populateMockDB(conn database.Connection) {
 	Admin = MakeAdminUser()
@@ -22,24 +16,26 @@ func populateMockDB(conn database.Connection) {
 	conn.SetSession(AdminSesh)
 }
 
-func clearMockDB() {
-	testUsers = make(map[string]database.User)
-	testChats = make(map[string]database.Chat)
-	testMessages = make(map[string]database.Message)
-	testSessions = make(map[string]database.Session)
+type MockConnection struct {
+	users    map[string]database.User
+	chats    map[string]database.Chat
+	messages map[string]database.Message
+	sessions map[string]database.Session
 }
 
-type MockConnection struct{}
-
-func MakeMockConnection(t *testing.T) database.Connection {
-	conn := &MockConnection{}
+func MakeMockConnection() database.Connection {
+	conn := &MockConnection{
+		make(map[string]database.User),
+		make(map[string]database.Chat),
+		make(map[string]database.Message),
+		make(map[string]database.Session),
+	}
 	populateMockDB(conn)
-	t.Cleanup(clearMockDB)
 	return conn
 }
 
-func (tc *MockConnection) CheckSession(id string) (*database.Session, bool) {
-	session := tc.GetSession(id)
+func (mc *MockConnection) CheckSession(id string) (*database.Session, bool) {
+	session := mc.GetSession(id)
 	if session == nil {
 		return nil, false
 	}
@@ -64,8 +60,8 @@ func (*MockConnection) GetMessagesByChatID(chatID string) []database.Message {
 	return nil
 }
 
-func (*MockConnection) GetSession(id string) *database.Session {
-	session, ok := testSessions[id]
+func (mc *MockConnection) GetSession(id string) *database.Session {
+	session, ok := mc.sessions[id]
 	if !ok {
 		return nil
 	}
@@ -76,30 +72,35 @@ func (*MockConnection) GetSessionByUserID(userID string) (*database.Session, err
 	return nil, nil
 }
 
-func (*MockConnection) GetUser(id string) (*database.User, error) {
-	user, ok := testUsers[id]
+func (mc *MockConnection) GetUser(id string) (*database.User, error) {
+	user, ok := mc.users[id]
 	if !ok {
 		return nil, errors.New("not found")
 	}
 	return &user, nil
 }
 
-func (*MockConnection) GetUserByUsername(username string) (*database.User, error) {
-	return nil, nil
+func (mc *MockConnection) GetUserByUsername(username string) (*database.User, error) {
+	for _, user := range mc.users {
+		if user.Username == username {
+			return &user, nil
+		}
+	}
+	return nil, errors.New("not found")
 }
 
-func (*MockConnection) SetChat(chat *database.Chat) {
-	testChats[chat.ID] = *chat
+func (mc *MockConnection) SetChat(chat *database.Chat) {
+	mc.chats[chat.ID] = *chat
 }
 
-func (*MockConnection) SetMessage(message *database.Message) {
-	testMessages[message.ID] = *message
+func (mc *MockConnection) SetMessage(message *database.Message) {
+	mc.messages[message.ID] = *message
 }
 
-func (*MockConnection) SetSession(session database.Session) {
-	testSessions[session.ID] = session
+func (mc *MockConnection) SetSession(session database.Session) {
+	mc.sessions[session.ID] = session
 }
 
-func (*MockConnection) SetUser(user *database.User) {
-	testUsers[user.ID] = *user
+func (mc *MockConnection) SetUser(user *database.User) {
+	mc.users[user.ID] = *user
 }
