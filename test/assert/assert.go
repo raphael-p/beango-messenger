@@ -1,6 +1,7 @@
 package assert
 
 import (
+	"encoding/json"
 	"reflect"
 	"strings"
 	"testing"
@@ -8,7 +9,7 @@ import (
 
 func HasLength[T any](t *testing.T, list []T, expectedLength int) {
 	if length := len(list); length != expectedLength {
-		t.Errorf("expected list to be of length %d, got %d", expectedLength, length)
+		t.Errorf("expected list to have %d elements, got %d", expectedLength, length)
 	}
 }
 
@@ -73,5 +74,11 @@ func ErrorHasMessage(t *testing.T, err error, expectedMessage string) {
 	}
 	if err.Error() != expectedMessage {
 		t.Errorf("expected error \"%v\", got \"%v\"", err.Error(), expectedMessage)
+	}
+}
+
+func IsValidJSON(t *testing.T, value string, ptr any) {
+	if err := json.Unmarshal([]byte(value), ptr); err != nil {
+		t.Errorf(`failed to unmarshal "%v", got "%v"`, value, err.Error())
 	}
 }
