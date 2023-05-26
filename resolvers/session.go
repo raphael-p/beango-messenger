@@ -20,8 +20,7 @@ type SessionInput struct {
 }
 
 func CreateSession(w *response.Writer, r *http.Request, conn database.Connection) {
-	sessionID, err := cookies.Get(r, cookies.SESSION)
-	if err == nil {
+	if sessionID, err := cookies.Get(r, cookies.SESSION); err == nil {
 		_, ok := conn.CheckSession(sessionID)
 		if ok {
 			w.WriteString(http.StatusBadRequest, "there already is a valid session cookie in the request")
@@ -34,27 +33,31 @@ func CreateSession(w *response.Writer, r *http.Request, conn database.Connection
 		return
 	}
 
-	if user, err := conn.GetUserByUsername(input.Username); err == nil {
-		err := bcrypt.CompareHashAndPassword(user.Key, []byte(input.Password))
-		if err == nil {
-			sessionID := uuid.NewString()
-			expiryDuration := time.Duration(config.Values.Session.SecondsUntilExpiry) * time.Second
-			expiryDate := time.Now().UTC().Add(expiryDuration)
-			err = cookies.Set(w, cookies.SESSION, sessionID, expiryDate)
-			if err != nil {
-				logger.Error(fmt.Sprint("session cookie creation failed: ", err))
-				w.WriteString(http.StatusInternalServerError, "")
-				return
-			}
-			conn.SetSession(database.Session{
-				ID:         sessionID,
-				UserID:     user.ID,
-				ExpiryDate: expiryDate,
-			})
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
+	user, err := conn.GetUserByUsername(input.Username)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
 	}
 
-	w.WriteHeader(http.StatusUnauthorized)
+	err = bcrypt.CompareHashAndPassword(user.Key, []byte(input.Password))
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	sessionID := uuid.NewString()
+	expiryDuration := time.Duration(config.Values.Session.SecondsUntilExpiry) * time.Second
+	expiryDate := time.Now().UTC().Add(expiryDuration)
+	err = cookies.Set(w, cookies.SESSION, sessionID, expiryDate)
+	if err != nil {
+		logger.Error(fmt.Sprint("failed to create session cookie: ", err))
+		w.WriteString(http.StatusInternalServerError, "failed to create session cookie")
+		return
+	}
+	conn.SetSession(database.Session{
+		ID:         sessionID,
+		UserID:     user.ID,
+		ExpiryDate: expiryDate,
+	})
+	w.WriteHeader(http.StatusNoContent)
 }
