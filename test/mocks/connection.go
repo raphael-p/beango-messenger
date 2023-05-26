@@ -42,7 +42,9 @@ func (mc *MockConnection) CheckSession(id string) (*database.Session, bool) {
 	return session, true
 }
 
-func (*MockConnection) DeleteSession(id string) {}
+func (mc *MockConnection) DeleteSession(id string) {
+	delete(mc.sessions, id)
+}
 
 func (*MockConnection) GetChat(id string) (*database.Chat, error) {
 	return nil, nil
