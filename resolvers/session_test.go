@@ -14,15 +14,19 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-func setupSession(username, password string) (*response.Writer, *http.Request, database.Connection) {
-	body := fmt.Sprintf(`{"Username": "%s", "Password": "%s"}`, username, password)
-	return setup(body)
-}
-
 func TestCreateSession(t *testing.T) {
+	config.CreateConfig()
+	setupSession := func(username, password string) (
+		*response.Writer,
+		*http.Request,
+		database.Connection,
+	) {
+		body := fmt.Sprintf(`{"Username": "%s", "Password": "%s"}`, username, password)
+		return setup(body)
+	}
+
 	t.Run("Normal", func(t *testing.T) {
 		w, req, conn := setupSession(mocks.ADMIN_USERNAME, mocks.PASSWORD)
-		config.CreateConfig()
 
 		CreateSession(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusNoContent)
@@ -34,7 +38,6 @@ func TestCreateSession(t *testing.T) {
 		cookie := &http.Cookie{Name: string(cookies.SESSION), Value: mocks.AdminSesh.ID}
 		req.AddCookie(cookie)
 		conn.DeleteSession(mocks.AdminSesh.ID)
-		config.CreateConfig()
 
 		CreateSession(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusNoContent)
@@ -45,7 +48,6 @@ func TestCreateSession(t *testing.T) {
 		w, req, conn := setupSession(mocks.ADMIN_USERNAME, mocks.PASSWORD)
 		cookie := &http.Cookie{Name: string(cookies.SESSION), Value: mocks.AdminSesh.ID}
 		req.AddCookie(cookie)
-		config.CreateConfig()
 
 		CreateSession(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusBadRequest)
@@ -54,7 +56,6 @@ func TestCreateSession(t *testing.T) {
 
 	t.Run("WrongUsername", func(t *testing.T) {
 		w, req, conn := setupSession(mocks.ADMIN_USERNAME+" ", mocks.PASSWORD)
-		config.CreateConfig()
 
 		CreateSession(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusUnauthorized)
@@ -63,7 +64,6 @@ func TestCreateSession(t *testing.T) {
 
 	t.Run("WrongPassword", func(t *testing.T) {
 		w, req, conn := setupSession(mocks.ADMIN_USERNAME, mocks.PASSWORD+" ")
-		config.CreateConfig()
 
 		CreateSession(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusUnauthorized)
@@ -74,7 +74,6 @@ func TestCreateSession(t *testing.T) {
 		w, req, conn := setupSession(mocks.ADMIN_USERNAME, mocks.PASSWORD)
 		http.SetCookie(w, &http.Cookie{Name: string(cookies.SESSION)})
 		buf := logger.MockFileLogger(t)
-		config.CreateConfig()
 
 		CreateSession(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusInternalServerError)

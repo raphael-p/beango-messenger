@@ -25,7 +25,11 @@ func TestCreateUser(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		username := "xXbeanXx"
 		display := "Bean The Cat"
-		body := fmt.Sprintf(`{"Username": "%s", "displayName": "%s", "password":"abc123"}`, username, display)
+		body := fmt.Sprintf(
+			`{"Username": "%s", "displayName": "%s", "password":"abc123"}`,
+			username,
+			display,
+		)
 		w, req, conn := setup(body)
 
 		CreateUser(w, req, conn)
@@ -43,10 +47,11 @@ func TestCreateUser(t *testing.T) {
 	})
 
 	t.Run("UsernameTaken", func(t *testing.T) {
-		username := "xXbeanXx"
-		body := fmt.Sprintf(`{"Username": "%s", "displayName": "Bean", "password":"abc123"}`, username)
+		body := fmt.Sprintf(
+			`{"Username": "%s", "displayName": "Bean", "password":"abc123"}`,
+			mocks.ADMIN_USERNAME,
+		)
 		w, req, conn := setup(body)
-		conn.SetUser(&database.User{Username: username})
 
 		CreateUser(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusConflict)
@@ -78,29 +83,25 @@ func TestCreateUser(t *testing.T) {
 
 func TestGetUserByName(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
-		username := "xXbeanXx"
 		w, req, conn := setup("")
-		conn.SetUser(&database.User{Username: username})
 		req, err := context.SetUser(req, mocks.MakeUser())
 		assert.IsNil(t, err)
-		req, err = context.SetParam(req, "username", username)
+		req, err = context.SetParam(req, "username", mocks.Admin.Username)
 		assert.IsNil(t, err)
 
 		GetUserByName(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusOK)
-		xOutput := UserOutput{"", username, ""}
+		xOutput := *stripFields(mocks.Admin)
 		var output UserOutput
 		assert.IsValidJSON(t, w.Body, &output)
 		assert.Equals(t, output, xOutput)
 	})
 
 	t.Run("UsernameParamNotSet", func(t *testing.T) {
-		username := "xXbeanXx"
 		w, req, conn := setup("")
-		conn.SetUser(&database.User{Username: username})
-		req, err := context.SetUser(req, mocks.MakeUser())
+		req, err := context.SetUser(req, mocks.Admin)
 		assert.IsNil(t, err)
-		req, err = context.SetParam(req, "not-username", username)
+		req, err = context.SetParam(req, "not-username", mocks.Admin.Username)
 		assert.IsNil(t, err)
 
 		GetUserByName(w, req, conn)
@@ -109,16 +110,14 @@ func TestGetUserByName(t *testing.T) {
 	})
 
 	t.Run("NoMatchingUsername", func(t *testing.T) {
-		username := "xXbeanXx"
 		w, req, conn := setup("")
 		req, err := context.SetUser(req, mocks.MakeUser())
 		assert.IsNil(t, err)
-		req, err = context.SetParam(req, "username", username)
+		req, err = context.SetParam(req, "username", "xXbeanXx")
 		assert.IsNil(t, err)
 
 		GetUserByName(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusNotFound)
 		assert.Equals(t, w.Body, "user not found")
 	})
-
 }
