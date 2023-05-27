@@ -44,7 +44,7 @@ func CreateUser(w *response.Writer, r *http.Request, conn database.Connection) {
 	}
 
 	newUser := &database.User{
-		ID:          uuid.New().String(),
+		ID:          uuid.NewString(),
 		Username:    input.Username,
 		DisplayName: input.DisplayName.Value,
 		Key:         hash,

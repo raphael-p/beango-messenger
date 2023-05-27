@@ -19,7 +19,7 @@ func (c *MongoConnection) GetChat(id string) (*Chat, error) {
 }
 
 func (c *MongoConnection) GetChatsByUserID(userID string) []Chat {
-	var chats []Chat
+	chats := []Chat{}
 	for _, chat := range Chats {
 		for _, chatUserID := range chat.UserIDs {
 			if chatUserID == userID {

@@ -8,7 +8,7 @@ type Message struct {
 }
 
 func (conn *MongoConnection) GetMessagesByChatID(chatID string) []Message {
-	var messages []Message
+	messages := []Message{}
 	for _, message := range Messages {
 		if message.ChatID == chatID {
 			messages = append(messages, message)
