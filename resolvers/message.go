@@ -48,6 +48,7 @@ func SendMessage(w *response.Writer, r *http.Request, conn database.Connection) 
 
 	newMessage := &database.Message{
 		ID:      uuid.NewString(),
+		UserID:  user.ID,
 		ChatID:  params[chatIDKey],
 		Content: input.Content,
 	}
