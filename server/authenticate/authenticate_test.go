@@ -16,15 +16,15 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-func setup(name, sessionId string) (*response.Writer, *http.Request, database.Connection) {
+func setup(name, sessionID string) (*response.Writer, *http.Request, database.Connection) {
 	w := response.NewWriter(httptest.NewRecorder())
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	conn := mocks.MakeMockConnection()
 	if name != "" {
-		if sessionId == "" {
-			sessionId = mocks.AdminSesh.ID
+		if sessionID == "" {
+			sessionID = mocks.AdminSesh.ID
 		}
-		cookie := &http.Cookie{Name: name, Value: sessionId}
+		cookie := &http.Cookie{Name: name, Value: sessionID}
 		req.AddCookie(cookie)
 	}
 	return w, req, conn
@@ -82,10 +82,9 @@ func TestFromCookie(t *testing.T) {
 		assert.Equals(t, w.Body, xMessage)
 		assert.Contains(t, buf.String(), fmt.Sprint("[ERROR] ", xMessage))
 	})
-
 }
 
-func TestGetUserIdFromCookie(t *testing.T) {
+func TestGetUserIDFromCookie(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		userID, err := getUserIDFromCookie(setup(sessionCookie, ""))
 		assert.IsNil(t, err)
