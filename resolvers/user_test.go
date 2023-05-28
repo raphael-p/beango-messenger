@@ -5,21 +5,42 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/test/assert"
 	"github.com/raphael-p/beango/test/mocks"
+	"github.com/raphael-p/beango/utils/response"
 )
 
 func TestCreateUser(t *testing.T) {
+	setup := func(name, display, pass string) (
+		*response.Writer,
+		*http.Request,
+		database.Connection,
+	) {
+		var body string
+		if display == "" {
+			body = fmt.Sprintf(
+				`{"Username": "%s", "password":"%s"}`,
+				name,
+				pass,
+			)
+		} else {
+			body = fmt.Sprintf(
+				`{"Username": "%s", "displayName": "%s", "password":"%s"}`,
+				name,
+				display,
+				pass,
+			)
+		}
+		w, req := mockRequest(body)
+		conn := mocks.MakeMockConnection()
+		return w, req, conn
+	}
+
 	t.Run("Normal", func(t *testing.T) {
 		username := "xXbeanXx"
 		display := "Bean The Cat"
-		body := fmt.Sprintf(
-			`{"Username": "%s", "displayName": "%s", "password":"abc123"}`,
-			username,
-			display,
-		)
-		w, req := mockRequest(body)
-		conn := mocks.MakeMockConnection()
+		w, req, conn := setup(username, display, "abc123")
 
 		CreateUser(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusCreated)
@@ -36,12 +57,7 @@ func TestCreateUser(t *testing.T) {
 	})
 
 	t.Run("UsernameTaken", func(t *testing.T) {
-		body := fmt.Sprintf(
-			`{"Username": "%s", "displayName": "Bean", "password":"abc123"}`,
-			mocks.ADMIN_USERNAME,
-		)
-		w, req := mockRequest(body)
-		conn := mocks.MakeMockConnection()
+		w, req, conn := setup(mocks.ADMIN_USERNAME, "Bean", "abc123")
 
 		CreateUser(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusConflict)
@@ -49,10 +65,9 @@ func TestCreateUser(t *testing.T) {
 	})
 
 	t.Run("PasswordNotHashable", func(t *testing.T) {
-		password := "This is string is longer than 72 bytes. bcrypt will not like this string."
-		body := fmt.Sprintf(`{"Username": "xXbeanXx", "displayName": "Bean", "password":"%s"}`, password)
-		w, req := mockRequest(body)
-		conn := mocks.MakeMockConnection()
+		password := "This is string is longer than 72 bytes. " +
+			"bcrypt will not like this string."
+		w, req, conn := setup("xXBeanXx", "Bean", password)
 
 		CreateUser(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusBadRequest)
@@ -61,9 +76,7 @@ func TestCreateUser(t *testing.T) {
 
 	t.Run("NoDisplayName", func(t *testing.T) {
 		username := "xXbeanXx"
-		body := fmt.Sprintf(`{"Username": "%s", "password":"abc123"}`, username)
-		w, req := mockRequest(body)
-		conn := mocks.MakeMockConnection()
+		w, req, conn := setup(username, "", "abc123")
 
 		CreateUser(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusCreated)
@@ -74,11 +87,26 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestGetUserByName(t *testing.T) {
-	t.Run("Normal", func(t *testing.T) {
+	setup := func(key, value string) (
+		*response.Writer,
+		*http.Request,
+		database.Connection,
+	) {
 		w, req := mockRequest("")
 		conn := mocks.MakeMockConnection()
-		params := map[string]string{"username": mocks.Admin.Username}
+		if key == "" {
+			key = "username"
+		}
+		if value == "" {
+			value = mocks.Admin.Username
+		}
+		params := map[string]string{key: value}
 		req = setContext(t, req, mocks.MakeUser(), params)
+		return w, req, conn
+	}
+
+	t.Run("Normal", func(t *testing.T) {
+		w, req, conn := setup("", "")
 
 		GetUserByName(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusOK)
@@ -89,10 +117,7 @@ func TestGetUserByName(t *testing.T) {
 	})
 
 	t.Run("UsernameParamNotSet", func(t *testing.T) {
-		w, req := mockRequest("")
-		conn := mocks.MakeMockConnection()
-		params := map[string]string{"not-username": mocks.Admin.Username}
-		req = setContext(t, req, mocks.MakeUser(), params)
+		w, req, conn := setup("not-username", "")
 
 		GetUserByName(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusInternalServerError)
@@ -100,10 +125,7 @@ func TestGetUserByName(t *testing.T) {
 	})
 
 	t.Run("NoMatchingUsername", func(t *testing.T) {
-		w, req := mockRequest("")
-		conn := mocks.MakeMockConnection()
-		params := map[string]string{"username": "xXbeanXx"}
-		req = setContext(t, req, mocks.MakeUser(), params)
+		w, req, conn := setup("", "xXbeanXx")
 
 		GetUserByName(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusNotFound)
