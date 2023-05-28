@@ -21,7 +21,7 @@ func setupMessageTests(t *testing.T, body string, contextUser *database.User) (
 	w, req := mockRequest(body)
 	conn := mocks.MakeMockConnection()
 	chat := mocks.MakeChat(mocks.Admin.ID, mocks.MakeUser().ID)
-	param := map[string]string{"chatID": chat.ID}
+	param := map[string]string{CHAT_ID_KEY: chat.ID}
 	if contextUser == nil {
 		contextUser = mocks.Admin
 	}

@@ -54,12 +54,29 @@ func (mc *MockConnection) GetChat(id string) (*database.Chat, error) {
 	return &chat, nil
 }
 
-func (*MockConnection) GetChatByUserIDs(userIDs [2]string) *database.Chat {
+func (mc *MockConnection) GetChatByUserIDs(userIDs [2]string) *database.Chat {
+	for _, chat := range mc.chats {
+		if (chat.UserIDs[0] == userIDs[0] &&
+			chat.UserIDs[1] == userIDs[1]) ||
+			(chat.UserIDs[0] == userIDs[1] &&
+				chat.UserIDs[1] == userIDs[0]) {
+			return &chat
+		}
+
+	}
 	return nil
 }
 
-func (*MockConnection) GetChatsByUserID(userID string) []database.Chat {
-	return nil
+func (mc *MockConnection) GetChatsByUserID(userID string) []database.Chat {
+	chats := []database.Chat{}
+	for _, chat := range mc.chats {
+		for _, chatUserID := range chat.UserIDs {
+			if chatUserID == userID {
+				chats = append(chats, chat)
+			}
+		}
+	}
+	return chats
 }
 
 func (mc *MockConnection) GetMessagesByChatID(chatID string) []database.Message {
