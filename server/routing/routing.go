@@ -143,12 +143,11 @@ func (r *route) handler(w *response.Writer, req *http.Request, conn database.Con
 	logger.Info(fmt.Sprint("received ", requestString))
 
 	// Authentication
+	ok := false
 	if r.authenticate {
-		reqWithUser, ok := authenticate.FromCookie(w, req, conn)
-		if !ok {
+		if req, ok = authenticate.FromCookie(w, req, conn); !ok {
 			return
 		}
-		req = reqWithUser
 	}
 
 	// Log response
