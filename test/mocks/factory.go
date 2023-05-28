@@ -13,7 +13,7 @@ const HASH = "$2y$04$8QoTLjUMGtnr4lNeA0DtduhEshmvbDbmEzW/G9IkV/9mr576xX//K"
 
 func MakeUser() *database.User {
 	return &database.User{
-		ID:          uuid.New().String(),
+		ID:          uuid.NewString(),
 		Username:    "john.doe.69",
 		DisplayName: "Johnny D",
 		Key:         []byte(HASH),
@@ -22,7 +22,7 @@ func MakeUser() *database.User {
 
 func MakeAdminUser() *database.User {
 	return &database.User{
-		ID:          uuid.New().String(),
+		ID:          uuid.NewString(),
 		Username:    ADMIN_USERNAME,
 		DisplayName: "Administrator",
 		Key:         []byte(HASH),
@@ -31,8 +31,24 @@ func MakeAdminUser() *database.User {
 
 func MakeSession(userId string) database.Session {
 	return database.Session{
-		ID:         uuid.New().String(),
+		ID:         uuid.NewString(),
 		UserID:     userId,
 		ExpiryDate: time.Now().UTC().Add(time.Hour),
+	}
+}
+
+func MakeChat(userIDOne, userIDTwo string) *database.Chat {
+	return &database.Chat{
+		ID:      uuid.NewString(),
+		UserIDs: [2]string{userIDOne, userIDTwo},
+	}
+}
+
+func MakeMessage(userID, chatID string) *database.Message {
+	return &database.Message{
+		ID:      uuid.NewString(),
+		UserID:  userID,
+		ChatID:  chatID,
+		Content: "Lorem Ipsum Dolor",
 	}
 }

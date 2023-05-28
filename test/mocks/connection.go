@@ -46,8 +46,12 @@ func (mc *MockConnection) DeleteSession(id string) {
 	delete(mc.sessions, id)
 }
 
-func (*MockConnection) GetChat(id string) (*database.Chat, error) {
-	return nil, nil
+func (mc *MockConnection) GetChat(id string) (*database.Chat, error) {
+	chat, ok := mc.chats[id]
+	if !ok {
+		return nil, errors.New("not found")
+	}
+	return &chat, nil
 }
 
 func (*MockConnection) GetChatByUserIDs(userIDs [2]string) *database.Chat {
@@ -58,8 +62,14 @@ func (*MockConnection) GetChatsByUserID(userID string) []database.Chat {
 	return nil
 }
 
-func (*MockConnection) GetMessagesByChatID(chatID string) []database.Message {
-	return nil
+func (mc *MockConnection) GetMessagesByChatID(chatID string) []database.Message {
+	messages := []database.Message{}
+	for _, message := range mc.messages {
+		if message.ChatID == chatID {
+			messages = append(messages, message)
+		}
+	}
+	return messages
 }
 
 func (mc *MockConnection) GetSession(id string) *database.Session {
