@@ -1,25 +1,13 @@
 package resolvers
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
-	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/test/assert"
 	"github.com/raphael-p/beango/test/mocks"
-	"github.com/raphael-p/beango/utils/context"
-	"github.com/raphael-p/beango/utils/response"
 )
-
-func setup(body string) (*response.Writer, *http.Request, database.Connection) {
-	req := httptest.NewRequest(http.MethodPost, "/test", bytes.NewBufferString(body))
-	req.Header.Set("Content-Type", "application/json")
-	w := response.NewWriter(httptest.NewRecorder())
-	return w, req, mocks.MakeMockConnection()
-}
 
 func TestCreateUser(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
@@ -30,7 +18,8 @@ func TestCreateUser(t *testing.T) {
 			username,
 			display,
 		)
-		w, req, conn := setup(body)
+		w, req := mockRequest(body)
+		conn := mocks.MakeMockConnection()
 
 		CreateUser(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusCreated)
@@ -51,7 +40,8 @@ func TestCreateUser(t *testing.T) {
 			`{"Username": "%s", "displayName": "Bean", "password":"abc123"}`,
 			mocks.ADMIN_USERNAME,
 		)
-		w, req, conn := setup(body)
+		w, req := mockRequest(body)
+		conn := mocks.MakeMockConnection()
 
 		CreateUser(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusConflict)
@@ -61,7 +51,8 @@ func TestCreateUser(t *testing.T) {
 	t.Run("PasswordNotHashable", func(t *testing.T) {
 		password := "This is string is longer than 72 bytes. bcrypt will not like this string."
 		body := fmt.Sprintf(`{"Username": "xXbeanXx", "displayName": "Bean", "password":"%s"}`, password)
-		w, req, conn := setup(body)
+		w, req := mockRequest(body)
+		conn := mocks.MakeMockConnection()
 
 		CreateUser(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusBadRequest)
@@ -71,7 +62,8 @@ func TestCreateUser(t *testing.T) {
 	t.Run("NoDisplayName", func(t *testing.T) {
 		username := "xXbeanXx"
 		body := fmt.Sprintf(`{"Username": "%s", "password":"abc123"}`, username)
-		w, req, conn := setup(body)
+		w, req := mockRequest(body)
+		conn := mocks.MakeMockConnection()
 
 		CreateUser(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusCreated)
@@ -83,11 +75,10 @@ func TestCreateUser(t *testing.T) {
 
 func TestGetUserByName(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
-		w, req, conn := setup("")
-		req, err := context.SetUser(req, mocks.MakeUser())
-		assert.IsNil(t, err)
-		req, err = context.SetParam(req, "username", mocks.Admin.Username)
-		assert.IsNil(t, err)
+		w, req := mockRequest("")
+		conn := mocks.MakeMockConnection()
+		params := map[string]string{"username": mocks.Admin.Username}
+		req = setContext(t, req, mocks.MakeUser(), params)
 
 		GetUserByName(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusOK)
@@ -98,11 +89,10 @@ func TestGetUserByName(t *testing.T) {
 	})
 
 	t.Run("UsernameParamNotSet", func(t *testing.T) {
-		w, req, conn := setup("")
-		req, err := context.SetUser(req, mocks.Admin)
-		assert.IsNil(t, err)
-		req, err = context.SetParam(req, "not-username", mocks.Admin.Username)
-		assert.IsNil(t, err)
+		w, req := mockRequest("")
+		conn := mocks.MakeMockConnection()
+		params := map[string]string{"not-username": mocks.Admin.Username}
+		req = setContext(t, req, mocks.MakeUser(), params)
 
 		GetUserByName(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusInternalServerError)
@@ -110,11 +100,10 @@ func TestGetUserByName(t *testing.T) {
 	})
 
 	t.Run("NoMatchingUsername", func(t *testing.T) {
-		w, req, conn := setup("")
-		req, err := context.SetUser(req, mocks.MakeUser())
-		assert.IsNil(t, err)
-		req, err = context.SetParam(req, "username", "xXbeanXx")
-		assert.IsNil(t, err)
+		w, req := mockRequest("")
+		conn := mocks.MakeMockConnection()
+		params := map[string]string{"username": "xXbeanXx"}
+		req = setContext(t, req, mocks.MakeUser(), params)
 
 		GetUserByName(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusNotFound)

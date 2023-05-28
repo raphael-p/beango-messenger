@@ -15,6 +15,31 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
+func mockRequest(body string) (*response.Writer, *http.Request) {
+	req := httptest.NewRequest(http.MethodPost, "/test", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := response.NewWriter(httptest.NewRecorder())
+	return w, req
+}
+
+func setContext(
+	t *testing.T,
+	req *http.Request,
+	user *database.User,
+	params map[string]string,
+) *http.Request {
+	var err error = nil
+	if user != nil {
+		req, err = context.SetUser(req, user)
+		assert.IsNil(t, err)
+	}
+	for key, value := range params {
+		req, err = context.SetParam(req, key, value)
+		assert.IsNil(t, err)
+	}
+	return req
+}
+
 func TestBindRequestJSON(t *testing.T) {
 	type TestStruct struct {
 		Name string `json:"name"`
@@ -22,9 +47,7 @@ func TestBindRequestJSON(t *testing.T) {
 	}
 
 	setup := func(body string, ptr any) (bool, *response.Writer) {
-		req := httptest.NewRequest(http.MethodPost, "/test", bytes.NewBufferString(body))
-		req.Header.Set("Content-Type", "application/json")
-		w := response.NewWriter(httptest.NewRecorder())
+		w, req := mockRequest(body)
 		ok := bindRequestJSON(w, req, ptr)
 		return ok, w
 	}
@@ -80,18 +103,8 @@ func TestGetRequestContext(t *testing.T) {
 		*response.Writer,
 		*bytes.Buffer,
 	) {
-		req := httptest.NewRequest(http.MethodGet, "/test", nil)
-		if user != nil {
-			newReq, err := context.SetUser(req, user)
-			assert.IsNil(t, err)
-			req = newReq
-		}
-		for key, value := range params {
-			newReq, err := context.SetParam(req, key, value)
-			assert.IsNil(t, err)
-			req = newReq
-		}
-		w := response.NewWriter(httptest.NewRecorder())
+		w, req := mockRequest("")
+		req = setContext(t, req, user, params)
 		buf := logger.MockFileLogger(t)
 		return req, w, buf
 	}
