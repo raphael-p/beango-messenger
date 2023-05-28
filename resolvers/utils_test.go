@@ -48,7 +48,7 @@ func TestBindRequestJSON(t *testing.T) {
 
 	setup := func(body string, ptr any) (bool, *response.Writer) {
 		w, req := mockRequest(body)
-		ok := bindRequestJSON(w, req, ptr)
+		ok := getRequestBody(w, req, ptr)
 		return ok, w
 	}
 

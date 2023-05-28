@@ -28,7 +28,7 @@ type CreateUserInput struct {
 
 func CreateUser(w *response.Writer, r *http.Request, conn database.Connection) {
 	var input CreateUserInput
-	if ok := bindRequestJSON(w, r, &input); !ok {
+	if ok := getRequestBody(w, r, &input); !ok {
 		return
 	}
 

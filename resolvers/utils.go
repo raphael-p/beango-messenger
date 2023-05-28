@@ -15,7 +15,7 @@ import (
 
 // Decodes JSON from HTTP request body and binds it to a struct pointer.
 // Writes an HTTP error response on failure.
-func bindRequestJSON(w *response.Writer, r *http.Request, ptr any) bool {
+func getRequestBody(w *response.Writer, r *http.Request, ptr any) bool {
 	value := reflect.ValueOf(ptr)
 	if value.Kind() != reflect.Ptr || value.Elem().Kind() != reflect.Struct {
 		errorResponse := fmt.Sprintf(
@@ -75,4 +75,17 @@ func getRequestContext(
 	}
 
 	return user, params, true
+}
+
+// Calls `getRequestBody()` then, if successful, `getRequestContext()`
+func getRequestBodyAndContext(
+	w *response.Writer,
+	r *http.Request,
+	ptr any,
+	keys ...string,
+) (*database.User, map[string]string, bool) {
+	if ok := getRequestBody(w, r, ptr); !ok {
+		return nil, nil, false
+	}
+	return getRequestContext(w, r, keys...)
 }

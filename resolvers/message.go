@@ -28,7 +28,8 @@ type SendMessageInput struct {
 }
 
 func SendMessage(w *response.Writer, r *http.Request, conn database.Connection) {
-	user, params, ok := getRequestContext(w, r, CHAT_ID_KEY)
+	var input SendMessageInput
+	user, params, ok := getRequestBodyAndContext(w, r, &input, CHAT_ID_KEY)
 	if !ok {
 		return
 	}
@@ -36,11 +37,6 @@ func SendMessage(w *response.Writer, r *http.Request, conn database.Connection) 
 	chat, _ := conn.GetChat(params[CHAT_ID_KEY])
 	if chat == nil || (chat.UserIDs[0] != user.ID && chat.UserIDs[1] != user.ID) {
 		w.WriteString(http.StatusNotFound, "chat not found")
-		return
-	}
-
-	var input SendMessageInput
-	if ok := bindRequestJSON(w, r, &input); !ok {
 		return
 	}
 

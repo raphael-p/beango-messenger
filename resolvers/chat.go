@@ -24,9 +24,11 @@ type CreateChatInput struct {
 
 func CreateChat(w *response.Writer, r *http.Request, conn database.Connection) {
 	var input CreateChatInput
-	if ok := bindRequestJSON(w, r, &input); !ok {
+	user, _, ok := getRequestBodyAndContext(w, r, &input)
+	if !ok {
 		return
 	}
+	userIDs := [2]string{user.ID, input.UserID}
 
 	// Check that user id exists
 	_, err := conn.GetUser(input.UserID)
@@ -35,12 +37,6 @@ func CreateChat(w *response.Writer, r *http.Request, conn database.Connection) {
 		w.WriteString(http.StatusBadRequest, errorResponse)
 		return
 	}
-
-	user, _, ok := getRequestContext(w, r)
-	if !ok {
-		return
-	}
-	userIDs := [2]string{user.ID, input.UserID}
 
 	// Check if chat already exists
 	if chat := conn.GetChatByUserIDs(userIDs); chat != nil {
