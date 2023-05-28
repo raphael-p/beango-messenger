@@ -12,26 +12,26 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-func TestGetChatMessages(t *testing.T) {
-	setup := func(contextUser *database.User) (
-		*response.Writer,
-		*http.Request,
-		database.Connection,
-		*database.Chat,
-	) {
-		w, req := mockRequest("")
-		conn := mocks.MakeMockConnection()
-		chat := mocks.MakeChat(mocks.Admin.ID, mocks.MakeUser().ID)
-		param := map[string]string{"chatID": chat.ID}
-		if contextUser == nil {
-			contextUser = mocks.Admin
-		}
-		req = setContext(t, req, contextUser, param)
-		return w, req, conn, chat
+func setupMessageTests(t *testing.T, body string, contextUser *database.User) (
+	*response.Writer,
+	*http.Request,
+	database.Connection,
+	*database.Chat,
+) {
+	w, req := mockRequest(body)
+	conn := mocks.MakeMockConnection()
+	chat := mocks.MakeChat(mocks.Admin.ID, mocks.MakeUser().ID)
+	param := map[string]string{"chatID": chat.ID}
+	if contextUser == nil {
+		contextUser = mocks.Admin
 	}
+	req = setContext(t, req, contextUser, param)
+	return w, req, conn, chat
+}
 
+func TestGetChatMessages(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
-		w, req, conn, chat := setup(nil)
+		w, req, conn, chat := setupMessageTests(t, "", nil)
 		conn.SetChat(chat)
 		conn.SetMessage(mocks.MakeMessage(chat.UserIDs[0], chat.ID))
 		conn.SetMessage(mocks.MakeMessage(chat.UserIDs[1], chat.ID))
@@ -45,7 +45,7 @@ func TestGetChatMessages(t *testing.T) {
 	})
 
 	t.Run("NoMessages", func(t *testing.T) {
-		w, req, conn, chat := setup(nil)
+		w, req, conn, chat := setupMessageTests(t, "", nil)
 		conn.SetChat(chat)
 
 		GetChatMessages(w, req, conn)
@@ -54,7 +54,7 @@ func TestGetChatMessages(t *testing.T) {
 	})
 
 	t.Run("NoChat", func(t *testing.T) {
-		w, req, conn, _ := setup(nil)
+		w, req, conn, _ := setupMessageTests(t, "", nil)
 
 		GetChatMessages(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusNotFound)
@@ -62,7 +62,7 @@ func TestGetChatMessages(t *testing.T) {
 	})
 
 	t.Run("NotChatUser", func(t *testing.T) {
-		w, req, conn, chat := setup(mocks.MakeUser())
+		w, req, conn, chat := setupMessageTests(t, "", mocks.MakeUser())
 		conn.SetChat(chat)
 
 		GetChatMessages(w, req, conn)
@@ -72,27 +72,11 @@ func TestGetChatMessages(t *testing.T) {
 }
 
 func TestSendMessage(t *testing.T) {
-	setup := func(content string, contextUser *database.User) (
-		*response.Writer,
-		*http.Request,
-		database.Connection,
-		*database.Chat,
-	) {
-		body := fmt.Sprintf(`{"content": "%s"}`, content)
-		w, req := mockRequest(body)
-		conn := mocks.MakeMockConnection()
-		chat := mocks.MakeChat(mocks.Admin.ID, mocks.MakeUser().ID)
-		param := map[string]string{"chatID": chat.ID}
-		if contextUser == nil {
-			contextUser = mocks.Admin
-		}
-		req = setContext(t, req, contextUser, param)
-		return w, req, conn, chat
-	}
+	content := "Hello, World!"
+	body := fmt.Sprintf(`{"content": "%s"}`, content)
 
 	t.Run("Normal", func(t *testing.T) {
-		content := "Hello, World!"
-		w, req, conn, chat := setup(content, nil)
+		w, req, conn, chat := setupMessageTests(t, body, nil)
 		conn.SetChat(chat)
 
 		SendMessage(w, req, conn)
@@ -106,8 +90,7 @@ func TestSendMessage(t *testing.T) {
 	})
 
 	t.Run("NoChat", func(t *testing.T) {
-		content := "Hello, World!"
-		w, req, conn, _ := setup(content, nil)
+		w, req, conn, _ := setupMessageTests(t, body, nil)
 
 		SendMessage(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusNotFound)
@@ -115,8 +98,7 @@ func TestSendMessage(t *testing.T) {
 	})
 
 	t.Run("NotChatUser", func(t *testing.T) {
-		content := "Hello, World!"
-		w, req, conn, chat := setup(content, mocks.MakeUser())
+		w, req, conn, chat := setupMessageTests(t, body, mocks.MakeUser())
 		conn.SetChat(chat)
 
 		SendMessage(w, req, conn)
