@@ -27,11 +27,11 @@ func setup() (router *routing.Router, ok bool) {
 	router = routing.NewRouter()
 	router.POST("/session", resolvers.CreateSession).NoAuth()
 	router.POST("/user", resolvers.CreateUser).NoAuth()
-	router.GET("/user/:username", resolvers.GetUserByName)
+	router.GET("/user/:"+resolvers.USERNAME_KEY, resolvers.GetUserByName)
 	router.GET("/chats", resolvers.GetChats)
 	router.POST("/chat", resolvers.CreateChat)
-	router.GET("/messages/:chatID", resolvers.GetChatMessages)
-	router.POST("/message/:chatID", resolvers.SendMessage)
+	router.GET("/messages/:"+resolvers.CHAT_ID_KEY, resolvers.GetChatMessages)
+	router.POST("/message/:"+resolvers.CHAT_ID_KEY, resolvers.SendMessage)
 	return router, ok
 }
 
