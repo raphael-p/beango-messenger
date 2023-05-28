@@ -18,7 +18,10 @@ import (
 func bindRequestJSON(w *response.Writer, r *http.Request, ptr any) bool {
 	value := reflect.ValueOf(ptr)
 	if value.Kind() != reflect.Ptr || value.Elem().Kind() != reflect.Struct {
-		errorResponse := fmt.Sprintf("expected `ptr` to be a pointer to a struct, got %T", ptr)
+		errorResponse := fmt.Sprintf(
+			"expected `ptr` to be a pointer to a struct, got %T",
+			ptr,
+		)
 		w.WriteString(http.StatusBadRequest, errorResponse)
 		return false
 	}
@@ -45,7 +48,11 @@ func bindRequestJSON(w *response.Writer, r *http.Request, ptr any) bool {
 
 // Gets all requested context attached to a request.
 // Writes an HTTP error response + logs on failure.
-func getRequestContext(w *response.Writer, r *http.Request, keys []string) (*database.User, map[string]string, bool) {
+func getRequestContext(
+	w *response.Writer,
+	r *http.Request,
+	keys ...string,
+) (*database.User, map[string]string, bool) {
 	user, err := context.GetUser(r)
 	if err != nil {
 		logger.Error(err.Error())

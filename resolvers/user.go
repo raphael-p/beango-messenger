@@ -57,7 +57,7 @@ func CreateUser(w *response.Writer, r *http.Request, conn database.Connection) {
 }
 
 func GetUserByName(w *response.Writer, r *http.Request, conn database.Connection) {
-	_, params, ok := getRequestContext(w, r, []string{USERNAME_KEY})
+	_, params, ok := getRequestContext(w, r, USERNAME_KEY)
 	if !ok {
 		return
 	}

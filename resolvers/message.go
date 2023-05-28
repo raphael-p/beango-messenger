@@ -9,7 +9,7 @@ import (
 )
 
 func GetChatMessages(w *response.Writer, r *http.Request, conn database.Connection) {
-	user, params, ok := getRequestContext(w, r, []string{CHAT_ID_KEY})
+	user, params, ok := getRequestContext(w, r, CHAT_ID_KEY)
 	if !ok {
 		return
 	}
@@ -28,7 +28,7 @@ type SendMessageInput struct {
 }
 
 func SendMessage(w *response.Writer, r *http.Request, conn database.Connection) {
-	user, params, ok := getRequestContext(w, r, []string{CHAT_ID_KEY})
+	user, params, ok := getRequestContext(w, r, CHAT_ID_KEY)
 	if !ok {
 		return
 	}
