@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"time"
 
 	"github.com/raphael-p/beango/config"
@@ -113,6 +115,10 @@ func Warning(message string) {
 
 func Error(message string) {
 	if Logger.logLevel <= logLevelError {
+		buf := make([]byte, 1<<16)
+		n := runtime.Stack(buf, false)
+		stackTrace := strings.ReplaceAll(string(buf[:n-1]), "\n", "\n\t")
+		message += fmt.Sprintf("\n\tstack trace: %s", stackTrace)
 		logMessage("ERROR", "\033[31;1m", message)
 	}
 }

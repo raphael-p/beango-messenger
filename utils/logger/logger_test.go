@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/raphael-p/beango/test/assert"
@@ -18,7 +19,12 @@ func checkLog(t *testing.T, buf *bytes.Buffer, level, colour, message string, is
 	} else {
 		xLog = fmt.Sprintf("%s [%s] %s\n", now(), level, message)
 	}
-	assert.Equals(t, log, xLog)
+	if level != "ERROR" {
+		assert.Equals(t, log, xLog)
+	} else {
+		assert.Equals(t, strings.Split(log, "\n")[0]+"\n", xLog)
+		assert.Contains(t, log, "stack trace: ")
+	}
 }
 
 func TestMain(m *testing.M) {
