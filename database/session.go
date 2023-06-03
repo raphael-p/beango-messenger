@@ -6,9 +6,11 @@ import (
 )
 
 type Session struct {
-	ID         string    `json:"id"`
-	UserID     string    `json:"userID"`
-	ExpiryDate time.Time `json:"expiryDate"`
+	ID            string    `json:"id"`
+	UserID        string    `json:"userID"`
+	ExpiryDate    time.Time `json:"expiryDate"`
+	CreatedAt     time.Time `json:"createdAt"`
+	LastUpdatedAt time.Time `json:"LastUpdatedAt"`
 }
 
 func (conn *MongoConnection) GetSession(id string) *Session {

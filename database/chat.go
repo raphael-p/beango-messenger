@@ -2,11 +2,14 @@ package database
 
 import (
 	"fmt"
+	"time"
 )
 
 type Chat struct {
-	ID      string    `json:"id"`
-	UserIDs [2]string `json:"userIDs"`
+	ID            string    `json:"id"`
+	UserIDs       [2]string `json:"userIDs"`
+	CreatedAt     time.Time `json:"createdAt"`
+	LastUpdatedAt time.Time `json:"LastUpdatedAt"`
 }
 
 func (c *MongoConnection) GetChat(id string) (*Chat, error) {

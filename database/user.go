@@ -1,12 +1,17 @@
 package database
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type User struct {
-	ID          string `json:"id"`
-	Username    string `json:"username"`
-	DisplayName string `json:"displayName"`
-	Key         []byte `json:"key"`
+	ID            string    `json:"id"`
+	Username      string    `json:"username"`
+	DisplayName   string    `json:"displayName"`
+	Key           []byte    `json:"key"`
+	CreatedAt     time.Time `json:"createdAt"`
+	LastUpdatedAt time.Time `json:"LastUpdatedAt"`
 }
 
 func (conn *MongoConnection) GetUser(id string) (*User, error) {
