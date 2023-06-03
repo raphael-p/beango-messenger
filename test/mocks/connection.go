@@ -23,7 +23,7 @@ type MockConnection struct {
 	sessions map[string]database.Session
 }
 
-func MakeMockConnection() database.Connection {
+func MakeMockConnection() *MockConnection {
 	conn := &MockConnection{
 		make(map[string]database.User),
 		make(map[string]database.Chat),

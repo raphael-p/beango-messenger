@@ -1,5 +1,13 @@
 package database
 
+import (
+	"database/sql"
+	"fmt"
+
+	_ "github.com/lib/pq"
+	"github.com/raphael-p/beango/config"
+)
+
 var Users = make(map[string]User)
 var Chats = make(map[string]Chat)
 var Messages = make(map[string]Message)
@@ -22,8 +30,20 @@ type Connection interface {
 	SetUser(user *User)
 }
 
-type MongoConnection struct{}
+type MongoConnection struct {
+	*sql.DB
+}
 
-func NewConnection() Connection {
-	return &MongoConnection{}
+func NewConnection() (*MongoConnection, error) {
+	connectionString := fmt.Sprintf(
+		"postgres://%s:%s/%s?sslmode=disable",
+		config.Values.Database.Host,
+		config.Values.Database.Port,
+		config.Values.Database.Name,
+	)
+	db, err := sql.Open("postgres", connectionString)
+	if err != nil {
+		return nil, err
+	}
+	return &MongoConnection{db}, nil
 }

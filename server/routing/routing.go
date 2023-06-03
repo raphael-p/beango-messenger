@@ -123,8 +123,21 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 				}
 			}
 
-			conn := database.NewConnection()
+			conn, err := database.NewConnection()
+			if err != nil {
+				message := "failed to open database connection"
+				logger.Error(message + ": " + err.Error())
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(message))
+			}
+			logger.Trace("opened database connection")
 			route.handler(response.NewWriter(w), req, conn)
+			err = conn.Close()
+			if err != nil {
+				logger.Error("failed to close database connection: " + err.Error())
+			} else {
+				logger.Trace("closed database connection")
+			}
 			return
 		}
 	}

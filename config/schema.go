@@ -3,9 +3,10 @@ package config
 import "github.com/raphael-p/beango/utils/validate"
 
 type config struct {
-	Server  serverConfig  `json:"server"`
-	Logger  loggerConfig  `json:"logger"`
-	Session sessionConfig `json:"session"`
+	Server   serverConfig   `json:"server"`
+	Logger   loggerConfig   `json:"logger"`
+	Session  sessionConfig  `json:"session"`
+	Database databaseConfig `json:"database"`
 }
 
 type serverConfig struct {
@@ -20,4 +21,10 @@ type loggerConfig struct {
 
 type sessionConfig struct {
 	SecondsUntilExpiry uint32 `json:"secondsUntilExpiry"`
+}
+
+type databaseConfig struct {
+	Host string `json:"host"`
+	Port string `json:"port"`
+	Name string `json:"name"`
 }
