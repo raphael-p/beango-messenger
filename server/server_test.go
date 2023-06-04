@@ -14,7 +14,8 @@ func TestSetup(t *testing.T) {
 		_ = os.Setenv("BG_CONFIG_FILEPATH", "/not/a/real/filepath.json")
 		buf := logger.MockFileLogger(t)
 
-		router, ok := setup()
+		conn, router, ok := setup()
+		assert.IsNil(t, conn)
 		assert.IsNil(t, router)
 		assert.Equals(t, ok, false)
 		assert.Contains(t, buf.String(), "[ERROR]", "setup failed: could not open config file")

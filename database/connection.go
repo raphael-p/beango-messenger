@@ -34,7 +34,12 @@ type MongoConnection struct {
 	*sql.DB
 }
 
-func NewConnection() (*MongoConnection, error) {
+var conn *MongoConnection
+
+func GetConnection() (*MongoConnection, error) {
+	if conn != nil {
+		return conn, nil
+	}
 	connectionString := fmt.Sprintf(
 		"postgres://%s:%s/%s?sslmode=disable",
 		config.Values.Database.Host,

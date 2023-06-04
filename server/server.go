@@ -7,12 +7,13 @@ import (
 	"os"
 
 	"github.com/raphael-p/beango/config"
+	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/resolvers"
 	"github.com/raphael-p/beango/server/routing"
 	"github.com/raphael-p/beango/utils/logger"
 )
 
-func setup() (router *routing.Router, ok bool) {
+func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 	ok = true
 	defer func() {
 		if r := recover(); r != nil {
@@ -24,6 +25,12 @@ func setup() (router *routing.Router, ok bool) {
 	config.CreateConfig()
 	logger.Init()
 
+	conn, err := database.GetConnection()
+	if err != nil {
+		panic("failed to open database connection: " + err.Error())
+	}
+	logger.Trace("opened database connection")
+
 	router = routing.NewRouter()
 	router.POST("/session", resolvers.CreateSession).NoAuth()
 	router.POST("/user", resolvers.CreateUser).NoAuth()
@@ -32,13 +39,25 @@ func setup() (router *routing.Router, ok bool) {
 	router.POST("/chat", resolvers.CreateChat)
 	router.GET("/messages/:"+resolvers.CHAT_ID_KEY, resolvers.GetChatMessages)
 	router.POST("/message/:"+resolvers.CHAT_ID_KEY, resolvers.SendMessage)
-	return router, ok
+	return conn, router, ok
+}
+
+func teardown(conn *database.MongoConnection) {
+	if conn != nil {
+		err := conn.Close()
+		if err != nil {
+			logger.Error("failed to close database connection: " + err.Error())
+		} else {
+			logger.Trace("closed database connection")
+		}
+	}
+	logger.Close()
+	os.Exit(1)
 }
 
 func Start() {
-	defer os.Exit(1)
-	defer logger.Close()
-	router, ok := setup()
+	conn, router, ok := setup()
+	defer teardown(conn)
 	if !ok {
 		return
 	}
