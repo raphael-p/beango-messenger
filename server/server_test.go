@@ -18,6 +18,6 @@ func TestSetup(t *testing.T) {
 		assert.IsNil(t, conn)
 		assert.IsNil(t, router)
 		assert.Equals(t, ok, false)
-		assert.Contains(t, buf.String(), "[ERROR]", "setup failed: could not open config file")
+		assert.Contains(t, buf.String(), "[ERROR]", "failed setup: could not open config file")
 	})
 }

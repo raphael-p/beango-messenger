@@ -12,7 +12,7 @@ type Chat struct {
 	LastUpdatedAt time.Time `json:"LastUpdatedAt"`
 }
 
-func (c *MongoConnection) GetChat(id string) (*Chat, error) {
+func (conn *MongoConnection) GetChat(id string) (*Chat, error) {
 	chat, ok := Chats[id]
 	if !ok {
 		return nil, fmt.Errorf("no chat found with id %s", id)
@@ -21,7 +21,7 @@ func (c *MongoConnection) GetChat(id string) (*Chat, error) {
 	}
 }
 
-func (c *MongoConnection) GetChatsByUserID(userID string) []Chat {
+func (conn *MongoConnection) GetChatsByUserID(userID string) []Chat {
 	chats := []Chat{}
 	for _, chat := range Chats {
 		for _, chatUserID := range chat.UserIDs {

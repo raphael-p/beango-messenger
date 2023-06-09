@@ -52,3 +52,7 @@ func GetConnection() (*MongoConnection, error) {
 	}
 	return &MongoConnection{db}, nil
 }
+
+func SetDummyConnection() {
+	conn = &MongoConnection{}
+}

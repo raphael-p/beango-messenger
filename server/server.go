@@ -18,7 +18,7 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 	defer func() {
 		if r := recover(); r != nil {
 			ok = false
-			logger.Error(fmt.Sprint("setup failed: ", r))
+			logger.Error(fmt.Sprint("failed setup: ", r))
 		}
 	}()
 
@@ -30,6 +30,7 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 		panic("failed to open database connection: " + err.Error())
 	}
 	logger.Trace("opened database connection")
+	database.Setup(conn)
 
 	router = routing.NewRouter()
 	router.POST("/session", resolvers.CreateSession).NoAuth()
@@ -67,8 +68,8 @@ func Start() {
 		logger.Error(fmt.Sprint("failed to start server: ", err))
 		return
 	}
-	logger.Info(fmt.Sprintf("🐱‍💻 BeanGo server started on %s", l.Addr().String()))
+	logger.Info(fmt.Sprintf("🐱‍💻 started BeanGo server on %s", l.Addr().String()))
 	if err := http.Serve(l, router); err != nil {
-		logger.Error(fmt.Sprint("server closed: ", err))
+		logger.Error(fmt.Sprint("closed server: ", err))
 	}
 }

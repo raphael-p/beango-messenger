@@ -174,6 +174,7 @@ func TestServeHTTP(t *testing.T) {
 		bodyBuf := bytes.NewBufferString(reqBody)
 		req := httptest.NewRequest(method, path(id, name), bodyBuf)
 		res := httptest.NewRecorder()
+		database.SetDummyConnection()
 
 		router.ServeHTTP(res, req)
 		assert.Equals(t, res.Code, code)
