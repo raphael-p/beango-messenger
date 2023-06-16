@@ -7,14 +7,16 @@ import (
 	"github.com/raphael-p/beango/database"
 )
 
-const ADMIN_ID = "09d3fb32-af60-4029-b37e-a3b92dc0a559"
-const ADMIN_USERNAME = "the_admin"
-const PASSWORD = "123abc*"
-const HASH = "$2y$04$8QoTLjUMGtnr4lNeA0DtduhEshmvbDbmEzW/G9IkV/9mr576xX//K"
+const (
+	ADMIN_ID       = 1
+	ADMIN_USERNAME = "the_admin"
+	PASSWORD       = "123abc*"
+	HASH           = "$2y$04$8QoTLjUMGtnr4lNeA0DtduhEshmvbDbmEzW/G9IkV/9mr576xX//K"
+)
 
-func MakeUser() *database.User {
+func MakeUser(id int) *database.User {
 	return &database.User{
-		ID:          uuid.NewString(),
+		ID:          id,
 		Username:    "john.doe.69",
 		DisplayName: "Johnny D",
 		Key:         []byte(HASH),
@@ -30,7 +32,7 @@ func MakeAdminUser() *database.User {
 	}
 }
 
-func MakeSession(userID string) database.Session {
+func MakeSession(userID int) database.Session {
 	return database.Session{
 		ID:         uuid.NewString(),
 		UserID:     userID,
@@ -38,16 +40,16 @@ func MakeSession(userID string) database.Session {
 	}
 }
 
-func MakeChat(userIDOne, userIDTwo string) *database.Chat {
+func MakePrivateChat(id int) *database.Chat {
 	return &database.Chat{
-		ID:      uuid.NewString(),
-		UserIDs: [2]string{userIDOne, userIDTwo},
+		ID:       id,
+		ChatType: database.PRIVATE_CHAT,
 	}
 }
 
-func MakeMessage(userID, chatID string) *database.Message {
+func MakeMessage(messageID, userID, chatID int) *database.Message {
 	return &database.Message{
-		ID:      uuid.NewString(),
+		ID:      messageID,
 		UserID:  userID,
 		ChatID:  chatID,
 		Content: "Lorem Ipsum Dolor",

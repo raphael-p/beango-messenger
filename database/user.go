@@ -6,7 +6,7 @@ import (
 )
 
 type User struct {
-	ID            string    `json:"id"`
+	ID            int       `json:"id"`
 	Username      string    `json:"username"`
 	DisplayName   string    `json:"displayName"`
 	Key           []byte    `json:"key"`
@@ -14,10 +14,10 @@ type User struct {
 	LastUpdatedAt time.Time `json:"LastUpdatedAt"`
 }
 
-func (conn *MongoConnection) GetUser(id string) (*User, error) {
+func (conn *MongoConnection) GetUser(id int) (*User, error) {
 	user, ok := Users[id]
 	if !ok {
-		return nil, fmt.Errorf("no user found with id %s", id)
+		return nil, fmt.Errorf("no user found with id %d", id)
 	} else {
 		return &user, nil
 	}

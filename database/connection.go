@@ -8,26 +8,27 @@ import (
 	"github.com/raphael-p/beango/config"
 )
 
-var Users = make(map[string]User)
-var Chats = make(map[string]Chat)
-var Messages = make(map[string]Message)
+var Users = make(map[int]User)
+var Chats = make(map[int]Chat)
+var ChatUsers = make(map[int]ChatUser)
+var Messages = make(map[int]Message)
 var Sessions = make(map[string]Session)
 
 type Connection interface {
+	GetChat(id, userID int) (*Chat, error)
+	GetChatsByUserID(userID int) []Chat
+	CheckPrivateChatExists(userIDs [2]int) bool
+	SetChat(chat *Chat, userIDs ...int)
+	GetMessagesByChatID(chatID int) []Message
+	SetMessage(message *Message)
+	GetUser(id int) (*User, error)
+	GetUserByUsername(username string) (*User, error)
+	SetUser(user *User)
+	GetSession(id string) *Session
+	GetSessionByUserID(userID int) (*Session, error)
+	SetSession(session Session)
 	CheckSession(id string) (*Session, bool)
 	DeleteSession(id string)
-	GetChat(id string) (*Chat, error)
-	GetChatByUserIDs(userIDs [2]string) *Chat
-	GetChatsByUserID(userID string) []Chat
-	GetMessagesByChatID(chatID string) []Message
-	GetSession(id string) *Session
-	GetSessionByUserID(userID string) (*Session, error)
-	GetUser(id string) (*User, error)
-	GetUserByUsername(username string) (*User, error)
-	SetChat(chat *Chat)
-	SetMessage(message *Message)
-	SetSession(session Session)
-	SetUser(user *User)
 }
 
 type MongoConnection struct {

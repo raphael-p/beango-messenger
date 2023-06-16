@@ -7,7 +7,7 @@ import (
 
 type Session struct {
 	ID         string    `json:"id"`
-	UserID     string    `json:"userID"`
+	UserID     int       `json:"userID"`
 	ExpiryDate time.Time `json:"expiryDate"`
 }
 
@@ -47,11 +47,11 @@ func (conn *MongoConnection) CheckSession(id string) (*Session, bool) {
 	return session, true
 }
 
-func (conn *MongoConnection) GetSessionByUserID(userID string) (*Session, error) {
+func (conn *MongoConnection) GetSessionByUserID(userID int) (*Session, error) {
 	for _, session := range Sessions {
 		if session.UserID == userID {
 			return &session, nil
 		}
 	}
-	return nil, fmt.Errorf("no session found for user ID %s", userID)
+	return nil, fmt.Errorf("no session found for user ID %d", userID)
 }

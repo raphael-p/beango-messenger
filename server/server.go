@@ -36,10 +36,11 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 	router.POST("/session", resolvers.CreateSession).NoAuth()
 	router.POST("/user", resolvers.CreateUser).NoAuth()
 	router.GET("/user/:"+resolvers.USERNAME_KEY, resolvers.GetUserByName)
+	// router.GET("/chat/:"+resolvers.CHAT_ID_KEY+"/users", resolvers.) TODO
 	router.GET("/chats", resolvers.GetChats)
-	router.POST("/chat", resolvers.CreateChat)
-	router.GET("/messages/:"+resolvers.CHAT_ID_KEY, resolvers.GetChatMessages)
-	router.POST("/message/:"+resolvers.CHAT_ID_KEY, resolvers.SendMessage)
+	router.POST("/chat", resolvers.CreatePrivateChat)
+	router.GET("/chat/:"+resolvers.CHAT_ID_KEY+"/messages", resolvers.GetChatMessages)
+	router.POST("/chat/:"+resolvers.CHAT_ID_KEY+"/message", resolvers.SendMessage)
 	return conn, router, ok
 }
 

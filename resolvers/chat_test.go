@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/test/assert"
 	"github.com/raphael-p/beango/test/mocks"
@@ -26,25 +25,24 @@ func setupChatTests(t *testing.T, body string) (
 
 func TestGetChats(t *testing.T) {
 	adminID := mocks.ADMIN_ID
-	uuid := func() string { return uuid.NewString() }
 	testCases := []struct {
 		name          string
-		chatUsers     [][2]string
+		chatUsers     [2][]int
 		expectedCount int
 	}{
 		{
 			"UserInAllChats",
-			[][2]string{{adminID, uuid()}, {uuid(), adminID}},
+			[2][]int{{adminID, 11}, {12, adminID}},
 			2,
 		},
 		{
 			"UserInSomeChats",
-			[][2]string{{adminID, uuid()}, {uuid(), uuid()}},
+			[2][]int{{adminID, 13}, {14, 15}},
 			1,
 		},
 		{
-			"UserInSomeChats",
-			[][2]string{{uuid(), uuid()}, {uuid(), uuid()}},
+			"UserInNoChats",
+			[2][]int{{16, 17}, {18, 19}},
 			0,
 		},
 	}
@@ -53,7 +51,7 @@ func TestGetChats(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			w, req, conn := setupChatTests(t, "")
 			for _, pair := range testCase.chatUsers {
-				conn.SetChat(mocks.MakeChat(pair[0], pair[1]))
+				conn.SetChat(mocks.MakePrivateChat(1), pair...)
 			}
 
 			GetChats(w, req, conn)
@@ -66,56 +64,55 @@ func TestGetChats(t *testing.T) {
 	}
 }
 
-func TestCreateChat(t *testing.T) {
-	body := func(userID string) string {
-		return fmt.Sprintf(`{"userID": "%s"}`, userID)
+func TestCreatePrivateChat(t *testing.T) {
+	body := func(userID int) string {
+		return fmt.Sprintf(`{"userID": %d}`, userID)
 	}
 
 	createAndCheck := func(
 		w *response.Writer,
 		req *http.Request,
 		conn database.Connection,
-		userID string,
 	) {
-		CreateChat(w, req, conn)
+		CreatePrivateChat(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusCreated)
 		chat := &database.Chat{}
 		err := json.Unmarshal([]byte(w.Body), chat)
 		assert.IsNil(t, err)
-		xUserIDs := [2]string{mocks.ADMIN_ID, userID}
-		assert.Equals(t, chat.UserIDs, xUserIDs)
+		assert.Equals(t, chat.Name, "")
+		assert.Equals(t, chat.ChatType, database.PRIVATE_CHAT)
 	}
 
 	t.Run("Normal", func(t *testing.T) {
-		user := mocks.MakeUser()
+		user := mocks.MakeUser(11)
 		w, req, conn := setupChatTests(t, body(user.ID))
 		conn.SetUser(user)
-		createAndCheck(w, req, conn, user.ID)
+		createAndCheck(w, req, conn)
 	})
 
 	t.Run("SelfChat", func(t *testing.T) {
 		w, req, conn := setupChatTests(t, body(mocks.ADMIN_ID))
-		createAndCheck(w, req, conn, mocks.ADMIN_ID)
+		createAndCheck(w, req, conn)
 	})
 
 	t.Run("UserDoesNotExist", func(t *testing.T) {
-		user := mocks.MakeUser()
+		user := mocks.MakeUser(11)
 		w, req, conn := setupChatTests(t, body(user.ID))
 
-		CreateChat(w, req, conn)
+		CreatePrivateChat(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusBadRequest)
-		xError := fmt.Sprintf("userID %s is invalid", user.ID)
+		xError := fmt.Sprintf("userID %d is invalid", user.ID)
 		assert.Equals(t, w.Body, xError)
 	})
 
 	t.Run("ChatAlreadyExists", func(t *testing.T) {
-		user := mocks.MakeUser()
+		user := mocks.MakeUser(11)
 		w, req, conn := setupChatTests(t, body(user.ID))
 		conn.SetUser(user)
-		chat := mocks.MakeChat(mocks.ADMIN_ID, user.ID)
-		conn.SetChat(chat)
+		chat := mocks.MakePrivateChat(1)
+		conn.SetChat(chat, mocks.ADMIN_ID, user.ID)
 
-		CreateChat(w, req, conn)
+		CreatePrivateChat(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusConflict)
 		assert.Equals(t, w.Body, "chat already exists")
 	})

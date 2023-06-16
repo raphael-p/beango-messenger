@@ -31,11 +31,11 @@ func FromCookie(w *response.Writer, req *http.Request, conn database.Connection)
 	return req, true
 }
 
-func getUserIDFromCookie(w *response.Writer, req *http.Request, conn database.Connection) (string, error) {
+func getUserIDFromCookie(w *response.Writer, req *http.Request, conn database.Connection) (int, error) {
 	cookieName := cookies.SESSION
 	sessionID, err := cookies.Get(req, cookieName)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 	session, ok := conn.CheckSession(sessionID)
 	if !ok {
@@ -43,7 +43,7 @@ func getUserIDFromCookie(w *response.Writer, req *http.Request, conn database.Co
 		if err != nil {
 			logger.Error(err.Error())
 		}
-		return "", errors.New("cookie or session is invalid")
+		return 0, errors.New("cookie or session is invalid")
 	}
 	return session.UserID, nil
 }

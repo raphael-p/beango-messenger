@@ -54,7 +54,7 @@ func TestFromCookie(t *testing.T) {
 	})
 
 	t.Run("UserNotFound", func(t *testing.T) {
-		user := mocks.MakeUser()
+		user := mocks.MakeUser(11)
 		sesh := mocks.MakeSession(user.ID)
 		w, req, conn := setup(sessionCookie, sesh.ID)
 		reqCopy := *req
@@ -94,23 +94,23 @@ func TestGetUserIDFromCookie(t *testing.T) {
 	t.Run("WrongCookie", func(t *testing.T) {
 		userID, err := getUserIDFromCookie(setup("raisin", ""))
 		assert.ErrorHasMessage(t, err, "no cookie found with the name beango-session")
-		assert.Equals(t, userID, "")
+		assert.Equals(t, userID, 0)
 	})
 
 	t.Run("NoCookie", func(t *testing.T) {
 		userID, err := getUserIDFromCookie(setup("raisin", ""))
 		assert.ErrorHasMessage(t, err, "no cookie found with the name beango-session")
-		assert.Equals(t, userID, "")
+		assert.Equals(t, userID, 0)
 	})
 
 	t.Run("NoSession", func(t *testing.T) {
-		noSeshUser := mocks.MakeUser()
+		noSeshUser := mocks.MakeUser(11)
 		buf := logger.MockFileLogger(t)
-		w, req, conn := setup(sessionCookie, noSeshUser.ID)
+		w, req, conn := setup(sessionCookie, fmt.Sprint(noSeshUser.ID))
 
 		userID, err := getUserIDFromCookie(w, req, conn)
 		assert.ErrorHasMessage(t, err, "cookie or session is invalid")
-		assert.Equals(t, userID, "")
+		assert.Equals(t, userID, 0)
 		assert.Equals(t, buf.String(), "")
 		resCookie := w.Header().Get("Set-Cookie")
 		xResCookie := fmt.Sprintf(

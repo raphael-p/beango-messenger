@@ -5,27 +5,45 @@ import (
 	"time"
 )
 
+type chatType string
+
+const (
+	PRIVATE_CHAT chatType = "private"
+	GROUP_CHAT   chatType = "group"
+)
+
 type Chat struct {
-	ID            string    `json:"id"`
-	UserIDs       [2]string `json:"userIDs"`
+	ID            int       `json:"id"`
+	ChatType      chatType  `json:"chatType"`
+	Name          string    `json:"name"`
 	CreatedAt     time.Time `json:"createdAt"`
 	LastUpdatedAt time.Time `json:"LastUpdatedAt"`
 }
 
-func (conn *MongoConnection) GetChat(id string) (*Chat, error) {
-	chat, ok := Chats[id]
-	if !ok {
-		return nil, fmt.Errorf("no chat found with id %s", id)
-	} else {
-		return &chat, nil
-	}
+type ChatUser struct {
+	ID        int       `json:"id"`
+	ChatID    int       `json:"chatID"`
+	UserID    int       `json:"userID"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
-func (conn *MongoConnection) GetChatsByUserID(userID string) []Chat {
+func (conn *MongoConnection) GetChat(id, userID int) (*Chat, error) {
+	chat, ok := Chats[id]
+	if ok {
+		for _, chatUser := range ChatUsers {
+			if chatUser.UserID == userID && chatUser.ChatID == chat.ID {
+				return &chat, nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("no chat found with id %d", id)
+}
+
+func (conn *MongoConnection) GetChatsByUserID(userID int) []Chat {
 	chats := []Chat{}
-	for _, chat := range Chats {
-		for _, chatUserID := range chat.UserIDs {
-			if chatUserID == userID {
+	for _, chatUser := range ChatUsers {
+		if chatUser.UserID == userID {
+			if chat, ok := Chats[chatUser.ChatID]; ok {
 				chats = append(chats, chat)
 			}
 		}
@@ -33,19 +51,45 @@ func (conn *MongoConnection) GetChatsByUserID(userID string) []Chat {
 	return chats
 }
 
-func (conn *MongoConnection) GetChatByUserIDs(userIDs [2]string) *Chat {
+func (conn *MongoConnection) CheckPrivateChatExists(userIDs [2]int) bool {
 	for _, chat := range Chats {
-		if (chat.UserIDs[0] == userIDs[0] &&
-			chat.UserIDs[1] == userIDs[1]) ||
-			(chat.UserIDs[0] == userIDs[1] &&
-				chat.UserIDs[1] == userIDs[0]) {
-			return &chat
-		}
+		if chat.ChatType == PRIVATE_CHAT {
+			match := [2]bool{false, false}
+			for _, chatUser := range ChatUsers {
+				if chatUser.ChatID == chat.ID {
+					if chatUser.UserID == userIDs[0] {
+						if match[0] {
+							break
+						}
+						match[0] = true
+					} else if chatUser.UserID == userIDs[1] {
+						if match[1] {
+							break
+						}
+						match[1] = true
+					} else {
+						break
+					}
+				}
+			}
+			if match[0] && match[1] {
+				return true
+			}
 
+		}
 	}
-	return nil
+	return false
 }
 
-func (conn *MongoConnection) SetChat(chat *Chat) {
+func (conn *MongoConnection) SetChat(chat *Chat, userIDs ...int) {
+	chat.ID = len(Chats) + 1
 	Chats[chat.ID] = *chat
+	for _, userID := range userIDs {
+		chatUser := ChatUser{
+			ID:     len(ChatUsers) + 1,
+			ChatID: chat.ID,
+			UserID: userID,
+		}
+		ChatUsers[chatUser.ID] = chatUser
+	}
 }

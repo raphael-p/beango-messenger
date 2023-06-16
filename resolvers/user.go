@@ -3,7 +3,6 @@ package resolvers
 import (
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/utils/response"
 	"github.com/raphael-p/beango/utils/validate"
@@ -11,7 +10,7 @@ import (
 )
 
 type UserOutput struct {
-	ID          string `json:"id"`
+	ID          int    `json:"id"`
 	Username    string `json:"username"`
 	DisplayName string `json:"displayName"`
 }
@@ -44,7 +43,6 @@ func CreateUser(w *response.Writer, r *http.Request, conn database.Connection) {
 	}
 
 	newUser := &database.User{
-		ID:          uuid.NewString(),
 		Username:    input.Username,
 		DisplayName: input.DisplayName.Value,
 		Key:         hash,

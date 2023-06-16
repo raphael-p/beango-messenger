@@ -15,7 +15,7 @@ import (
 func TestGetUser(t *testing.T) {
 	t.Run("Single", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
-		xUser := mocks.MakeUser()
+		xUser := mocks.MakeUser(11)
 		req = req.WithContext(context.WithValue(req.Context(), userKey{}, xUser))
 
 		user, err := GetUser(req)
@@ -25,8 +25,8 @@ func TestGetUser(t *testing.T) {
 
 	t.Run("Multiple", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
-		xUser := mocks.MakeUser()
-		req = req.WithContext(context.WithValue(req.Context(), userKey{}, mocks.MakeUser()))
+		xUser := mocks.MakeUser(11)
+		req = req.WithContext(context.WithValue(req.Context(), userKey{}, mocks.MakeUser(12)))
 		req = req.WithContext(context.WithValue(req.Context(), userKey{}, xUser))
 
 		user, err := GetUser(req)
@@ -65,7 +65,7 @@ func TestGetUser(t *testing.T) {
 func TestSetUser(t *testing.T) {
 	t.Run("Single", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
-		xUser := mocks.MakeUser()
+		xUser := mocks.MakeUser(11)
 
 		req, err := SetUser(req, xUser)
 		assert.IsNil(t, err)
@@ -75,11 +75,11 @@ func TestSetUser(t *testing.T) {
 
 	t.Run("Multiple", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
-		xUser := mocks.MakeUser()
+		xUser := mocks.MakeUser(11)
 
 		req, err := SetUser(req, xUser)
 		assert.IsNil(t, err)
-		req, err = SetUser(req, mocks.MakeUser())
+		req, err = SetUser(req, mocks.MakeUser(12))
 		assert.ErrorHasMessage(t, err, "user already in request context")
 		user := req.Context().Value(userKey{}).(*database.User)
 		assert.DeepEquals(t, user, xUser)
@@ -134,7 +134,7 @@ func TestGetParam(t *testing.T) {
 		key := "user"
 		xValue := "testvalue"
 		req = req.WithContext(context.WithValue(req.Context(), paramKey(key), xValue))
-		req = req.WithContext(context.WithValue(req.Context(), userKey{}, mocks.MakeUser()))
+		req = req.WithContext(context.WithValue(req.Context(), userKey{}, mocks.MakeUser(11)))
 
 		value, err := GetParam(req, key)
 		assert.IsNil(t, err)

@@ -2,8 +2,8 @@ package resolvers
 
 import (
 	"net/http"
+	"strconv"
 
-	"github.com/google/uuid"
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/utils/response"
 )
@@ -14,8 +14,13 @@ func GetChatMessages(w *response.Writer, r *http.Request, conn database.Connecti
 		return
 	}
 
-	chat, _ := conn.GetChat(params[CHAT_ID_KEY])
-	if chat == nil || (chat.UserIDs[0] != user.ID && chat.UserIDs[1] != user.ID) {
+	chatID, err := strconv.Atoi(params[CHAT_ID_KEY])
+	if err != nil {
+		w.WriteString(http.StatusBadRequest, "chat ID must be an integer")
+	}
+
+	chat, _ := conn.GetChat(chatID, user.ID)
+	if chat == nil {
 		w.WriteString(http.StatusNotFound, "chat not found")
 		return
 	}
@@ -34,16 +39,20 @@ func SendMessage(w *response.Writer, r *http.Request, conn database.Connection) 
 		return
 	}
 
-	chat, _ := conn.GetChat(params[CHAT_ID_KEY])
-	if chat == nil || (chat.UserIDs[0] != user.ID && chat.UserIDs[1] != user.ID) {
+	chatID, err := strconv.Atoi(params[CHAT_ID_KEY])
+	if err != nil {
+		w.WriteString(http.StatusBadRequest, "chat ID must be an integer")
+	}
+
+	chat, _ := conn.GetChat(chatID, user.ID)
+	if chat == nil {
 		w.WriteString(http.StatusNotFound, "chat not found")
 		return
 	}
 
 	newMessage := &database.Message{
-		ID:      uuid.NewString(),
 		UserID:  user.ID,
-		ChatID:  params[CHAT_ID_KEY],
+		ChatID:  chatID,
 		Content: input.Content,
 	}
 	conn.SetMessage(newMessage)

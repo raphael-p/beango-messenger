@@ -101,7 +101,7 @@ func TestGetUserByName(t *testing.T) {
 			value = mocks.Admin.Username
 		}
 		params := map[string]string{key: value}
-		req = setContext(t, req, mocks.MakeUser(), params)
+		req = setContext(t, req, mocks.MakeUser(11), params)
 		return w, req, conn
 	}
 
