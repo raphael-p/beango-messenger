@@ -12,7 +12,7 @@ func Setup(conn *MongoConnection) {
 
 	_, err = conn.Exec(`
 	CREATE TABLE IF NOT EXISTS "user" (
-		id UUID PRIMARY KEY,
+		id SERIAL PRIMARY KEY,
 		username VARCHAR(25) NOT NULL,
 		display_name VARCHAR(25) NOT NULL,
 		key BYTEA NOT NULL,
@@ -28,7 +28,6 @@ func Setup(conn *MongoConnection) {
 			SELECT 1 FROM pg_type WHERE typname = 'chattype'
 		) THEN
 			CREATE TYPE CHATTYPE AS ENUM (
-				'public',
 				'private',
 				'group'
 			);
@@ -38,8 +37,9 @@ func Setup(conn *MongoConnection) {
 
 	_, err = conn.Exec(`
 	CREATE TABLE IF NOT EXISTS chat (
-		id UUID PRIMARY KEY,
+		id SERIAL PRIMARY KEY,
 		type CHATTYPE NOT NULL,
+		name VARCHAR(25),
 		created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'UTC'),
 		last_updated_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'UTC')
 	)`)
@@ -57,7 +57,7 @@ func Setup(conn *MongoConnection) {
 
 	_, err = conn.Exec(`
 	CREATE TABLE IF NOT EXISTS message (
-		id UUID PRIMARY KEY,
+		id SERIAL PRIMARY KEY,
 		user_id UUID NOT NULL REFERENCES "user"(id),
 		chat_id UUID NOT NULL REFERENCES chat(id),
 		content TEXT NOT NULL,
