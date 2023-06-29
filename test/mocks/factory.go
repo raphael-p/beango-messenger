@@ -14,11 +14,18 @@ const (
 	HASH           = "$2y$04$8QoTLjUMGtnr4lNeA0DtduhEshmvbDbmEzW/G9IkV/9mr576xX//K"
 )
 
-func MakeUser(id int) *database.User {
+func MakeUser() *database.User {
 	return &database.User{
-		ID:          id,
 		Username:    "john.doe.69",
 		DisplayName: "Johnny D",
+		Key:         []byte(HASH),
+	}
+}
+
+func MakeUser2() *database.User {
+	return &database.User{
+		Username:    "miltonb",
+		DisplayName: "Blake Milton",
 		Key:         []byte(HASH),
 	}
 }
@@ -40,16 +47,14 @@ func MakeSession(userID int) database.Session {
 	}
 }
 
-func MakePrivateChat(id int) *database.Chat {
+func MakePrivateChat() *database.Chat {
 	return &database.Chat{
-		ID:       id,
 		ChatType: database.PRIVATE_CHAT,
 	}
 }
 
-func MakeMessage(messageID, userID, chatID int) *database.Message {
+func MakeMessage(userID, chatID int) *database.Message {
 	return &database.Message{
-		ID:      messageID,
 		UserID:  userID,
 		ChatID:  chatID,
 		Content: "Lorem Ipsum Dolor",

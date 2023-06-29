@@ -110,7 +110,7 @@ func TestGetRequestContext(t *testing.T) {
 	}
 
 	t.Run("Normal", func(t *testing.T) {
-		xUser := mocks.MakeUser(11)
+		xUser := mocks.MakeUser()
 		key1 := "Param1"
 		key2 := "param2"
 		xParams := map[string]string{key1: "value1", key2: "value2"}
@@ -126,7 +126,7 @@ func TestGetRequestContext(t *testing.T) {
 		key := "param1"
 		extraKey := "extra"
 		xParams := map[string]string{key: "value1", extraKey: "value2"}
-		req, _, _ := setup(mocks.MakeUser(11), xParams)
+		req, _, _ := setup(mocks.MakeUser(), xParams)
 
 		_, params, ok := getRequestContext(nil, req, key)
 		assert.Equals(t, ok, true)
@@ -135,7 +135,7 @@ func TestGetRequestContext(t *testing.T) {
 	})
 
 	t.Run("NoParamKeys", func(t *testing.T) {
-		req, _, _ := setup(mocks.MakeUser(11), map[string]string{"param1": "value1"})
+		req, _, _ := setup(mocks.MakeUser(), map[string]string{"param1": "value1"})
 
 		_, params, ok := getRequestContext(nil, req)
 		assert.Equals(t, ok, true)
@@ -145,7 +145,7 @@ func TestGetRequestContext(t *testing.T) {
 	t.Run("MissingRequestParam", func(t *testing.T) {
 		key1 := "param1"
 		key2 := "param2"
-		req, w, buf := setup(mocks.MakeUser(11), map[string]string{key1: "some-value"})
+		req, w, buf := setup(mocks.MakeUser(), map[string]string{key1: "some-value"})
 
 		_, _, ok := getRequestContext(w, req, key1, key2)
 		assert.Equals(t, ok, false)

@@ -54,7 +54,7 @@ func TestFromCookie(t *testing.T) {
 	})
 
 	t.Run("UserNotFound", func(t *testing.T) {
-		user := mocks.MakeUser(11)
+		user := mocks.MakeUser()
 		sesh := mocks.MakeSession(user.ID)
 		w, req, conn := setup(sessionCookie, sesh.ID)
 		reqCopy := *req
@@ -104,7 +104,7 @@ func TestGetUserIDFromCookie(t *testing.T) {
 	})
 
 	t.Run("NoSession", func(t *testing.T) {
-		noSeshUser := mocks.MakeUser(11)
+		noSeshUser := mocks.MakeUser()
 		buf := logger.MockFileLogger(t)
 		w, req, conn := setup(sessionCookie, fmt.Sprint(noSeshUser.ID))
 
