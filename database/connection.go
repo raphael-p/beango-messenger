@@ -18,12 +18,12 @@ type Connection interface {
 	GetChat(id, userID int) (*Chat, error)
 	GetChatsByUserID(userID int) []Chat
 	CheckPrivateChatExists(userIDs [2]int) bool
-	SetChat(chat *Chat, userIDs ...int)
+	SetChat(chat *Chat, userIDs ...int) *Chat
 	GetMessagesByChatID(chatID int) []Message
-	SetMessage(message *Message)
+	SetMessage(message *Message) *Message
 	GetUser(id int) (*User, error)
 	GetUserByUsername(username string) (*User, error)
-	SetUser(user *User)
+	SetUser(user *User) *User
 	GetSession(id string) *Session
 	GetSessionByUserID(userID int) (*Session, error)
 	SetSession(session Session)

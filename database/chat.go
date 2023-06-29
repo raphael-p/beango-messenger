@@ -81,7 +81,7 @@ func (conn *MongoConnection) CheckPrivateChatExists(userIDs [2]int) bool {
 	return false
 }
 
-func (conn *MongoConnection) SetChat(chat *Chat, userIDs ...int) {
+func (conn *MongoConnection) SetChat(chat *Chat, userIDs ...int) *Chat {
 	chat.ID = len(Chats) + 1
 	Chats[chat.ID] = *chat
 	for _, userID := range userIDs {
@@ -92,4 +92,5 @@ func (conn *MongoConnection) SetChat(chat *Chat, userIDs ...int) {
 		}
 		ChatUsers[chatUser.ID] = chatUser
 	}
+	return chat
 }

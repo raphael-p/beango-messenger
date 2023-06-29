@@ -44,6 +44,6 @@ func CreatePrivateChat(w *response.Writer, r *http.Request, conn database.Connec
 	}
 
 	newChat := &database.Chat{ChatType: database.PRIVATE_CHAT}
-	conn.SetChat(newChat, userIDs[:]...)
+	newChat = conn.SetChat(newChat, userIDs[:]...)
 	w.WriteJSON(http.StatusCreated, newChat)
 }

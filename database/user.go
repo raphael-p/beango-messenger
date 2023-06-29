@@ -32,6 +32,8 @@ func (conn *MongoConnection) GetUserByUsername(username string) (*User, error) {
 	return nil, fmt.Errorf("no user found with username %s", username)
 }
 
-func (conn *MongoConnection) SetUser(user *User) {
+func (conn *MongoConnection) SetUser(user *User) *User {
+	user.ID = len(Users) + 1
 	Users[user.ID] = *user
+	return user
 }

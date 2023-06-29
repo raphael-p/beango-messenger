@@ -50,7 +50,7 @@ func CreateUser(w *response.Writer, r *http.Request, conn database.Connection) {
 	if newUser.DisplayName == "" {
 		newUser.DisplayName = input.Username
 	}
-	conn.SetUser(newUser)
+	newUser = conn.SetUser(newUser)
 	w.WriteJSON(http.StatusCreated, stripFields(newUser))
 }
 

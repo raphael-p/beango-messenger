@@ -90,7 +90,7 @@ func (mc *MockConnection) CheckPrivateChatExists(userIDs [2]int) bool {
 	return false
 }
 
-func (mc *MockConnection) SetChat(chat *database.Chat, userIDs ...int) {
+func (mc *MockConnection) SetChat(chat *database.Chat, userIDs ...int) *database.Chat {
 	chat.ID = len(mc.chats) + 1
 	mc.chats[chat.ID] = *chat
 	for _, userID := range userIDs {
@@ -102,6 +102,7 @@ func (mc *MockConnection) SetChat(chat *database.Chat, userIDs ...int) {
 		mc.chatUsers[chatUser.ID] = chatUser
 	}
 	mc.chats[chat.ID] = *chat
+	return chat
 }
 
 func (mc *MockConnection) GetMessagesByChatID(chatID int) []database.Message {
@@ -114,8 +115,10 @@ func (mc *MockConnection) GetMessagesByChatID(chatID int) []database.Message {
 	return messages
 }
 
-func (mc *MockConnection) SetMessage(message *database.Message) {
+func (mc *MockConnection) SetMessage(message *database.Message) *database.Message {
+	message.ID = len(mc.messages) + 1
 	mc.messages[message.ID] = *message
+	return message
 }
 
 func (mc *MockConnection) GetUser(id int) (*database.User, error) {
@@ -135,8 +138,10 @@ func (mc *MockConnection) GetUserByUsername(username string) (*database.User, er
 	return nil, errors.New("not found")
 }
 
-func (mc *MockConnection) SetUser(user *database.User) {
+func (mc *MockConnection) SetUser(user *database.User) *database.User {
+	user.ID = len(mc.users) + 1
 	mc.users[user.ID] = *user
+	return user
 }
 
 func (mc *MockConnection) GetSession(id string) *database.Session {

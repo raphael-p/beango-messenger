@@ -55,6 +55,6 @@ func SendMessage(w *response.Writer, r *http.Request, conn database.Connection) 
 		ChatID:  chatID,
 		Content: input.Content,
 	}
-	conn.SetMessage(newMessage)
+	newMessage = conn.SetMessage(newMessage)
 	w.WriteJSON(http.StatusAccepted, newMessage)
 }

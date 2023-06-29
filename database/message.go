@@ -21,6 +21,8 @@ func (conn *MongoConnection) GetMessagesByChatID(chatID int) []Message {
 	return messages
 }
 
-func (conn *MongoConnection) SetMessage(message *Message) {
+func (conn *MongoConnection) SetMessage(message *Message) *Message {
+	message.ID = len(Messages) + 1
 	Messages[message.ID] = *message
+	return message
 }
