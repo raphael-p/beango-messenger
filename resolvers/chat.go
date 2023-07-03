@@ -18,7 +18,7 @@ func GetChats(w *response.Writer, r *http.Request, conn database.Connection) {
 }
 
 type CreateChatInput struct {
-	UserID int `json:"userID"`
+	UserID int64 `json:"userID"`
 }
 
 func CreatePrivateChat(w *response.Writer, r *http.Request, conn database.Connection) {
@@ -27,7 +27,7 @@ func CreatePrivateChat(w *response.Writer, r *http.Request, conn database.Connec
 	if !ok {
 		return
 	}
-	userIDs := [2]int{user.ID, input.UserID}
+	userIDs := [2]int64{user.ID, input.UserID}
 
 	// Check that user id exists
 	_, err := conn.GetUser(input.UserID)

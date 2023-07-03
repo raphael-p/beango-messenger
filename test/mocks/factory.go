@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	ADMIN_ID       = 1
-	ADMIN_USERNAME = "the_admin"
-	PASSWORD       = "123abc*"
-	HASH           = "$2y$04$8QoTLjUMGtnr4lNeA0DtduhEshmvbDbmEzW/G9IkV/9mr576xX//K"
+	ADMIN_ID       int64 = 1
+	ADMIN_USERNAME       = "the_admin"
+	PASSWORD             = "123abc*"
+	HASH                 = "$2y$04$8QoTLjUMGtnr4lNeA0DtduhEshmvbDbmEzW/G9IkV/9mr576xX//K"
 )
 
 func MakeUser() *database.User {
@@ -39,7 +39,7 @@ func MakeAdminUser() *database.User {
 	}
 }
 
-func MakeSession(userID int) database.Session {
+func MakeSession(userID int64) database.Session {
 	return database.Session{
 		ID:         uuid.NewString(),
 		UserID:     userID,
@@ -53,7 +53,7 @@ func MakePrivateChat() *database.Chat {
 	}
 }
 
-func MakeMessage(userID, chatID int) *database.Message {
+func MakeMessage(userID, chatID int64) *database.Message {
 	return &database.Message{
 		UserID:  userID,
 		ChatID:  chatID,

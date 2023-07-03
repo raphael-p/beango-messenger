@@ -13,7 +13,7 @@ const (
 )
 
 type Chat struct {
-	ID            int       `json:"id"`
+	ID            int64     `json:"id"`
 	ChatType      chatType  `json:"chatType"`
 	Name          string    `json:"name"`
 	CreatedAt     time.Time `json:"createdAt"`
@@ -21,13 +21,13 @@ type Chat struct {
 }
 
 type ChatUser struct {
-	ID        int       `json:"id"`
-	ChatID    int       `json:"chatID"`
-	UserID    int       `json:"userID"`
+	ID        int64     `json:"id"`
+	ChatID    int64     `json:"chatID"`
+	UserID    int64     `json:"userID"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-func (conn *MongoConnection) GetChat(id, userID int) (*Chat, error) {
+func (conn *MongoConnection) GetChat(id, userID int64) (*Chat, error) {
 	chat, ok := Chats[id]
 	if ok {
 		for _, chatUser := range ChatUsers {
@@ -39,7 +39,7 @@ func (conn *MongoConnection) GetChat(id, userID int) (*Chat, error) {
 	return nil, fmt.Errorf("no chat found with id %d", id)
 }
 
-func (conn *MongoConnection) GetChatsByUserID(userID int) []Chat {
+func (conn *MongoConnection) GetChatsByUserID(userID int64) []Chat {
 	chats := []Chat{}
 	for _, chatUser := range ChatUsers {
 		if chatUser.UserID == userID {
@@ -51,7 +51,7 @@ func (conn *MongoConnection) GetChatsByUserID(userID int) []Chat {
 	return chats
 }
 
-func (conn *MongoConnection) CheckPrivateChatExists(userIDs [2]int) bool {
+func (conn *MongoConnection) CheckPrivateChatExists(userIDs [2]int64) bool {
 	for _, chat := range Chats {
 		if chat.ChatType == PRIVATE_CHAT {
 			match := [2]bool{false, false}
@@ -81,12 +81,12 @@ func (conn *MongoConnection) CheckPrivateChatExists(userIDs [2]int) bool {
 	return false
 }
 
-func (conn *MongoConnection) SetChat(chat *Chat, userIDs ...int) *Chat {
-	chat.ID = len(Chats) + 1
+func (conn *MongoConnection) SetChat(chat *Chat, userIDs ...int64) *Chat {
+	chat.ID = int64(len(Chats) + 1)
 	Chats[chat.ID] = *chat
 	for _, userID := range userIDs {
 		chatUser := ChatUser{
-			ID:     len(ChatUsers) + 1,
+			ID:     int64(len(ChatUsers) + 1),
 			ChatID: chat.ID,
 			UserID: userID,
 		}
@@ -94,3 +94,40 @@ func (conn *MongoConnection) SetChat(chat *Chat, userIDs ...int) *Chat {
 	}
 	return chat
 }
+
+// GPT:
+// func (conn *MongoConnection) SetChat(chat *Chat, userIDs ...int) *Chat {
+// 	// Insert chat into the 'chat' table
+// 	_, err := conn.Exec(`
+// 		INSERT INTO chat (type, name, created_at, last_updated_at)
+// 		VALUES ($1, $2, NOW() AT TIME ZONE 'UTC', NOW() AT TIME ZONE 'UTC')
+// 		RETURNING id`,
+// 		chat.Type, chat.Name)
+// 	if err != nil {
+// 		handleError(err)
+// 		return nil
+// 	}
+
+// 	// Get the inserted chat ID
+// 	var chatID int
+// 	err = conn.QueryRow("SELECT lastval()").Scan(&chatID)
+// 	if err != nil {
+// 		handleError(err)
+// 		return nil
+// 	}
+// 	chat.ID = chatID
+
+// 	// Insert chat users into the 'chat_users' table
+// 	for _, userID := range userIDs {
+// 		_, err := conn.Exec(`
+// 			INSERT INTO chat_users (chat_id, user_id, created_at)
+// 			VALUES ($1, $2, NOW() AT TIME ZONE 'UTC')`,
+// 			chat.ID, userID)
+// 		if err != nil {
+// 			handleError(err)
+// 			return nil
+// 		}
+// 	}
+
+// 	return chat
+// }

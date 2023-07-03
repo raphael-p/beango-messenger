@@ -12,15 +12,15 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-func setupMessageTests(t *testing.T, body string, userID1, userID2 int) (
+func setupMessageTests(t *testing.T, body string, userID1, userID2 int64) (
 	*response.Writer,
 	*http.Request,
 	database.Connection,
-	int,
+	int64,
 ) {
 	w, req := mockRequest(body)
 	conn := mocks.MakeMockConnection()
-	var chatID int
+	var chatID int64
 	if userID1 != 0 && userID2 != 0 {
 		chatID = conn.SetChat(mocks.MakePrivateChat(), userID1, userID2).ID
 	}
@@ -32,7 +32,7 @@ func setupMessageTests(t *testing.T, body string, userID1, userID2 int) (
 func TestGetChatMessages(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		userID1 := mocks.ADMIN_ID
-		userID2 := 12
+		var userID2 int64 = 12
 		w, req, conn, chatID := setupMessageTests(t, "", userID1, userID2)
 		conn.SetMessage(mocks.MakeMessage(userID1, chatID))
 		conn.SetMessage(mocks.MakeMessage(userID2, chatID))

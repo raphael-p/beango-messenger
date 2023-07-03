@@ -8,24 +8,24 @@ import (
 	"github.com/raphael-p/beango/config"
 )
 
-var Users = make(map[int]User)
-var Chats = make(map[int]Chat)
-var ChatUsers = make(map[int]ChatUser)
-var Messages = make(map[int]Message)
+var Users = make(map[int64]User)
+var Chats = make(map[int64]Chat)
+var ChatUsers = make(map[int64]ChatUser)
+var Messages = make(map[int64]Message)
 var Sessions = make(map[string]Session)
 
 type Connection interface {
-	GetChat(id, userID int) (*Chat, error)
-	GetChatsByUserID(userID int) []Chat
-	CheckPrivateChatExists(userIDs [2]int) bool
-	SetChat(chat *Chat, userIDs ...int) *Chat
-	GetMessagesByChatID(chatID int) []Message
+	GetChat(id, userID int64) (*Chat, error)
+	GetChatsByUserID(userID int64) []Chat
+	CheckPrivateChatExists(userIDs [2]int64) bool
+	SetChat(chat *Chat, userIDs ...int64) *Chat
+	GetMessagesByChatID(chatID int64) []Message
 	SetMessage(message *Message) *Message
-	GetUser(id int) (*User, error)
+	GetUser(id int64) (*User, error)
 	GetUserByUsername(username string) (*User, error)
 	SetUser(user *User) *User
 	GetSession(id string) *Session
-	GetSessionByUserID(userID int) (*Session, error)
+	GetSessionByUserID(userID int64) (*Session, error)
 	SetSession(session Session)
 	CheckSession(id string) (*Session, bool)
 	DeleteSession(id string)

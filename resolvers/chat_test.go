@@ -16,31 +16,31 @@ func TestGetChats(t *testing.T) {
 	adminID := mocks.ADMIN_ID
 	testCases := []struct {
 		name          string
-		chatUsers     [2][]int
+		chatUsers     [2][]int64
 		expectedCount int
 	}{
 		{
 			"UserInAllChats",
-			[2][]int{{adminID, 11}, {12, adminID}},
+			[2][]int64{{adminID, 11}, {12, adminID}},
 			2,
 		},
 		{
 			"UserInSomeChats",
-			[2][]int{{adminID, 13}, {14, 15}},
+			[2][]int64{{adminID, 13}, {14, 15}},
 			1,
 		},
 		{
 			"UserInNoChats",
-			[2][]int{{16, 17}, {18, 19}},
+			[2][]int64{{16, 17}, {18, 19}},
 			0,
 		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			conn := mocks.MakeMockConnection()
 			w, req := mockRequest("")
 			req = setContext(t, req, mocks.Admin, nil)
-			conn := mocks.MakeMockConnection()
 			for _, pair := range testCase.chatUsers {
 				conn.SetChat(mocks.MakePrivateChat(), pair...)
 			}
@@ -56,7 +56,7 @@ func TestGetChats(t *testing.T) {
 }
 
 func TestCreatePrivateChat(t *testing.T) {
-	setup := func(t *testing.T, userID int) (*response.Writer, *http.Request) {
+	setup := func(t *testing.T, userID int64) (*response.Writer, *http.Request) {
 		w, req := mockRequest(fmt.Sprintf(`{"userID": %d}`, userID))
 		req = setContext(t, req, mocks.Admin, nil)
 		return w, req
@@ -91,7 +91,7 @@ func TestCreatePrivateChat(t *testing.T) {
 	})
 
 	t.Run("UserDoesNotExist", func(t *testing.T) {
-		fakeUserID := 451
+		var fakeUserID int64 = 451
 		conn := mocks.MakeMockConnection()
 		w, req := setup(t, fakeUserID)
 

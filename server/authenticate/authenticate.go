@@ -31,7 +31,7 @@ func FromCookie(w *response.Writer, req *http.Request, conn database.Connection)
 	return req, true
 }
 
-func getUserIDFromCookie(w *response.Writer, req *http.Request, conn database.Connection) (int, error) {
+func getUserIDFromCookie(w *response.Writer, req *http.Request, conn database.Connection) (int64, error) {
 	cookieName := cookies.SESSION
 	sessionID, err := cookies.Get(req, cookieName)
 	if err != nil {

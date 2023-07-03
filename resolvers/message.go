@@ -14,7 +14,7 @@ func GetChatMessages(w *response.Writer, r *http.Request, conn database.Connecti
 		return
 	}
 
-	chatID, err := strconv.Atoi(params[CHAT_ID_KEY])
+	chatID, err := strconv.ParseInt(params[CHAT_ID_KEY], 10, 64)
 	if err != nil {
 		w.WriteString(http.StatusBadRequest, "chat ID must be an integer")
 	}
@@ -39,7 +39,7 @@ func SendMessage(w *response.Writer, r *http.Request, conn database.Connection) 
 		return
 	}
 
-	chatID, err := strconv.Atoi(params[CHAT_ID_KEY])
+	chatID, err := strconv.ParseInt(params[CHAT_ID_KEY], 10, 64)
 	if err != nil {
 		w.WriteString(http.StatusBadRequest, "chat ID must be an integer")
 	}
