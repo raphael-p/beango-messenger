@@ -1,16 +1,27 @@
 package database
 
-func handleError(err error) {
+import "database/sql"
+
+func handleError(tx *sql.Tx, err error) {
 	if err != nil {
-		panic("failed to setup database: " + err.Error())
+		message := "failed to setup database: " + err.Error()
+		if err := tx.Rollback(); err != nil {
+			message += " (transaction rollback failed: " + err.Error() + ")"
+		} else {
+			message += " (transaction rollback successful)"
+		}
+		panic(message)
 	}
 }
 
 func Setup(conn *MongoConnection) {
-	_, err := conn.Exec(`SET TIME ZONE 'UTC';`)
-	handleError(err)
+	tx, err := conn.Begin()
+	handleError(tx, err)
 
-	_, err = conn.Exec(`
+	_, err = tx.Exec(`SET TIME ZONE 'UTC';`)
+	handleError(tx, err)
+
+	_, err = tx.Exec(`
 	CREATE TABLE IF NOT EXISTS "user" (
 		id SERIAL PRIMARY KEY,
 		username VARCHAR(25) NOT NULL,
@@ -19,9 +30,9 @@ func Setup(conn *MongoConnection) {
 		created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'UTC'),
 		last_updated_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'UTC')
 	)`)
-	handleError(err)
+	handleError(tx, err)
 
-	_, err = conn.Exec(`
+	_, err = tx.Exec(`
 	DO $$
 	BEGIN
 		IF NOT EXISTS (
@@ -33,9 +44,9 @@ func Setup(conn *MongoConnection) {
 			);
 		END IF;
 	END$$;`)
-	handleError(err)
+	handleError(tx, err)
 
-	_, err = conn.Exec(`
+	_, err = tx.Exec(`
 	CREATE TABLE IF NOT EXISTS chat (
 		id SERIAL PRIMARY KEY,
 		type CHATTYPE NOT NULL,
@@ -43,26 +54,29 @@ func Setup(conn *MongoConnection) {
 		created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'UTC'),
 		last_updated_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'UTC')
 	)`)
-	handleError(err)
+	handleError(tx, err)
 
-	_, err = conn.Exec(`
+	_, err = tx.Exec(`
 	CREATE TABLE IF NOT EXISTS chat_users (
 		id SERIAL PRIMARY KEY,
-		chat_id UUID NOT NULL REFERENCES chat(id),
-		user_id UUID NOT NULL REFERENCES "user"(id),
+		chat_id INT NOT NULL REFERENCES chat(id),
+		user_id INT NOT NULL REFERENCES "user"(id),
 		created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'UTC'),
 		CONSTRAINT unique_combination UNIQUE (chat_id, user_id)
 	)`)
-	handleError(err)
+	handleError(tx, err)
 
-	_, err = conn.Exec(`
+	_, err = tx.Exec(`
 	CREATE TABLE IF NOT EXISTS message (
 		id SERIAL PRIMARY KEY,
-		user_id UUID NOT NULL REFERENCES "user"(id),
-		chat_id UUID NOT NULL REFERENCES chat(id),
+		user_id INT NOT NULL REFERENCES "user"(id),
+		chat_id INT NOT NULL REFERENCES chat(id),
 		content TEXT NOT NULL,
 		created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'UTC'),
 		last_updated_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'UTC')
 	)`)
-	handleError(err)
+	handleError(tx, err)
+
+	err = tx.Commit()
+	handleError(tx, err)
 }
