@@ -23,7 +23,7 @@ type Connection interface {
 	SetMessage(message *Message) *Message
 	GetUser(id int64) (*User, error)
 	GetUserByUsername(username string) (*User, error)
-	SetUser(user *User) *User
+	SetUser(user *User) (*User, error)
 	GetSession(id string) *Session
 	GetSessionByUserID(userID int64) (*Session, error)
 	SetSession(session Session)

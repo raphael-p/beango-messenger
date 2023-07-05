@@ -89,3 +89,10 @@ func getRequestBodyAndContext(
 	}
 	return getRequestContext(w, r, keys...)
 }
+
+// Handles an unexpected error from the database
+func handleDatabaseError(w *response.Writer, err error) {
+	message := "database operation failed"
+	logger.Error(message + ": " + err.Error())
+	w.WriteString(http.StatusInternalServerError, message)
+}

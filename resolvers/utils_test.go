@@ -2,6 +2,7 @@ package resolvers
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -162,5 +163,18 @@ func TestGetRequestContext(t *testing.T) {
 		assert.Equals(t, w.Status, http.StatusInternalServerError)
 		assert.Equals(t, w.Body, "failed to fetch user")
 		assert.Contains(t, buf.String(), "[ERROR]", "user not found in request context")
+	})
+}
+
+func TestHandleDatabaseError(t *testing.T) {
+	t.Run("Normal", func(t *testing.T) {
+		w, _ := mockRequest("")
+		buf := logger.MockFileLogger(t)
+		errPrefix := "database operation failed"
+		errMessage := "this did not go well"
+		handleDatabaseError(w, errors.New(errMessage))
+		assert.Equals(t, w.Status, http.StatusInternalServerError)
+		assert.Equals(t, w.Body, errPrefix)
+		assert.Contains(t, buf.String(), "[ERROR] "+errPrefix+": "+errMessage)
 	})
 }

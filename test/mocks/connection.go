@@ -138,10 +138,10 @@ func (mc *MockConnection) GetUserByUsername(username string) (*database.User, er
 	return nil, errors.New("not found")
 }
 
-func (mc *MockConnection) SetUser(user *database.User) *database.User {
+func (mc *MockConnection) SetUser(user *database.User) (*database.User, error) {
 	user.ID = int64(len(mc.users) + 1)
 	mc.users[user.ID] = *user
-	return user
+	return user, nil
 }
 
 func (mc *MockConnection) GetSession(id string) *database.Session {

@@ -79,7 +79,7 @@ func TestCreatePrivateChat(t *testing.T) {
 
 	t.Run("Normal", func(t *testing.T) {
 		conn := mocks.MakeMockConnection()
-		user := conn.SetUser(mocks.MakeUser())
+		user, _ := conn.SetUser(mocks.MakeUser())
 		w, req := setup(t, user.ID)
 		createAndCheck(w, req, conn)
 	})
@@ -103,7 +103,7 @@ func TestCreatePrivateChat(t *testing.T) {
 
 	t.Run("ChatAlreadyExists", func(t *testing.T) {
 		conn := mocks.MakeMockConnection()
-		user := conn.SetUser(mocks.MakeUser())
+		user, _ := conn.SetUser(mocks.MakeUser())
 		w, req := setup(t, user.ID)
 		chat := mocks.MakePrivateChat()
 		conn.SetChat(chat, mocks.ADMIN_ID, user.ID)

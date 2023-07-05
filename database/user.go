@@ -32,12 +32,11 @@ func (conn *MongoConnection) GetUserByUsername(username string) (*User, error) {
 	return nil, fmt.Errorf("no user found with username %s", username)
 }
 
-func (conn *MongoConnection) SetUser(user *User) *User {
-	newUser, _ := scanRow[User](conn.QueryRow(
+func (conn *MongoConnection) SetUser(user *User) (*User, error) {
+	return scanRow[User](conn.QueryRow(
 		`INSERT INTO "user" (username, display_name, key)
 		VALUES ($1, $2, $3)
 		RETURNING *`,
 		user.Username, user.DisplayName, user.Key,
-	)) // TODO: error handling
-	return newUser
+	))
 }
