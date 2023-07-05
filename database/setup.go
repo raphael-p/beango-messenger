@@ -33,6 +33,11 @@ func Setup(conn *MongoConnection) {
 	handleError(tx, err)
 
 	_, err = tx.Exec(`
+		CREATE UNIQUE INDEX IF NOT EXISTS user_username_unique_idx ON "user" (username);
+	`)
+	handleError(tx, err)
+
+	_, err = tx.Exec(`
 	DO $$
 	BEGIN
 		IF NOT EXISTS (
@@ -62,7 +67,7 @@ func Setup(conn *MongoConnection) {
 		chat_id INT NOT NULL REFERENCES chat(id),
 		user_id INT NOT NULL REFERENCES "user"(id),
 		created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'UTC'),
-		CONSTRAINT unique_combination UNIQUE (chat_id, user_id)
+		CONSTRAINT chat_users_unique_constraint UNIQUE (chat_id, user_id)
 	)`)
 	handleError(tx, err)
 
