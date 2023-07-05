@@ -56,7 +56,7 @@ func getRequestContext(
 	user, err := context.GetUser(r)
 	if err != nil {
 		logger.Error(err.Error())
-		w.WriteString(http.StatusInternalServerError, "failed to fetch user")
+		w.WriteString(http.StatusInternalServerError, "failed to fetch request user")
 		return nil, nil, false
 	}
 
@@ -91,7 +91,10 @@ func getRequestBodyAndContext(
 }
 
 // Handles an unexpected error from the database
-func handleDatabaseError(w *response.Writer, err error) {
+func HandleDatabaseError(w *response.Writer, err error) {
+	if err == nil {
+		return
+	}
 	message := "database operation failed"
 	logger.Error(message + ": " + err.Error())
 	w.WriteString(http.StatusInternalServerError, message)

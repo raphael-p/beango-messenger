@@ -33,13 +33,13 @@ func CreateSession(w *response.Writer, r *http.Request, conn database.Connection
 		return
 	}
 
-	user, err := conn.GetUserByUsername(input.Username)
-	if err != nil {
+	user, _ := conn.GetUserByUsername(input.Username)
+	if user == nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	err = bcrypt.CompareHashAndPassword(user.Key, []byte(input.Password))
+	err := bcrypt.CompareHashAndPassword(user.Key, []byte(input.Password))
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return

@@ -124,7 +124,7 @@ func (mc *MockConnection) SetMessage(message *database.Message) *database.Messag
 func (mc *MockConnection) GetUser(id int64) (*database.User, error) {
 	user, ok := mc.users[id]
 	if !ok {
-		return nil, errors.New("not found")
+		return nil, nil
 	}
 	return &user, nil
 }
@@ -135,7 +135,7 @@ func (mc *MockConnection) GetUserByUsername(username string) (*database.User, er
 			return &user, nil
 		}
 	}
-	return nil, errors.New("not found")
+	return nil, nil
 }
 
 func (mc *MockConnection) SetUser(user *database.User) (*database.User, error) {

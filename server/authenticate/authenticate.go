@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/raphael-p/beango/database"
+	"github.com/raphael-p/beango/resolvers"
 	"github.com/raphael-p/beango/utils/context"
 	"github.com/raphael-p/beango/utils/cookies"
 	"github.com/raphael-p/beango/utils/logger"
@@ -18,8 +19,12 @@ func FromCookie(w *response.Writer, req *http.Request, conn database.Connection)
 		return req, false
 	}
 	user, err := conn.GetUser(userID)
-	if err != nil {
-		w.WriteString(http.StatusNotFound, "user not found during authentication")
+	if user == nil {
+		if err != nil {
+			resolvers.HandleDatabaseError(w, err)
+		} else {
+			w.WriteString(http.StatusNotFound, "user not found during authentication")
+		}
 		return req, false
 	}
 	req, err = context.SetUser(req, user)

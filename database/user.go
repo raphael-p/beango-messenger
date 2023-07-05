@@ -1,7 +1,7 @@
 package database
 
 import (
-	"fmt"
+	"database/sql"
 	"time"
 )
 
@@ -15,21 +15,29 @@ type User struct {
 }
 
 func (conn *MongoConnection) GetUser(id int64) (*User, error) {
-	user, ok := Users[id]
-	if !ok {
-		return nil, fmt.Errorf("no user found with id %d", id)
-	} else {
-		return &user, nil
+	row := conn.QueryRow(
+		`SELECT * FROM "user" WHERE id = $1`,
+		id,
+	)
+	user, err := scanRow[User](row)
+	if err != nil && err == sql.ErrNoRows {
+		return nil, nil
 	}
+	return user, err
 }
 
 func (conn *MongoConnection) GetUserByUsername(username string) (*User, error) {
-	for _, user := range Users {
-		if user.Username == username {
-			return &user, nil
-		}
+	row := conn.QueryRow(
+		`SELECT * FROM "user" WHERE username = $1
+		ORDER BY created_at ASC 
+		LIMIT 1`,
+		username,
+	)
+	user, err := scanRow[User](row)
+	if err != nil && err == sql.ErrNoRows {
+		return nil, nil
 	}
-	return nil, fmt.Errorf("no user found with username %s", username)
+	return user, err
 }
 
 func (conn *MongoConnection) SetUser(user *User) (*User, error) {

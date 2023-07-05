@@ -30,8 +30,7 @@ func CreatePrivateChat(w *response.Writer, r *http.Request, conn database.Connec
 	userIDs := [2]int64{user.ID, input.UserID}
 
 	// Check that user id exists
-	_, err := conn.GetUser(input.UserID)
-	if err != nil {
+	if user, _ := conn.GetUser(input.UserID); user == nil {
 		errorResponse := fmt.Sprintf("userID %d is invalid", input.UserID)
 		w.WriteString(http.StatusBadRequest, errorResponse)
 		return

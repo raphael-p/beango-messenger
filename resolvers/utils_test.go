@@ -161,7 +161,7 @@ func TestGetRequestContext(t *testing.T) {
 		_, _, ok := getRequestContext(w, req)
 		assert.Equals(t, ok, false)
 		assert.Equals(t, w.Status, http.StatusInternalServerError)
-		assert.Equals(t, w.Body, "failed to fetch user")
+		assert.Equals(t, w.Body, "failed to fetch request user")
 		assert.Contains(t, buf.String(), "[ERROR]", "user not found in request context")
 	})
 }
@@ -172,7 +172,7 @@ func TestHandleDatabaseError(t *testing.T) {
 		buf := logger.MockFileLogger(t)
 		errPrefix := "database operation failed"
 		errMessage := "this did not go well"
-		handleDatabaseError(w, errors.New(errMessage))
+		HandleDatabaseError(w, errors.New(errMessage))
 		assert.Equals(t, w.Status, http.StatusInternalServerError)
 		assert.Equals(t, w.Body, errPrefix)
 		assert.Contains(t, buf.String(), "[ERROR] "+errPrefix+": "+errMessage)
