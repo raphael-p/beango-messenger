@@ -11,14 +11,12 @@ type Message struct {
 	LastUpdatedAt time.Time `json:"LastUpdatedAt"`
 }
 
-func (conn *MongoConnection) GetMessagesByChatID(chatID int64) []Message {
-	messages := []Message{}
-	for _, message := range Messages {
-		if message.ChatID == chatID {
-			messages = append(messages, message)
-		}
-	}
-	return messages
+func (conn *MongoConnection) GetMessagesByChatID(chatID int64) ([]Message, error) {
+	return scanRows[Message](conn.Query(
+		`SELECT * FROM message WHERE chat_id = $1
+		ORDER BY created_at DESC`,
+		chatID,
+	))
 }
 
 func (conn *MongoConnection) SetMessage(message *Message) (*Message, error) {

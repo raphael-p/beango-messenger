@@ -55,7 +55,7 @@ func Setup(conn *MongoConnection) {
 	CREATE TABLE IF NOT EXISTS chat (
 		id SERIAL PRIMARY KEY,
 		type CHATTYPE NOT NULL,
-		name VARCHAR(25),
+		name VARCHAR(25) NOT NULL,
 		created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'UTC'),
 		last_updated_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'UTC')
 	)`)

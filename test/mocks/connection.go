@@ -103,14 +103,14 @@ func (mc *MockConnection) SetChat(chat *database.Chat, userIDs ...int64) *databa
 	return chat
 }
 
-func (mc *MockConnection) GetMessagesByChatID(chatID int64) []database.Message {
+func (mc *MockConnection) GetMessagesByChatID(chatID int64) ([]database.Message, error) {
 	messages := []database.Message{}
 	for _, message := range mc.messages {
 		if message.ChatID == chatID {
 			messages = append(messages, message)
 		}
 	}
-	return messages
+	return messages, nil
 }
 
 func (mc *MockConnection) SetMessage(message *database.Message) (*database.Message, error) {
