@@ -20,7 +20,7 @@ type Connection interface {
 	CheckPrivateChatExists(userIDs [2]int64) bool
 	SetChat(chat *Chat, userIDs ...int64) *Chat
 	GetMessagesByChatID(chatID int64) []Message
-	SetMessage(message *Message) *Message
+	SetMessage(message *Message) (*Message, error)
 	GetUser(id int64) (*User, error)
 	GetUserByUsername(username string) (*User, error)
 	SetUser(user *User) (*User, error)

@@ -115,10 +115,10 @@ func (mc *MockConnection) GetMessagesByChatID(chatID int64) []database.Message {
 	return messages
 }
 
-func (mc *MockConnection) SetMessage(message *database.Message) *database.Message {
+func (mc *MockConnection) SetMessage(message *database.Message) (*database.Message, error) {
 	message.ID = int64(len(mc.messages) + 1)
 	mc.messages[message.ID] = *message
-	return message
+	return message, nil
 }
 
 func (mc *MockConnection) GetUser(id int64) (*database.User, error) {

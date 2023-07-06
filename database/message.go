@@ -21,8 +21,11 @@ func (conn *MongoConnection) GetMessagesByChatID(chatID int64) []Message {
 	return messages
 }
 
-func (conn *MongoConnection) SetMessage(message *Message) *Message {
-	message.ID = int64(len(Messages) + 1)
-	Messages[message.ID] = *message
-	return message
+func (conn *MongoConnection) SetMessage(message *Message) (*Message, error) {
+	return scanRow[Message](conn.QueryRow(
+		`INSERT INTO message (user_id, chat_id, content)
+		VALUES ($1, $2, $3)
+		RETURNING *`,
+		message.UserID, message.ChatID, message.Content,
+	))
 }
