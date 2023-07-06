@@ -44,16 +44,20 @@ func (conn *MongoConnection) GetChat(id, userID int64) (*Chat, error) {
 	return chat, err
 }
 
-func (conn *MongoConnection) GetChatsByUserID(userID int64) []Chat {
-	chats := []Chat{}
-	for _, chatUser := range ChatUsers {
-		if chatUser.UserID == userID {
-			if chat, ok := Chats[chatUser.ChatID]; ok {
-				chats = append(chats, chat)
-			}
-		}
-	}
-	return chats
+func (conn *MongoConnection) GetChatsByUserID(userID int64) ([]Chat, error) {
+	return scanRows[Chat](conn.Query(
+		`SELECT c.*
+		FROM chat c
+		INNER JOIN chat_users cu ON cu.chat_id = c.id
+		LEFT JOIN (
+			SELECT chat_id, MAX(created_at) AS last_message_time
+			FROM message
+			GROUP BY chat_id
+		) m ON m.chat_id = c.id
+		WHERE cu.user_id = $1
+		ORDER BY COALESCE(m.last_message_time, c.last_updated_at) DESC;`,
+		userID,
+	))
 }
 
 func (conn *MongoConnection) CheckPrivateChatExists(userIDs [2]int64) bool {

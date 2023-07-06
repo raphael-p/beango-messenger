@@ -13,7 +13,11 @@ func GetChats(w *response.Writer, r *http.Request, conn database.Connection) {
 	if !ok {
 		return
 	}
-	chats := conn.GetChatsByUserID(user.ID)
+	chats, err := conn.GetChatsByUserID(user.ID)
+	if err != nil {
+		HandleDatabaseError(w, err)
+		return
+	}
 	w.WriteJSON(http.StatusOK, chats)
 }
 
