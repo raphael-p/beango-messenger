@@ -1,7 +1,7 @@
 package database
 
 import (
-	"fmt"
+	"database/sql"
 	"time"
 )
 
@@ -28,15 +28,20 @@ type ChatUser struct {
 }
 
 func (conn *MongoConnection) GetChat(id, userID int64) (*Chat, error) {
-	chat, ok := Chats[id]
-	if ok {
-		for _, chatUser := range ChatUsers {
-			if chatUser.UserID == userID && chatUser.ChatID == chat.ID {
-				return &chat, nil
-			}
-		}
+	row := conn.QueryRow(
+		`SELECT * FROM chat
+		WHERE id = $1 
+		AND EXISTS (
+			SELECT 1 FROM chat_users
+			WHERE chat_id = $1 AND user_id = $2
+		);`,
+		id, userID,
+	)
+	chat, err := scanRow[Chat](row)
+	if err != nil && err == sql.ErrNoRows {
+		return nil, nil
 	}
-	return nil, fmt.Errorf("no chat found with id %d", id)
+	return chat, err
 }
 
 func (conn *MongoConnection) GetChatsByUserID(userID int64) []Chat {

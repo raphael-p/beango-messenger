@@ -1,8 +1,6 @@
 package mocks
 
 import (
-	"errors"
-
 	"github.com/raphael-p/beango/database"
 )
 
@@ -45,7 +43,7 @@ func (mc *MockConnection) GetChat(id, userID int64) (*database.Chat, error) {
 			}
 		}
 	}
-	return nil, errors.New("not found")
+	return nil, nil
 }
 
 func (mc *MockConnection) GetChatsByUserID(userID int64) []database.Chat {

@@ -19,13 +19,12 @@ func GetChatMessages(w *response.Writer, r *http.Request, conn database.Connecti
 		w.WriteString(http.StatusBadRequest, "chat ID must be an integer")
 	}
 
-	chat, _ := conn.GetChat(chatID, user.ID)
-	if chat == nil {
+	if chat, _ := conn.GetChat(chatID, user.ID); chat == nil {
 		w.WriteString(http.StatusNotFound, "chat not found")
 		return
 	}
 
-	w.WriteJSON(http.StatusOK, conn.GetMessagesByChatID(chat.ID))
+	w.WriteJSON(http.StatusOK, conn.GetMessagesByChatID(chatID))
 }
 
 type SendMessageInput struct {
