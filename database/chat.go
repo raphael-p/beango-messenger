@@ -2,7 +2,10 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 type chatType string
@@ -14,7 +17,7 @@ const (
 
 type Chat struct {
 	ID            int64     `json:"id"`
-	ChatType      chatType  `json:"chatType"`
+	Type          chatType  `json:"type"`
 	Name          string    `json:"name"`
 	CreatedAt     time.Time `json:"createdAt"`
 	LastUpdatedAt time.Time `json:"LastUpdatedAt"`
@@ -60,83 +63,61 @@ func (conn *MongoConnection) GetChatsByUserID(userID int64) ([]Chat, error) {
 	))
 }
 
-func (conn *MongoConnection) CheckPrivateChatExists(userIDs [2]int64) bool {
-	for _, chat := range Chats {
-		if chat.ChatType == PRIVATE_CHAT {
-			match := [2]bool{false, false}
-			for _, chatUser := range ChatUsers {
-				if chatUser.ChatID == chat.ID {
-					if chatUser.UserID == userIDs[0] {
-						if match[0] {
-							break
-						}
-						match[0] = true
-					} else if chatUser.UserID == userIDs[1] {
-						if match[1] {
-							break
-						}
-						match[1] = true
-					} else {
-						break
-					}
-				}
-			}
-			if match[0] && match[1] {
-				return true
-			}
-
-		}
+func (conn *MongoConnection) CheckPrivateChatExists(userIDs [2]int64) (bool, error) {
+	rows, err := conn.Query(
+		`SELECT 1
+		FROM chat c
+		JOIN chat_users cu1 ON cu1.chat_id = c.id AND cu1.user_id = $1
+		JOIN chat_users cu2 ON cu2.chat_id = c.id AND cu2.user_id = $2
+		WHERE c.type = $3`,
+		userIDs[0], userIDs[1], PRIVATE_CHAT,
+	)
+	if err != nil {
+		return false, err
 	}
-	return false
+	return rows.Next(), rows.Close()
 }
 
-func (conn *MongoConnection) SetChat(chat *Chat, userIDs ...int64) *Chat {
-	chat.ID = int64(len(Chats) + 1)
-	Chats[chat.ID] = *chat
+func (conn *MongoConnection) SetChat(chat *Chat, userIDs ...int64) (*Chat, error) {
+	txn, err := conn.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	chat, err = scanRow[Chat](txn.QueryRow(
+		`INSERT INTO chat (type, name) VALUES ($1, $2)
+		RETURNING *`,
+		chat.Type, chat.Name,
+	))
+	if err != nil {
+		return nil, errors.Join(err, txn.Rollback())
+	}
+
+	stmt, err := txn.Prepare(pq.CopyIn("chat_users", "chat_id", "user_id"))
+	if err != nil {
+		return nil, errors.Join(err, txn.Rollback())
+	}
+
 	for _, userID := range userIDs {
-		chatUser := ChatUser{
-			ID:     int64(len(ChatUsers) + 1),
-			ChatID: chat.ID,
-			UserID: userID,
+		_, err = stmt.Exec(chat.ID, userID)
+		if err != nil {
+			return nil, errors.Join(err, txn.Rollback())
 		}
-		ChatUsers[chatUser.ID] = chatUser
 	}
-	return chat
+
+	_, err = stmt.Exec()
+	if err != nil {
+		return nil, errors.Join(err, txn.Rollback())
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		return nil, errors.Join(err, txn.Rollback())
+	}
+
+	err = txn.Commit()
+	if err != nil {
+		return nil, err
+	}
+	return chat, nil
 }
-
-// GPT:
-// func (conn *MongoConnection) SetChat(chat *Chat, userIDs ...int) *Chat {
-// 	// Insert chat into the 'chat' table
-// 	_, err := conn.Exec(`
-// 		INSERT INTO chat (type, name, created_at, last_updated_at)
-// 		VALUES ($1, $2, NOW() AT TIME ZONE 'UTC', NOW() AT TIME ZONE 'UTC')
-// 		RETURNING id`,
-// 		chat.Type, chat.Name)
-// 	if err != nil {
-// 		handleError(err)
-// 		return nil
-// 	}
-
-// 	// Get the inserted chat ID
-// 	var chatID int
-// 	err = conn.QueryRow("SELECT lastval()").Scan(&chatID)
-// 	if err != nil {
-// 		handleError(err)
-// 		return nil
-// 	}
-// 	chat.ID = chatID
-
-// 	// Insert chat users into the 'chat_users' table
-// 	for _, userID := range userIDs {
-// 		_, err := conn.Exec(`
-// 			INSERT INTO chat_users (chat_id, user_id, created_at)
-// 			VALUES ($1, $2, NOW() AT TIME ZONE 'UTC')`,
-// 			chat.ID, userID)
-// 		if err != nil {
-// 			handleError(err)
-// 			return nil
-// 		}
-// 	}
-
-// 	return chat
-// }

@@ -49,7 +49,7 @@ func MakeSession(userID int64) database.Session {
 
 func MakePrivateChat() *database.Chat {
 	return &database.Chat{
-		ChatType: database.PRIVATE_CHAT,
+		Type: database.PRIVATE_CHAT,
 	}
 }
 

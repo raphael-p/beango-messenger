@@ -26,6 +26,7 @@ type CreateChatInput struct {
 }
 
 func CreatePrivateChat(w *response.Writer, r *http.Request, conn database.Connection) {
+	// TODO: throw error if attempting to create self chat, create new chat type for that, called "note"
 	var input CreateChatInput
 	user, _, ok := getRequestBodyAndContext(w, r, &input)
 	if !ok {
@@ -41,12 +42,21 @@ func CreatePrivateChat(w *response.Writer, r *http.Request, conn database.Connec
 	}
 
 	// Check if chat already exists
-	if conn.CheckPrivateChatExists(userIDs) {
+	exists, err := conn.CheckPrivateChatExists(userIDs)
+	if err != nil {
+		HandleDatabaseError(w, err)
+		return
+	}
+	if exists {
 		w.WriteString(http.StatusConflict, "chat already exists")
 		return
 	}
 
-	newChat := &database.Chat{ChatType: database.PRIVATE_CHAT}
-	newChat = conn.SetChat(newChat, userIDs[:]...)
+	newChat := &database.Chat{Type: database.PRIVATE_CHAT}
+	newChat, err = conn.SetChat(newChat, userIDs[:]...)
+	if err != nil {
+		HandleDatabaseError(w, err)
+		return
+	}
 	w.WriteJSON(http.StatusCreated, newChat)
 }

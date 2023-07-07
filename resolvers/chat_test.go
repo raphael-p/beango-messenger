@@ -74,7 +74,7 @@ func TestCreatePrivateChat(t *testing.T) {
 		err := json.Unmarshal([]byte(w.Body), chat)
 		assert.IsNil(t, err)
 		assert.Equals(t, chat.Name, "")
-		assert.Equals(t, chat.ChatType, database.PRIVATE_CHAT)
+		assert.Equals(t, chat.Type, database.PRIVATE_CHAT)
 	}
 
 	t.Run("Normal", func(t *testing.T) {

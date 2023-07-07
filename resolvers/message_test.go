@@ -22,7 +22,8 @@ func setupMessageTests(t *testing.T, body string, userID1, userID2 int64) (
 	conn := mocks.MakeMockConnection()
 	var chatID int64
 	if userID1 != 0 && userID2 != 0 {
-		chatID = conn.SetChat(mocks.MakePrivateChat(), userID1, userID2).ID
+		chat, _ := conn.SetChat(mocks.MakePrivateChat(), userID1, userID2)
+		chatID = chat.ID
 	}
 	param := map[string]string{CHAT_ID_KEY: fmt.Sprint(chatID)}
 	req = setContext(t, req, mocks.Admin, param)
