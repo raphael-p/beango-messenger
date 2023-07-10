@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/raphael-p/beango/config"
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/test/assert"
 	"github.com/raphael-p/beango/test/mocks"
@@ -142,6 +143,7 @@ func TestAddRoute(t *testing.T) {
 }
 
 func TestServeHTTP(t *testing.T) {
+	config.CreateConfig()
 	method := http.MethodGet
 	pattern := "^/user/([^/]+)/name/([^/]+)$"
 	path := func(id, name string) string {

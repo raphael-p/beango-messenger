@@ -153,6 +153,7 @@ func (r *route) handler(w *response.Writer, req *http.Request, conn database.Con
 	ok := false
 	if r.authenticate {
 		if req, ok = authenticate.FromCookie(w, req, conn); !ok {
+			w.Commit()
 			return
 		}
 	}
@@ -160,6 +161,7 @@ func (r *route) handler(w *response.Writer, req *http.Request, conn database.Con
 	// Log response
 	start := time.Now()
 	r.innerHandler(w, req, conn)
+	w.Commit()
 	w.Time = time.Since(start).Milliseconds()
 	logger.Info(fmt.Sprintf("%s resolved with %s", requestString, w))
 }

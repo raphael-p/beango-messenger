@@ -19,17 +19,15 @@ func NewWriter(w http.ResponseWriter) *Writer {
 
 func (w *Writer) WriteHeader(code int) {
 	w.Status = code
-	w.ResponseWriter.WriteHeader(code)
 }
 
-func (w *Writer) writeBody(body []byte) (int, error) {
+func (w *Writer) writeBody(body string) {
 	w.Body = string(body)
-	return w.ResponseWriter.Write(body)
 }
 
 func (w *Writer) WriteString(code int, response string) {
 	w.WriteHeader(code)
-	w.writeBody([]byte(response))
+	w.writeBody(response)
 }
 
 func (w *Writer) WriteJSON(code int, responseObject any) {
@@ -42,7 +40,12 @@ func (w *Writer) WriteJSON(code int, responseObject any) {
 	}
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(code)
-	w.writeBody(response)
+	w.writeBody(string(response))
+}
+
+func (w *Writer) Commit() (int, error) {
+	w.ResponseWriter.WriteHeader(w.Status)
+	return w.ResponseWriter.Write([]byte(w.Body))
 }
 
 func (w *Writer) String() string {
