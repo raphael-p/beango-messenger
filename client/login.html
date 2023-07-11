@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+    <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
+    <title>Login Page</title>
+</head>
+<body>      
+    <div id="login-form">
+        <form hx-ext='json-enc'>
+            <div>
+                <label for="username">Username:</label>
+                <input type="text" name="username">
+            </div>
+            <div>
+                <label for="password">Password:</label>
+                <input type="password" name="password">
+            </div>
+            <div>
+                <button hx-post="/login/login" type="submit" hx-swap="none">Log In</button>
+                <button hx-post="/login/signup" type="submit" hx-swap="none">Sign Up</button>
+            </div>
+        </form>
+    </div>
+    <div id="errors"></div>
+</body>
+</html>

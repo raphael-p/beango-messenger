@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/raphael-p/beango/client"
 	"github.com/raphael-p/beango/config"
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/resolvers"
@@ -33,6 +34,12 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 	database.Setup(conn)
 
 	router = routing.NewRouter()
+
+	// frontend endpoints
+	router.GET("/login", client.Login).NoAuth()
+	router.POST("/login/:action", client.SubmitLogin).NoAuth()
+
+	// backend endpoints
 	router.POST("/session", resolvers.CreateSession).NoAuth()
 	router.POST("/user", resolvers.CreateUser).NoAuth()
 	router.GET("/user/:"+resolvers.USERNAME_KEY, resolvers.GetUserByName)
@@ -41,6 +48,7 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 	router.POST("/chat", resolvers.CreatePrivateChat)
 	router.GET("/chat/:"+resolvers.CHAT_ID_KEY+"/messages", resolvers.GetChatMessages)
 	router.POST("/chat/:"+resolvers.CHAT_ID_KEY+"/message", resolvers.SendMessage)
+
 	return conn, router, ok
 }
 
