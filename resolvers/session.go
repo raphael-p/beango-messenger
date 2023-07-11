@@ -23,7 +23,7 @@ func CreateSession(w *response.Writer, r *http.Request, conn database.Connection
 	if sessionID, err := cookies.Get(r, cookies.SESSION); err == nil {
 		_, ok := conn.CheckSession(sessionID)
 		if ok {
-			w.WriteString(http.StatusBadRequest, "there already is a valid session cookie in the request")
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 	}
@@ -33,15 +33,17 @@ func CreateSession(w *response.Writer, r *http.Request, conn database.Connection
 		return
 	}
 
+	unauthorised := func() {
+		w.WriteString(http.StatusUnauthorized, "login credentials are incorrect")
+	}
 	user, _ := conn.GetUserByUsername(input.Username)
 	if user == nil {
-		w.WriteHeader(http.StatusUnauthorized)
+		unauthorised()
 		return
 	}
-
 	err := bcrypt.CompareHashAndPassword(user.Key, []byte(input.Password))
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
+		unauthorised()
 		return
 	}
 

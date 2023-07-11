@@ -51,8 +51,8 @@ func TestCreateSession(t *testing.T) {
 		req.AddCookie(cookie)
 
 		CreateSession(w, req, conn)
-		assert.Equals(t, w.Status, http.StatusBadRequest)
-		assert.Equals(t, w.Body, "there already is a valid session cookie in the request")
+		assert.Equals(t, w.Status, http.StatusNoContent)
+		assert.Equals(t, w.Body, "")
 	})
 
 	t.Run("WrongUsername", func(t *testing.T) {
@@ -60,6 +60,7 @@ func TestCreateSession(t *testing.T) {
 
 		CreateSession(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusUnauthorized)
+		assert.Equals(t, w.Body, "login credentials are incorrect")
 		assert.HasLength(t, w.Header()["Set-Cookie"], 0)
 	})
 
@@ -68,6 +69,7 @@ func TestCreateSession(t *testing.T) {
 
 		CreateSession(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusUnauthorized)
+		assert.Equals(t, w.Body, "login credentials are incorrect")
 		assert.HasLength(t, w.Header()["Set-Cookie"], 0)
 	})
 
