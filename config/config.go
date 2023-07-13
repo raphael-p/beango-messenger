@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
-	"runtime"
 
+	"github.com/raphael-p/beango/utils/path"
 	"github.com/raphael-p/beango/utils/validate"
 )
 
@@ -16,11 +15,11 @@ func CreateConfig() {
 	filePath := os.Getenv(envars.configFilepath)
 	if filePath == "" {
 		fmt.Printf("$%s not set, using default config\n", envars.configFilepath)
-		_, dirname, _, ok := runtime.Caller(0)
+		path, ok := path.RelativeJoin("default.json")
 		if !ok {
 			panic("could not get absolute path for config directory")
 		}
-		filePath = filepath.Join(filepath.Dir(dirname), "default.json")
+		filePath = path
 	}
 
 	file, err := os.Open(filePath)
