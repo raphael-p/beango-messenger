@@ -12,6 +12,8 @@ import (
 	"github.com/raphael-p/beango/resolvers"
 	"github.com/raphael-p/beango/server/routing"
 	"github.com/raphael-p/beango/utils/logger"
+	"github.com/raphael-p/beango/utils/path"
+	"github.com/raphael-p/beango/utils/response"
 )
 
 func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
@@ -35,9 +37,17 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 
 	router = routing.NewRouter()
 
+	path, ok := path.RelativeJoin("../client/resources")
+	if !ok {
+		panic("failed to get path at runtime")
+	}
+
 	// frontend endpoints
 	router.GET("/login", client.Login).NoAuth()
 	router.POST("/login/:action", client.SubmitLogin).NoAuth()
+	router.GET("/resources/.*", func(w *response.Writer, r *http.Request, conn database.Connection) {
+		http.StripPrefix("/resources/", http.FileServer(http.Dir(path))).ServeHTTP(w, r)
+	}).NoAuth()
 
 	// backend endpoints
 	router.POST("/session", resolvers.CreateSession).NoAuth()
@@ -66,6 +76,10 @@ func teardown(conn *database.MongoConnection) {
 }
 
 func Start() {
+	// path, _ := path.RelativeJoin("../client/resources")
+	// http.Handle("/", http.FileServer(http.Dir(path)))
+	// http.Handle("/resources/", http.StripPrefix("/resources/", http.FileServer(http.Dir(path))))
+	// http.ListenAndServe(":8081", nil)
 	conn, router, ok := setup()
 	defer teardown(conn)
 	if !ok {

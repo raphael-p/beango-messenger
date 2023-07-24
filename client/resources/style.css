@@ -1,0 +1,115 @@
+@import url('https://fonts.googleapis.com/css?family=VT323');
+@import url('https://fonts.googleapis.com/css?family=Tektur');
+@import url('https://fonts.googleapis.com/css?family=Megrim');
+
+:root {
+	--hacker-green: #37ff00;
+	--hacker-grey: #787171;
+	--hacker-font: 'VT323', 'Courier New', Courier, monospace; 
+	--text-font: 'Courier New', Courier, monospace 
+}
+
+body {
+	background-color: black;
+	color: white;
+	font-family: var(--text-font);
+}
+
+span.title  {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	margin: 50px 0;
+	user-select: none;
+}
+
+.title span {
+	font-family: 'Megrim';
+	color: var(--hacker-green);
+	font-size: 75px;
+}
+
+.title span::after {
+	content: "|";
+	width: 0px;
+	background: var(--hacker-green);
+	display: inline-block;
+	animation: cursor-blink 1.2s steps(1) infinite;
+}
+
+@keyframes cursor-blink {
+	50% {
+		opacity: 0;
+	}
+}
+  
+
+label {
+	font-family: var(--hacker-font);
+	font-size: medium;
+	text-transform: uppercase;
+  }
+  
+input {
+	display: inline-block;
+	vertical-align: middle;
+	font-family: var(--text-font);
+	width: 60%;
+	margin: 0 20px;
+	border: none;
+	background-color: transparent;
+	color: var(--hacker-grey);
+	caret-color: var(--hacker-green);
+}
+
+input:focus {
+	outline:none;
+}
+
+div.form-row {
+	margin-top: 20px;
+	margin-bottom: 20px;
+	letter-spacing: 2px;
+}
+
+div.button-row {
+	display: flex;
+	justify-content: center;
+}
+
+div.error {
+	color: red;
+	font-weight: bold;
+	font-size: small;
+	margin: 10px 0;
+}
+
+button[type="submit"] {
+	font-family: var(--hacker-font);
+	font-size: medium;
+	background-color: transparent;
+	color: white;
+	padding: 5px 0;
+	margin: 0px 15px;
+	border: none;
+	border-bottom: 1px solid transparent;
+	cursor: pointer;
+	text-transform: uppercase;
+}
+
+button[type="submit"]:hover {
+	border-bottom: 1px solid var(--hacker-green);
+}
+
+form {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	margin: 50px 0;
+}
+
+form > div {
+	width: 30%;
+}
