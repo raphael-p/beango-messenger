@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 )
 
 type Writer struct {
-	Status int
-	Body   string
-	Time   int64
+	Status       int
+	HideResponse bool
+	Body         string
+	Time         int64
 	http.ResponseWriter
 }
 
@@ -22,12 +24,22 @@ func (w *Writer) WriteHeader(code int) {
 }
 
 func (w *Writer) writeBody(body string) {
-	w.Body = string(body)
+	w.Body = body
 }
 
 func (w *Writer) WriteString(code int, response string) {
 	w.WriteHeader(code)
 	w.writeBody(response)
+}
+
+func (w *Writer) Write(bytes []byte) (int, error) {
+	w.HideResponse = true
+	w.Body = string(bytes)
+	w.Header().Set(
+		"Content-Length",
+		strconv.FormatInt(int64(len(bytes)), 10),
+	)
+	return len(bytes), nil
 }
 
 func (w *Writer) WriteJSON(code int, responseObject any) {
@@ -50,7 +62,7 @@ func (w *Writer) Commit() (int, error) {
 
 func (w *Writer) String() string {
 	out := fmt.Sprintf("status %d (took %dms)", w.Status, w.Time)
-	if w.Body != "" {
+	if w.Body != "" && !w.HideResponse {
 		out = fmt.Sprintf("%s\n\tresponse: %s", out, w.Body)
 	}
 	return out

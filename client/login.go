@@ -6,11 +6,23 @@ import (
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/resolvers"
 	"github.com/raphael-p/beango/utils/context"
+	"github.com/raphael-p/beango/utils/logger"
+	"github.com/raphael-p/beango/utils/path"
 	"github.com/raphael-p/beango/utils/response"
 )
 
 func Login(w *response.Writer, r *http.Request, conn database.Connection) {
-	http.ServeFile(w, r, "/Users/raphaelpiccolin/Documents/Code/beango-messenger/client/login.html")
+	// TODO: redirect to home page if session cookie is present
+	// TODO: make single page website https://stackoverflow.com/questions/72914578/single-page-application-with-htmx-url-browsing-history-and-manual-reloading-of
+	path, ok := path.RelativeJoin("login.html")
+	if !ok {
+		message := "could not resolve filepath"
+		logger.Error(message)
+		w.WriteString(http.StatusInternalServerError, message)
+		return
+	}
+	http.ServeFile(w, r, path)
+
 }
 
 func SubmitLogin(w *response.Writer, r *http.Request, conn database.Connection) {
