@@ -42,6 +42,8 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 		panic("failed to get path at runtime")
 	}
 
+	client.CreateContainer()
+
 	// frontend endpoints
 	router.GET("/login", client.Login).NoAuth()
 	router.POST("/login/:action", client.SubmitLogin).NoAuth()

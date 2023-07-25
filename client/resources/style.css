@@ -93,13 +93,13 @@ button[type="submit"] {
 	padding: 5px 0;
 	margin: 0px 15px;
 	border: none;
-	border-bottom: 1px solid transparent;
+	border-bottom: 2px solid transparent;
 	cursor: pointer;
 	text-transform: uppercase;
 }
 
 button[type="submit"]:hover {
-	border-bottom: 1px solid var(--hacker-green);
+	border-bottom: 2px solid var(--hacker-green);
 }
 
 form {
