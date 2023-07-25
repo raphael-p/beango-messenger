@@ -10,7 +10,7 @@ import (
 type Writer struct {
 	Status       int
 	HideResponse bool
-	Body         string
+	Body         []byte
 	Time         int64
 	http.ResponseWriter
 }
@@ -24,7 +24,7 @@ func (w *Writer) WriteHeader(code int) {
 }
 
 func (w *Writer) writeBody(body string) {
-	w.Body = body
+	w.Body = []byte(body)
 }
 
 func (w *Writer) WriteString(code int, response string) {
@@ -34,11 +34,8 @@ func (w *Writer) WriteString(code int, response string) {
 
 func (w *Writer) Write(bytes []byte) (int, error) {
 	w.HideResponse = true
-	w.Body = string(bytes)
-	w.Header().Set(
-		"Content-Length",
-		strconv.FormatInt(int64(len(bytes)), 10),
-	)
+	w.Body = append(w.Body, bytes...)
+
 	return len(bytes), nil
 }
 
@@ -56,13 +53,17 @@ func (w *Writer) WriteJSON(code int, responseObject any) {
 }
 
 func (w *Writer) Commit() (int, error) {
+	w.Header().Set(
+		"Content-Length",
+		strconv.FormatInt(int64(len(w.Body)), 10),
+	)
 	w.ResponseWriter.WriteHeader(w.Status)
-	return w.ResponseWriter.Write([]byte(w.Body))
+	return w.ResponseWriter.Write(w.Body)
 }
 
 func (w *Writer) String() string {
 	out := fmt.Sprintf("status %d (took %dms)", w.Status, w.Time)
-	if w.Body != "" && !w.HideResponse {
+	if len(w.Body) > 0 && !w.HideResponse {
 		out = fmt.Sprintf("%s\n\tresponse: %s", out, w.Body)
 	}
 	return out

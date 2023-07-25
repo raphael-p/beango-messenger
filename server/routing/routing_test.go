@@ -309,7 +309,7 @@ func TestRouteHandler(t *testing.T) {
 
 	assertSuccess := func(t *testing.T, w *response.Writer, buf *bytes.Buffer) {
 		assert.Equals(t, w.Status, status)
-		assert.Equals(t, w.Body, body)
+		assert.Equals(t, string(w.Body), body)
 		reqString := fmt.Sprint(method, " ", path)
 		receivedMessage := fmt.Sprint("[INFO] received ", reqString)
 		successMessage := fmt.Sprintf("[INFO] %s resolved with %s", reqString, w)

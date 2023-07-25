@@ -48,7 +48,7 @@ func TestGetChats(t *testing.T) {
 			GetChats(w, req, conn)
 			assert.Equals(t, w.Status, http.StatusOK)
 			chats := &[]database.Chat{}
-			err := json.Unmarshal([]byte(w.Body), chats)
+			err := json.Unmarshal(w.Body, chats)
 			assert.IsNil(t, err)
 			assert.HasLength(t, *chats, testCase.expectedCount)
 		})
@@ -70,8 +70,7 @@ func TestCreatePrivateChat(t *testing.T) {
 		CreatePrivateChat(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusCreated)
 		chat := &database.Chat{}
-		fmt.Println("body: ", w.Body)
-		err := json.Unmarshal([]byte(w.Body), chat)
+		err := json.Unmarshal(w.Body, chat)
 		assert.IsNil(t, err)
 		assert.Equals(t, chat.Name, "")
 		assert.Equals(t, chat.Type, database.PRIVATE_CHAT)
@@ -98,7 +97,7 @@ func TestCreatePrivateChat(t *testing.T) {
 		CreatePrivateChat(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusBadRequest)
 		xError := fmt.Sprintf("userID %d is invalid", fakeUserID)
-		assert.Equals(t, w.Body, xError)
+		assert.Equals(t, string(w.Body), xError)
 	})
 
 	t.Run("ChatAlreadyExists", func(t *testing.T) {
@@ -110,6 +109,6 @@ func TestCreatePrivateChat(t *testing.T) {
 
 		CreatePrivateChat(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusConflict)
-		assert.Equals(t, w.Body, "chat already exists")
+		assert.Equals(t, string(w.Body), "chat already exists")
 	})
 }

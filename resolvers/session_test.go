@@ -52,7 +52,7 @@ func TestCreateSession(t *testing.T) {
 
 		CreateSession(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusNoContent)
-		assert.Equals(t, w.Body, "")
+		assert.Equals(t, string(w.Body), "")
 	})
 
 	t.Run("WrongUsername", func(t *testing.T) {
@@ -60,7 +60,7 @@ func TestCreateSession(t *testing.T) {
 
 		CreateSession(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusUnauthorized)
-		assert.Equals(t, w.Body, "login credentials are incorrect")
+		assert.Equals(t, string(w.Body), "login credentials are incorrect")
 		assert.HasLength(t, w.Header()["Set-Cookie"], 0)
 	})
 
@@ -69,7 +69,7 @@ func TestCreateSession(t *testing.T) {
 
 		CreateSession(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusUnauthorized)
-		assert.Equals(t, w.Body, "login credentials are incorrect")
+		assert.Equals(t, string(w.Body), "login credentials are incorrect")
 		assert.HasLength(t, w.Header()["Set-Cookie"], 0)
 	})
 
@@ -80,7 +80,7 @@ func TestCreateSession(t *testing.T) {
 
 		CreateSession(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusInternalServerError)
-		assert.Equals(t, w.Body, "failed to create session cookie")
+		assert.Equals(t, string(w.Body), "failed to create session cookie")
 		xError := fmt.Sprint(
 			"failed to create session cookie: response header already ",
 			"sets a cookie with the name ",

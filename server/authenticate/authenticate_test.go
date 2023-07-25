@@ -64,7 +64,7 @@ func TestFromCookie(t *testing.T) {
 		assert.Equals(t, ok, false)
 		assert.DeepEquals(t, *req, reqCopy)
 		assert.Equals(t, w.Status, http.StatusNotFound)
-		assert.Equals(t, w.Body, "user not found during authentication")
+		assert.Equals(t, string(w.Body), "user not found during authentication")
 	})
 
 	t.Run("CannotSetNewContext", func(t *testing.T) {
@@ -79,7 +79,7 @@ func TestFromCookie(t *testing.T) {
 		assert.DeepEquals(t, *req, reqCopy)
 		assert.Equals(t, w.Status, http.StatusInternalServerError)
 		xMessage := "user already in request context"
-		assert.Equals(t, w.Body, xMessage)
+		assert.Equals(t, string(w.Body), xMessage)
 		assert.Contains(t, buf.String(), fmt.Sprint("[ERROR] ", xMessage))
 	})
 }

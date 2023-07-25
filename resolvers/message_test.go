@@ -41,7 +41,7 @@ func TestGetChatMessages(t *testing.T) {
 		GetChatMessages(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusOK)
 		messages := &[]database.Message{}
-		err := json.Unmarshal([]byte(w.Body), messages)
+		err := json.Unmarshal(w.Body, messages)
 		assert.IsNil(t, err)
 		assert.HasLength(t, *messages, 2)
 	})
@@ -51,7 +51,7 @@ func TestGetChatMessages(t *testing.T) {
 
 		GetChatMessages(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusOK)
-		assert.Equals(t, w.Body, "[]")
+		assert.Equals(t, string(w.Body), "[]")
 	})
 
 	t.Run("NoChat", func(t *testing.T) {
@@ -59,7 +59,7 @@ func TestGetChatMessages(t *testing.T) {
 
 		GetChatMessages(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusNotFound)
-		assert.Equals(t, w.Body, "chat not found")
+		assert.Equals(t, string(w.Body), "chat not found")
 	})
 
 	t.Run("NotChatUser", func(t *testing.T) {
@@ -67,7 +67,7 @@ func TestGetChatMessages(t *testing.T) {
 
 		GetChatMessages(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusNotFound)
-		assert.Equals(t, w.Body, "chat not found")
+		assert.Equals(t, string(w.Body), "chat not found")
 	})
 }
 
@@ -81,7 +81,7 @@ func TestSendMessage(t *testing.T) {
 		SendMessage(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusAccepted)
 		message := &database.Message{}
-		err := json.Unmarshal([]byte(w.Body), message)
+		err := json.Unmarshal(w.Body, message)
 		assert.IsNil(t, err)
 		assert.Equals(t, message.UserID, mocks.Admin.ID)
 		assert.Equals(t, message.ChatID, chatID)
@@ -93,7 +93,7 @@ func TestSendMessage(t *testing.T) {
 
 		SendMessage(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusNotFound)
-		assert.Equals(t, w.Body, "chat not found")
+		assert.Equals(t, string(w.Body), "chat not found")
 	})
 
 	t.Run("NotChatUser", func(t *testing.T) {
@@ -101,6 +101,6 @@ func TestSendMessage(t *testing.T) {
 
 		SendMessage(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusNotFound)
-		assert.Equals(t, w.Body, "chat not found")
+		assert.Equals(t, string(w.Body), "chat not found")
 	})
 }

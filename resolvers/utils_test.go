@@ -70,7 +70,7 @@ func TestBindRequestJSON(t *testing.T) {
 		assert.Equals(t, ok, false)
 		assert.Equals(t, w.Status, http.StatusBadRequest)
 		xBody := "expected `ptr` to be a pointer to a struct, got resolvers.TestStruct"
-		assert.Equals(t, w.Body, xBody)
+		assert.Equals(t, string(w.Body), xBody)
 	})
 
 	t.Run("NonStructBind", func(t *testing.T) {
@@ -78,7 +78,7 @@ func TestBindRequestJSON(t *testing.T) {
 		ok, w := setup(`{"name": "John", "Age": 30}`, testStruct)
 		assert.Equals(t, ok, false)
 		assert.Equals(t, w.Status, http.StatusBadRequest)
-		assert.Equals(t, w.Body, "expected `ptr` to be a pointer to a struct, got *string")
+		assert.Equals(t, string(w.Body), "expected `ptr` to be a pointer to a struct, got *string")
 	})
 
 	t.Run("MissingRequiredField", func(t *testing.T) {
@@ -86,7 +86,7 @@ func TestBindRequestJSON(t *testing.T) {
 		ok, w := setup(`{"name": "John"}`, &testStruct)
 		assert.Equals(t, ok, false)
 		assert.Equals(t, w.Status, http.StatusBadRequest)
-		assert.Equals(t, w.Body, "missing required field(s): [age]")
+		assert.Equals(t, string(w.Body), "missing required field(s): [age]")
 	})
 
 	t.Run("MalformedJSON", func(t *testing.T) {
@@ -94,7 +94,7 @@ func TestBindRequestJSON(t *testing.T) {
 		ok, w := setup(`{"name": "John",}`, &testStruct)
 		assert.Equals(t, ok, false)
 		assert.Equals(t, w.Status, http.StatusBadRequest)
-		assert.Contains(t, w.Body, "malformed request body: ")
+		assert.Contains(t, string(w.Body), "malformed request body: ")
 	})
 }
 
@@ -151,7 +151,7 @@ func TestGetRequestContext(t *testing.T) {
 		_, _, ok := getRequestContext(w, req, key1, key2)
 		assert.Equals(t, ok, false)
 		assert.Equals(t, w.Status, http.StatusInternalServerError)
-		assert.Equals(t, w.Body, fmt.Sprint("failed to fetch path parameter: ", key2))
+		assert.Equals(t, string(w.Body), fmt.Sprint("failed to fetch path parameter: ", key2))
 		assert.Contains(t, buf.String(), "[ERROR]", fmt.Sprintf("path parameter %s not found", key2))
 	})
 
@@ -161,7 +161,7 @@ func TestGetRequestContext(t *testing.T) {
 		_, _, ok := getRequestContext(w, req)
 		assert.Equals(t, ok, false)
 		assert.Equals(t, w.Status, http.StatusInternalServerError)
-		assert.Equals(t, w.Body, "failed to fetch request user")
+		assert.Equals(t, string(w.Body), "failed to fetch request user")
 		assert.Contains(t, buf.String(), "[ERROR]", "user not found in request context")
 	})
 }
@@ -174,7 +174,7 @@ func TestHandleDatabaseError(t *testing.T) {
 		errMessage := "this did not go well"
 		HandleDatabaseError(w, errors.New(errMessage))
 		assert.Equals(t, w.Status, http.StatusInternalServerError)
-		assert.Equals(t, w.Body, errPrefix)
+		assert.Equals(t, string(w.Body), errPrefix)
 		assert.Contains(t, buf.String(), "[ERROR] "+errPrefix+": "+errMessage)
 	})
 }

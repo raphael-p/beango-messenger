@@ -31,7 +31,7 @@ func TestWriteString(t *testing.T) {
 		xBody := "Hello, world!"
 		writer.WriteString(xStatus, xBody)
 		assert.Equals(t, writer.Status, xStatus)
-		assert.Equals(t, writer.Body, xBody)
+		assert.Equals(t, string(writer.Body), xBody)
 		assert.Equals(t, recorder.Code, http.StatusOK) // default
 		assert.Equals(t, recorder.Body.String(), "")   // default
 	})
@@ -46,7 +46,7 @@ func TestWriteJSON(t *testing.T) {
 		writer.WriteJSON(xStatus, map[string]string{"message": "Hello, world!"})
 		assert.Equals(t, recorder.Header().Get("content-type"), "application/json")
 		assert.Equals(t, writer.Status, xStatus)
-		assert.Equals(t, writer.Body, "{\"message\":\"Hello, world!\"}")
+		assert.Equals(t, string(writer.Body), "{\"message\":\"Hello, world!\"}")
 		assert.Equals(t, recorder.Code, http.StatusOK) // default
 		assert.Equals(t, recorder.Body.String(), "")   // default
 	})
@@ -59,7 +59,7 @@ func TestWriteJSON(t *testing.T) {
 		writer.WriteJSON(http.StatusAccepted, body)
 		xStatus := http.StatusBadRequest
 		assert.Equals(t, writer.Status, xStatus)
-		assert.Equals(t, writer.Body, "json: unsupported type: func(string)")
+		assert.Equals(t, string(writer.Body), "json: unsupported type: func(string)")
 		assert.Equals(t, recorder.Code, http.StatusOK) // default
 		assert.Equals(t, recorder.Body.String(), "")   // default
 	})
@@ -71,7 +71,7 @@ func TestString(t *testing.T) {
 		writer := NewWriter(recorder)
 		writer.Status = http.StatusOK
 		writer.Time = 100 * time.Millisecond.Milliseconds()
-		writer.Body = "Hello, world!"
+		writer.Body = []byte("Hello, world!")
 
 		xOut := fmt.Sprintf("status %d (took %dms)\n\tresponse: %s", http.StatusOK, writer.Time, writer.Body)
 		assert.Equals(t, writer.String(), xOut)
@@ -85,7 +85,7 @@ func TestCommit(t *testing.T) {
 		xStatus := 573
 		xBody := "Hello, World!"
 		writer.Status = xStatus
-		writer.Body = xBody
+		writer.Body = []byte(xBody)
 
 		assert.Equals(t, recorder.Code, http.StatusOK)
 		assert.Equals(t, recorder.Body.String(), "")

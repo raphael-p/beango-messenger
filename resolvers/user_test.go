@@ -46,7 +46,7 @@ func TestCreateUser(t *testing.T) {
 		assert.Equals(t, w.Status, http.StatusCreated)
 
 		var output UserOutput
-		assert.IsValidJSON(t, w.Body, &output)
+		assert.IsValidJSON(t, string(w.Body), &output)
 		assert.Equals(t, output.Username, username)
 		assert.Equals(t, output.DisplayName, display)
 
@@ -61,7 +61,7 @@ func TestCreateUser(t *testing.T) {
 
 		CreateUser(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusConflict)
-		assert.Equals(t, w.Body, "username is taken")
+		assert.Equals(t, string(w.Body), "username is taken")
 	})
 
 	t.Run("PasswordNotHashable", func(t *testing.T) {
@@ -71,7 +71,7 @@ func TestCreateUser(t *testing.T) {
 
 		CreateUser(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusBadRequest)
-		assert.Equals(t, w.Body, "bcrypt: password length exceeds 72 bytes")
+		assert.Equals(t, string(w.Body), "bcrypt: password length exceeds 72 bytes")
 	})
 
 	t.Run("NoDisplayName", func(t *testing.T) {
@@ -81,7 +81,7 @@ func TestCreateUser(t *testing.T) {
 		CreateUser(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusCreated)
 		var output UserOutput
-		assert.IsValidJSON(t, w.Body, &output)
+		assert.IsValidJSON(t, string(w.Body), &output)
 		assert.Equals(t, output.DisplayName, username)
 	})
 }
@@ -112,7 +112,7 @@ func TestGetUserByName(t *testing.T) {
 		assert.Equals(t, w.Status, http.StatusOK)
 		xOutput := *stripFields(mocks.Admin)
 		var output UserOutput
-		assert.IsValidJSON(t, w.Body, &output)
+		assert.IsValidJSON(t, string(w.Body), &output)
 		assert.Equals(t, output, xOutput)
 	})
 
@@ -121,7 +121,7 @@ func TestGetUserByName(t *testing.T) {
 
 		GetUserByName(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusInternalServerError)
-		assert.Equals(t, w.Body, "failed to fetch path parameter: username")
+		assert.Equals(t, string(w.Body), "failed to fetch path parameter: username")
 	})
 
 	t.Run("NoMatchingUsername", func(t *testing.T) {
@@ -129,6 +129,6 @@ func TestGetUserByName(t *testing.T) {
 
 		GetUserByName(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusNotFound)
-		assert.Equals(t, w.Body, "user not found")
+		assert.Equals(t, string(w.Body), "user not found")
 	})
 }
