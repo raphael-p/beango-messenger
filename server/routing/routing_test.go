@@ -25,19 +25,13 @@ func TestNewRouter(t *testing.T) {
 	assert.HasLength(t, r.routes, 0)
 }
 
-func TestNoAuth(t *testing.T) {
-	r := &route{authenticate: true}
-	r.NoAuth()
-	assert.Equals(t, r.authenticate, false)
-}
-
-func makeRoute(method, pattern string, handler handlerFunc, params []string, auth bool) *route {
+func makeRoute(method, pattern string, handler handlerFunc, params []string) *route {
 	return &route{
 		method,
 		regexp.MustCompile(pattern),
 		handler,
 		params,
-		auth,
+		[]Middleware{},
 	}
 }
 
@@ -48,7 +42,7 @@ func assertRoute(t *testing.T, route *route, xRoute *route) {
 	assert.Equals(t, route.pattern.String(), xRoute.pattern.String())
 	assert.Equals(t, ptrAddress(route.innerHandler), ptrAddress(xRoute.innerHandler))
 	assert.DeepEquals(t, route.paramKeys, xRoute.paramKeys)
-	assert.Equals(t, route.authenticate, xRoute.authenticate)
+	assert.HasLength(t, route.middleware, 0)
 }
 
 func TestAddRoute(t *testing.T) {
@@ -61,7 +55,7 @@ func TestAddRoute(t *testing.T) {
 		route := router.addRoute(method, "/from/:place/to/:newPlace/move", handler)
 		xPattern := "^/from/([^/]+)/to/([^/]+)/move$"
 		xParams := []string{"place", "newPlace"}
-		xRoute := makeRoute(method, xPattern, handler, xParams, true)
+		xRoute := makeRoute(method, xPattern, handler, xParams)
 		assertRoute(t, route, xRoute)
 		assert.HasLength(t, router.routes, 1)
 		assertRoute(t, router.routes[0], xRoute)
@@ -120,7 +114,7 @@ func TestAddRoute(t *testing.T) {
 			xPattern := fmt.Sprint("^", pathDef, "$")
 			testCases := []struct {
 				method          string
-				addRouteWrapper func(string, handlerFunc) *route
+				addRouteWrapper func(string, handlerFunc, ...Middleware) *route
 			}{
 				{http.MethodGet, router.GET},
 				{http.MethodPost, router.POST},
@@ -132,7 +126,7 @@ func TestAddRoute(t *testing.T) {
 			for idx, testCase := range testCases {
 				t.Run(testCase.method, func(t *testing.T) {
 					route := testCase.addRouteWrapper(pathDef, handler)
-					xRoute := makeRoute(testCase.method, xPattern, handler, []string{}, true)
+					xRoute := makeRoute(testCase.method, xPattern, handler, []string{})
 					assertRoute(t, route, xRoute)
 					assert.HasLength(t, router.routes, idx+1)
 					assertRoute(t, router.routes[idx], xRoute)
@@ -164,7 +158,7 @@ func TestServeHTTP(t *testing.T) {
 		w.WriteString(code, xBody(id, name, string(body)))
 	}
 
-	newRoute := makeRoute(method, pattern, handler, params, false)
+	newRoute := makeRoute(method, pattern, handler, params)
 	router := Router{[]*route{newRoute}}
 	origRoutes := append([]*route{}, router.routes...)
 	resetRoutes := func() { router.routes = append([]*route{}, origRoutes...) }
@@ -190,7 +184,7 @@ func TestServeHTTP(t *testing.T) {
 		}
 		router.routes = append(
 			router.routes,
-			makeRoute(method, "^/correct$", correctHandler, []string{}, false),
+			makeRoute(method, "^/correct$", correctHandler, []string{}),
 		)
 		defer resetRoutes()
 		req := httptest.NewRequest(method, "/correct", nil)
@@ -209,7 +203,7 @@ func TestServeHTTP(t *testing.T) {
 		}
 		router.routes = append(
 			router.routes,
-			makeRoute(correctMethod, "^/$", correctHandler, []string{}, false),
+			makeRoute(correctMethod, "^/$", correctHandler, []string{}),
 		)
 		defer resetRoutes()
 		req := httptest.NewRequest(correctMethod, "/", nil)
@@ -218,18 +212,6 @@ func TestServeHTTP(t *testing.T) {
 		router.ServeHTTP(res, req)
 		assert.Equals(t, res.Code, code)
 		assert.Equals(t, res.Body.String(), xBody)
-	})
-
-	t.Run("RunsAuth", func(t *testing.T) {
-		oldAuth := newRoute.authenticate
-		defer func() { newRoute.authenticate = oldAuth }()
-		newRoute.authenticate = true
-		req := httptest.NewRequest(method, path("3", "bean"), nil)
-		res := httptest.NewRecorder()
-
-		router.ServeHTTP(res, req)
-		assert.Equals(t, res.Code, http.StatusUnauthorized)
-		assert.Equals(t, res.Body.String(), "")
 	})
 
 	t.Run("DuplicateParamKey", func(t *testing.T) {
@@ -287,6 +269,7 @@ func TestServeHTTP(t *testing.T) {
 	})
 }
 
+// TODO: move Auth* tests to middleware_test.go
 func TestRouteHandler(t *testing.T) {
 	method := http.MethodGet
 	path := "/"
@@ -296,8 +279,9 @@ func TestRouteHandler(t *testing.T) {
 		w.WriteString(status, body)
 	}
 	params := []string{}
-	authRoute := makeRoute(method, path, handler, params, true)
-	noAuthRoute := makeRoute(method, path, handler, params, false)
+	authRoute := makeRoute(method, path, handler, params)
+	authRoute.middleware = []Middleware{Auth}
+	noAuthRoute := makeRoute(method, path, handler, params)
 
 	setup := func(t *testing.T) (*response.Writer, *http.Request, *bytes.Buffer, database.Connection) {
 		req := httptest.NewRequest(method, path, nil)
@@ -315,6 +299,27 @@ func TestRouteHandler(t *testing.T) {
 		successMessage := fmt.Sprintf("[INFO] %s resolved with %s", reqString, w)
 		assert.Contains(t, buf.String(), receivedMessage, successMessage)
 	}
+
+	t.Run("RunsMiddleware", func(t *testing.T) {
+		newRoute := makeRoute(method, path, handler, params)
+		xStatus := http.StatusUnauthorized
+		xBody := "Lorem Ipsum Dolor"
+		newRoute.middleware = []Middleware{
+			func(w *response.Writer, r *http.Request, conn database.Connection) (*http.Request, bool) {
+				w.WriteString(http.StatusAccepted, xBody)
+				return r, true
+			},
+			func(w *response.Writer, r *http.Request, conn database.Connection) (*http.Request, bool) {
+				w.WriteHeader(xStatus)
+				return r, false
+			},
+		}
+
+		w, req, _, conn := setup(t)
+		newRoute.handler(w, req, conn)
+		assert.Equals(t, w.Status, xStatus)
+		assert.Equals(t, string(w.Body), xBody)
+	})
 
 	t.Run("AuthSucceeds", func(t *testing.T) {
 		w, req, buf, conn := setup(t)
