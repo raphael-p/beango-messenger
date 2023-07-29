@@ -14,30 +14,23 @@ import (
 func Login(w *response.Writer, r *http.Request, conn database.Connection) {
 	// TODO: use htmx to replace if request comes from htmx
 	// TODO: redirect to home page if session cookie is present
-	loginPage := template.HTML(`<span class="title"><span>> Beango Messenger </span></span>
-	<div id="login-form">
-		<form hx-ext='json-enc'>
-			<div class="form-row">
-				<label for="username">Username:</label>
-				<input type="text" name="username">
-			</div>
-			<div class="form-row">
-				<label for="password">Password:</label>
-				<input type="password" name="password">
-			</div>
-			<div class="form-row button-row">
-				<button hx-post="/login/login" type="submit" hx-swap="none">Log In</button>
-				<button hx-post="/login/signup" type="submit" hx-swap="none">Sign Up</button>
-			</div>
-			<div id="errors" class="error"></div>
-		</form>
-	</div>`)
+	if r.Header.Get("HX-Request") == "true" {
+		w.Write([]byte("<div id='content' hx-swap-oob='innerHTML'>" + loginPage + "</div>"))
+		return
+	}
 
-	if err := container.Execute(w, loginPage); err != nil {
+	skeleton, err := getSkeleton()
+	if err != nil {
+		logger.Error(err.Error())
+		w.WriteString(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	data := map[string]any{"content": template.HTML(loginPage)}
+	if err := skeleton.Execute(w, data); err != nil {
 		logger.Error(err.Error())
 		w.WriteString(http.StatusInternalServerError, err.Error())
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func SubmitLogin(w *response.Writer, r *http.Request, conn database.Connection) {
@@ -64,7 +57,10 @@ func SubmitLogin(w *response.Writer, r *http.Request, conn database.Connection) 
 
 	resolvers.CreateSession(w, requests[0], conn)
 	if w.Status == http.StatusNoContent {
-		w.Header().Set("HX-Redirect", "/test")
+		w.Status = 0
+		w.Header().Set("HX-Push", "/home")
+		Home(w, r, conn)
+		return
 	}
 	displayError(w, string(w.Body))
 }

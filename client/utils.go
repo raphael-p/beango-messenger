@@ -14,7 +14,7 @@ func displayError(w *response.Writer, message string) {
 	if message == "" {
 		return
 	}
-	htmlStr := fmt.Sprintf("<div id='errors' class='error' hx-swap-oob='true'>%s</div>", message)
+	htmlStr := fmt.Sprintf("<div id='errors' class='error' hx-swap-oob='innerHTML'>%s</div>", message)
 	w.WriteString(http.StatusOK, htmlStr)
 }
 

@@ -42,11 +42,14 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 		panic("failed to get path at runtime")
 	}
 
-	client.CreateContainer()
-
 	// frontend endpoints
+	// TODO: 401s automatically redirect to login
 	router.GET("/login", client.Login).NoAuth()
 	router.POST("/login/:action", client.SubmitLogin).NoAuth()
+	router.GET("/home", client.Home)
+	router.GET("/favicon.ico", func(w *response.Writer, r *http.Request, conn database.Connection) {
+		http.FileServer(http.Dir(path)).ServeHTTP(w, r)
+	}).NoAuth()
 	router.GET("/resources/.*", func(w *response.Writer, r *http.Request, conn database.Connection) {
 		http.StripPrefix("/resources/", http.FileServer(http.Dir(path))).ServeHTTP(w, r)
 	}).NoAuth()

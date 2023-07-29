@@ -1,12 +1,13 @@
 package client
 
-import (
-	"html/template"
-)
+import "html/template"
 
-var container *template.Template
+var skeleton *template.Template
 
-func CreateContainer() {
+func getSkeleton() (*template.Template, error) {
+	if skeleton != nil {
+		return skeleton, nil
+	}
 	tmpl := `<!DOCTYPE html>
 		<html>
 		<head>
@@ -16,10 +17,16 @@ func CreateContainer() {
 			<title>Beango Messenger</title>
 		</head>
 		<body>
-			<div id="container">{{.}}</div>
+			<div id="header">{{.header}}</div>
+			<div id="content">{{.content}}</div>
+			<div id="footer">{{.footer}}</div>
 		</body>
 		</html>`
 
-	t := template.Must(template.New("container").Parse(tmpl))
-	container = t
+	t, err := template.New("skeleton").Parse(tmpl)
+	if err != nil {
+		return nil, err
+	}
+	skeleton = t
+	return skeleton, nil
 }

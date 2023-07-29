@@ -57,7 +57,9 @@ func (w *Writer) Commit() (int, error) {
 		"Content-Length",
 		strconv.FormatInt(int64(len(w.Body)), 10),
 	)
-	w.ResponseWriter.WriteHeader(w.Status)
+	if w.Status != 0 {
+		w.ResponseWriter.WriteHeader(w.Status)
+	}
 	return w.ResponseWriter.Write(w.Body)
 }
 
