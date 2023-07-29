@@ -18,6 +18,7 @@ func FromCookie(w *response.Writer, req *http.Request, conn database.Connection)
 		w.WriteHeader(http.StatusUnauthorized)
 		return req, false
 	}
+
 	user, err := conn.GetUser(userID)
 	if user == nil {
 		if err != nil {
@@ -27,6 +28,7 @@ func FromCookie(w *response.Writer, req *http.Request, conn database.Connection)
 		}
 		return req, false
 	}
+
 	req, err = context.SetUser(req, user)
 	if err != nil {
 		logger.Error(err.Error())
@@ -42,6 +44,7 @@ func getUserIDFromCookie(w *response.Writer, req *http.Request, conn database.Co
 	if err != nil {
 		return 0, err
 	}
+
 	session, ok := conn.CheckSession(sessionID)
 	if !ok {
 		err := cookies.Invalidate(w, cookieName)

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/raphael-p/beango/database"
-	"github.com/raphael-p/beango/server/authenticate"
 	"github.com/raphael-p/beango/utils/context"
 	"github.com/raphael-p/beango/utils/logger"
 	"github.com/raphael-p/beango/utils/response"
@@ -22,11 +21,7 @@ type route struct {
 	pattern      *regexp.Regexp
 	innerHandler handlerFunc
 	paramKeys    []string
-	authenticate bool
-}
-
-func (r *route) NoAuth() {
-	r.authenticate = false
+	middleware   []Middleware
 }
 
 type Router struct {
@@ -37,7 +32,7 @@ func NewRouter() *Router {
 	return &Router{routes: []*route{}}
 }
 
-func (r *Router) addRoute(method, pathDef string, handler handlerFunc) *route {
+func (r *Router) addRoute(method, pathDef string, handler handlerFunc, middleware ...Middleware) *route {
 	// handle path parameters
 	pathParamMatcher := regexp.MustCompile(":([a-zA-Z]+)")
 	matches := pathParamMatcher.FindAllStringSubmatch(pathDef, -1)
@@ -68,30 +63,30 @@ func (r *Router) addRoute(method, pathDef string, handler handlerFunc) *route {
 		regex,
 		handler,
 		paramKeys,
-		true,
+		middleware,
 	}
 	r.routes = append(r.routes, newRoute)
 	return newRoute
 }
 
-func (r *Router) GET(pattern string, handler handlerFunc) *route {
-	return r.addRoute(http.MethodGet, pattern, handler)
+func (r *Router) GET(pattern string, handler handlerFunc, middleware ...Middleware) *route {
+	return r.addRoute(http.MethodGet, pattern, handler, middleware...)
 }
 
-func (r *Router) POST(pattern string, handler handlerFunc) *route {
-	return r.addRoute(http.MethodPost, pattern, handler)
+func (r *Router) POST(pattern string, handler handlerFunc, middleware ...Middleware) *route {
+	return r.addRoute(http.MethodPost, pattern, handler, middleware...)
 }
 
-func (r *Router) PUT(pattern string, handler handlerFunc) *route {
-	return r.addRoute(http.MethodPut, pattern, handler)
+func (r *Router) PUT(pattern string, handler handlerFunc, middleware ...Middleware) *route {
+	return r.addRoute(http.MethodPut, pattern, handler, middleware...)
 }
 
-func (r *Router) PATCH(pattern string, handler handlerFunc) *route {
-	return r.addRoute(http.MethodPatch, pattern, handler)
+func (r *Router) PATCH(pattern string, handler handlerFunc, middleware ...Middleware) *route {
+	return r.addRoute(http.MethodPatch, pattern, handler, middleware...)
 }
 
-func (r *Router) DELETE(pattern string, handler handlerFunc) *route {
-	return r.addRoute(http.MethodDelete, pattern, handler)
+func (r *Router) DELETE(pattern string, handler handlerFunc, middleware ...Middleware) *route {
+	return r.addRoute(http.MethodDelete, pattern, handler, middleware...)
 }
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -149,10 +144,10 @@ func (r *route) handler(w *response.Writer, req *http.Request, conn database.Con
 	requestString := fmt.Sprint(req.Method, " ", req.URL)
 	logger.Info(fmt.Sprint("received ", requestString))
 
-	// Authentication
-	ok := false
-	if r.authenticate {
-		if req, ok = authenticate.FromCookie(w, req, conn); !ok {
+	// Middleware
+	var next bool
+	for _, middleware := range r.middleware {
+		if req, next = middleware(w, req, conn); !next {
 			w.Commit()
 			return
 		}

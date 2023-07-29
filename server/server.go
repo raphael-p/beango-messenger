@@ -43,26 +43,25 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 	}
 
 	// frontend endpoints
-	// TODO: 401s automatically redirect to login
-	router.GET("/login", client.Login).NoAuth()
-	router.POST("/login/:action", client.SubmitLogin).NoAuth()
-	router.GET("/home", client.Home)
+	router.GET("/login", client.Login)
+	router.POST("/login/:action", client.SubmitLogin)
+	router.GET("/home", client.Home, routing.AuthRedirect)
 	router.GET("/favicon.ico", func(w *response.Writer, r *http.Request, conn database.Connection) {
 		http.FileServer(http.Dir(path)).ServeHTTP(w, r)
-	}).NoAuth()
+	})
 	router.GET("/resources/.*", func(w *response.Writer, r *http.Request, conn database.Connection) {
 		http.StripPrefix("/resources/", http.FileServer(http.Dir(path))).ServeHTTP(w, r)
-	}).NoAuth()
+	})
 
 	// backend endpoints
-	router.POST("/session", resolvers.CreateSession).NoAuth()
-	router.POST("/user", resolvers.CreateUser).NoAuth()
-	router.GET("/user/:"+resolvers.USERNAME_KEY, resolvers.GetUserByName)
+	router.POST("/session", resolvers.CreateSession)
+	router.POST("/user", resolvers.CreateUser)
+	router.GET("/user/:"+resolvers.USERNAME_KEY, resolvers.GetUserByName, routing.Auth)
 	// router.GET("/chat/:"+resolvers.CHAT_ID_KEY+"/users", resolvers.) TODO
-	router.GET("/chats", resolvers.GetChats)
-	router.POST("/chat", resolvers.CreatePrivateChat)
-	router.GET("/chat/:"+resolvers.CHAT_ID_KEY+"/messages", resolvers.GetChatMessages)
-	router.POST("/chat/:"+resolvers.CHAT_ID_KEY+"/message", resolvers.SendMessage)
+	router.GET("/chats", resolvers.GetChats, routing.Auth)
+	router.POST("/chat", resolvers.CreatePrivateChat, routing.Auth)
+	router.GET("/chat/:"+resolvers.CHAT_ID_KEY+"/messages", resolvers.GetChatMessages, routing.Auth)
+	router.POST("/chat/:"+resolvers.CHAT_ID_KEY+"/message", resolvers.SendMessage, routing.Auth)
 
 	return conn, router, ok
 }
@@ -81,10 +80,6 @@ func teardown(conn *database.MongoConnection) {
 }
 
 func Start() {
-	// path, _ := path.RelativeJoin("../client/resources")
-	// http.Handle("/", http.FileServer(http.Dir(path)))
-	// http.Handle("/resources/", http.StripPrefix("/resources/", http.FileServer(http.Dir(path))))
-	// http.ListenAndServe(":8081", nil)
 	conn, router, ok := setup()
 	defer teardown(conn)
 	if !ok {
