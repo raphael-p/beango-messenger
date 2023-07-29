@@ -7,13 +7,20 @@ import (
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/resolvers"
 	"github.com/raphael-p/beango/utils/context"
+	"github.com/raphael-p/beango/utils/cookies"
 	"github.com/raphael-p/beango/utils/logger"
 	"github.com/raphael-p/beango/utils/response"
 )
 
 func Login(w *response.Writer, r *http.Request, conn database.Connection) {
-	// TODO: use htmx to replace if request comes from htmx
-	// TODO: redirect to home page if session cookie is present
+	if sessionID, err := cookies.Get(r, cookies.SESSION); err == nil {
+		if _, ok := conn.CheckSession(sessionID); ok {
+			w.Header().Set("Location", "/home")
+			w.WriteHeader(http.StatusSeeOther)
+			return
+		}
+	}
+
 	if r.Header.Get("HX-Request") == "true" {
 		w.Write([]byte("<div id='content' hx-swap-oob='innerHTML'>" + loginPage + "</div>"))
 		return
