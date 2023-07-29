@@ -47,9 +47,16 @@ func (w *Writer) WriteJSON(code int, responseObject any) {
 		w.WriteString(errCode, err.Error())
 		return
 	}
-	w.Header().Set("content-type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.writeBody(string(response))
+}
+
+func (w *Writer) Clear() {
+	w.Header().Del("Content-Type")
+	w.Header().Del("Content-Length")
+	w.Body = []byte{}
+	w.Status = 0
 }
 
 func (w *Writer) Commit() (int, error) {

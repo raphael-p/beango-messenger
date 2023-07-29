@@ -64,7 +64,7 @@ func SubmitLogin(w *response.Writer, r *http.Request, conn database.Connection) 
 
 	resolvers.CreateSession(w, requests[0], conn)
 	if w.Status == http.StatusNoContent {
-		w.Status = 0
+		w.Clear()
 		w.Header().Set("HX-Push", "/home")
 		Home(w, r, conn)
 		return

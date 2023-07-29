@@ -44,7 +44,7 @@ func TestWriteJSON(t *testing.T) {
 
 		xStatus := http.StatusAccepted
 		writer.WriteJSON(xStatus, map[string]string{"message": "Hello, world!"})
-		assert.Equals(t, recorder.Header().Get("content-type"), "application/json")
+		assert.Equals(t, recorder.Header().Get("Content-Type"), "application/json")
 		assert.Equals(t, writer.Status, xStatus)
 		assert.Equals(t, string(writer.Body), "{\"message\":\"Hello, world!\"}")
 		assert.Equals(t, recorder.Code, http.StatusOK) // default
