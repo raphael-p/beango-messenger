@@ -20,7 +20,7 @@ type Chat struct {
 	Type          chatType  `json:"type"`
 	Name          string    `json:"name"`
 	CreatedAt     time.Time `json:"createdAt"`
-	LastUpdatedAt time.Time `json:"LastUpdatedAt"`
+	LastUpdatedAt time.Time `json:"lastUpdatedAt"`
 }
 
 type ChatUser struct {

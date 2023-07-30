@@ -3,22 +3,67 @@ package resolvers
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/utils/response"
 )
 
-func GetChats(w *response.Writer, r *http.Request, conn database.Connection) {
+type GetChatsOutput struct {
+	database.Chat
+	Users []UserOutput `json:"users"`
+}
+
+// TODO: test
+func generateChatName(userID int64, users []database.User) string {
+	var displayNames []string
+	for _, user := range users {
+		if user.ID != userID {
+			displayNames = append(displayNames, user.DisplayName)
+		}
+	}
+
+	return strings.Join(displayNames, ", ")
+}
+
+// TODO: test
+func GetChatsSlice(w *response.Writer, r *http.Request, conn database.Connection) ([]GetChatsOutput, bool) {
 	user, _, ok := getRequestContext(w, r)
 	if !ok {
-		return
+		return nil, false
 	}
+
 	chats, err := conn.GetChatsByUserID(user.ID)
 	if err != nil {
 		HandleDatabaseError(w, err)
-		return
+		return nil, false
 	}
-	w.WriteJSON(http.StatusOK, chats)
+
+	chatOutput := make([]GetChatsOutput, len(chats))
+	for i, chat := range chats {
+		users, err := conn.GetUsersByChatID(chat.ID)
+		if err != nil {
+			HandleDatabaseError(w, err)
+			return nil, false
+		}
+
+		outputUsers := make([]UserOutput, len(users))
+		for j, user := range users {
+			outputUsers[j] = *stripFields(&user)
+		}
+
+		if chat.Name == "" {
+			chat.Name = generateChatName(user.ID, users)
+		}
+		chatOutput[i] = GetChatsOutput{chat, outputUsers}
+	}
+	return chatOutput, true
+}
+
+func GetChats(w *response.Writer, r *http.Request, conn database.Connection) {
+	if chats, ok := GetChatsSlice(w, r, conn); ok {
+		w.WriteJSON(http.StatusOK, chats)
+	}
 }
 
 type CreateChatInput struct {

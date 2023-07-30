@@ -23,6 +23,7 @@ type Connection interface {
 	SetMessage(message *Message) (*Message, error)
 	GetUser(id int64) (*User, error)
 	GetUserByUsername(username string) (*User, error)
+	GetUsersByChatID(chatID int64) ([]User, error)
 	SetUser(user *User) (*User, error)
 	GetSession(id string) *Session
 	GetSessionByUserID(userID int64) (*Session, error)

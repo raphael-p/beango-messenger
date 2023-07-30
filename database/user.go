@@ -40,6 +40,16 @@ func (conn *MongoConnection) GetUserByUsername(username string) (*User, error) {
 	return user, err
 }
 
+func (conn *MongoConnection) GetUsersByChatID(chatID int64) ([]User, error) {
+	return scanRows[User](conn.Query(
+		`SELECT u.*
+		FROM "user" u
+		INNER JOIN chat_users cu ON cu.user_id = u.id
+		WHERE cu.chat_id = $1`,
+		chatID,
+	))
+}
+
 func (conn *MongoConnection) SetUser(user *User) (*User, error) {
 	return scanRow[User](conn.QueryRow(
 		`INSERT INTO "user" (username, display_name, key)
