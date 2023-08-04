@@ -6,7 +6,7 @@ import (
 )
 
 type databaseEntity interface {
-	User | Chat | ChatUser | Message
+	User | Chat | ChatUser | Message | MessageExtended
 }
 
 // Maps a SQL row onto a struct of a database entity

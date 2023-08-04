@@ -115,11 +115,18 @@ func (mc *MockConnection) SetChat(chat *database.Chat, userIDs ...int64) (*datab
 	return chat, nil
 }
 
-func (mc *MockConnection) GetMessagesByChatID(chatID int64) ([]database.Message, error) {
-	messages := []database.Message{}
-	for _, message := range mc.messages {
-		if message.ChatID == chatID {
-			messages = append(messages, message)
+func (mc *MockConnection) GetMessagesByChatID(chatID int64) ([]database.MessageExtended, error) {
+	messages := []database.MessageExtended{}
+	for _, m := range mc.messages {
+		if m.ChatID == chatID {
+			messages = append(messages, database.MessageExtended{
+				ID:            m.ID,
+				UserID:        m.UserID,
+				ChatID:        m.ChatID,
+				Content:       m.Content,
+				CreatedAt:     m.CreatedAt,
+				LastUpdatedAt: m.LastUpdatedAt,
+			})
 		}
 	}
 	return messages, nil

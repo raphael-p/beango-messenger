@@ -8,10 +8,10 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-func GetChatMessages(w *response.Writer, r *http.Request, conn database.Connection) {
+func GetChatMessagesData(w *response.Writer, r *http.Request, conn database.Connection) ([]database.MessageExtended, bool) {
 	user, params, ok := getRequestContext(w, r, CHAT_ID_KEY)
 	if !ok {
-		return
+		return nil, false
 	}
 
 	chatID, err := strconv.ParseInt(params[CHAT_ID_KEY], 10, 64)
@@ -22,19 +22,25 @@ func GetChatMessages(w *response.Writer, r *http.Request, conn database.Connecti
 	chat, err := conn.GetChat(chatID, user.ID)
 	if err != nil {
 		HandleDatabaseError(w, err)
-		return
+		return nil, false
 	}
 	if chat == nil {
 		w.WriteString(http.StatusNotFound, "chat not found")
-		return
+		return nil, false
 	}
 
 	messages, err := conn.GetMessagesByChatID(chatID)
 	if err != nil {
 		HandleDatabaseError(w, err)
-		return
+		return nil, false
 	}
-	w.WriteJSON(http.StatusOK, messages)
+	return messages, true
+}
+
+func GetChatMessages(w *response.Writer, r *http.Request, conn database.Connection) {
+	if messages, ok := GetChatMessagesData(w, r, conn); ok {
+		w.WriteJSON(http.StatusOK, messages)
+	}
 }
 
 type SendMessageInput struct {

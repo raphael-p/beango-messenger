@@ -9,6 +9,7 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
+// TODO: Use ChatExtended struct?
 type GetChatsOutput struct {
 	database.Chat
 	Users []UserOutput `json:"users"`
@@ -27,7 +28,7 @@ func generateChatName(userID int64, users []database.User) string {
 }
 
 // TODO: test
-func GetChatsSlice(w *response.Writer, r *http.Request, conn database.Connection) ([]GetChatsOutput, bool) {
+func GetChatsData(w *response.Writer, r *http.Request, conn database.Connection) ([]GetChatsOutput, bool) {
 	user, _, ok := getRequestContext(w, r)
 	if !ok {
 		return nil, false
@@ -61,7 +62,7 @@ func GetChatsSlice(w *response.Writer, r *http.Request, conn database.Connection
 }
 
 func GetChats(w *response.Writer, r *http.Request, conn database.Connection) {
-	if chats, ok := GetChatsSlice(w, r, conn); ok {
+	if chats, ok := GetChatsData(w, r, conn); ok {
 		w.WriteJSON(http.StatusOK, chats)
 	}
 }
