@@ -43,31 +43,19 @@ func Login(w *response.Writer, r *http.Request, conn database.Connection) {
 func SubmitLogin(w *response.Writer, r *http.Request, conn database.Connection) {
 	action, _ := context.GetParam(r, "action")
 
-	var requests []*http.Request
 	if action == "signup" {
-		if req, ok := cloneRequest(w, r, 2); ok {
-			requests = req
-		} else {
-			return
-		}
-	} else {
-		requests = append(requests, r)
-	}
-
-	if action == "signup" {
-		resolvers.CreateUser(w, requests[1], conn)
+		resolvers.CreateUser(w, cloneRequest(r), conn)
 		if w.Status != http.StatusCreated {
 			displayError(w, string(w.Body))
 			return
 		}
 	}
 
-	resolvers.CreateSession(w, requests[0], conn)
-	if w.Status == http.StatusNoContent {
-		w.Clear()
-		w.Header().Set("HX-Push", "/home")
-		Home(w, r, conn)
+	resolvers.CreateSession(w, r, conn)
+	if w.Status != http.StatusNoContent {
+		displayError(w, string(w.Body))
 		return
 	}
-	displayError(w, string(w.Body))
+
+	w.Header().Set("HX-Redirect", "/home")
 }

@@ -52,13 +52,6 @@ func (w *Writer) WriteJSON(code int, responseObject any) {
 	w.writeBody(string(response))
 }
 
-func (w *Writer) Clear() {
-	w.Header().Del("Content-Type")
-	w.Header().Del("Content-Length")
-	w.Body = []byte{}
-	w.Status = 0
-}
-
 func (w *Writer) Commit() (int, error) {
 	w.Header().Set(
 		"Content-Length",

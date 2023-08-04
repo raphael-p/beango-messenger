@@ -16,8 +16,12 @@ var AuthRedirect Middleware = func(w *response.Writer, r *http.Request, conn dat
 	if newRequest, ok := authenticate.FromCookie(w, r, conn); ok {
 		return newRequest, true
 	} else {
-		w.Header().Set("Location", "/login")
-		w.WriteHeader(http.StatusSeeOther)
+		if r.Header.Get("HX-Request") == "true" {
+			w.Header().Set("HX-Redirect", "/home")
+		} else {
+			w.Header().Set("Location", "/login")
+			w.WriteHeader(http.StatusSeeOther)
+		}
 		return newRequest, false
 	}
 }
