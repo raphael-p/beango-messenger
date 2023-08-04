@@ -46,6 +46,7 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 	router.GET("/login", client.Login)
 	router.POST("/login/:action", client.SubmitLogin)
 	router.GET("/home", client.Home, routing.AuthRedirect)
+	router.GET("/home/chat/:"+resolvers.CHAT_ID_KEY+"/:"+resolvers.CHAT_NAME_KEY, client.OpenChat, routing.AuthRedirect)
 	router.GET("/favicon.ico", func(w *response.Writer, r *http.Request, conn database.Connection) {
 		http.FileServer(http.Dir(path)).ServeHTTP(w, r)
 	})
@@ -57,7 +58,6 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 	router.POST("/session", resolvers.CreateSession)
 	router.POST("/user", resolvers.CreateUser)
 	router.GET("/user/:"+resolvers.USERNAME_KEY, resolvers.GetUserByName, routing.Auth)
-	// router.GET("/chat/:"+resolvers.CHAT_ID_KEY+"/users", resolvers.) TODO
 	router.GET("/chats", resolvers.GetChats, routing.Auth)
 	router.POST("/chat", resolvers.CreatePrivateChat, routing.Auth)
 	router.GET("/chat/:"+resolvers.CHAT_ID_KEY+"/messages", resolvers.GetChatMessages, routing.Auth)

@@ -6,10 +6,10 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/raphael-p/beango/utils/logger"
 	"github.com/raphael-p/beango/utils/response"
 )
 
+// TODO: unit test
 func displayError(w *response.Writer, message string) {
 	if message == "" {
 		return
@@ -18,25 +18,12 @@ func displayError(w *response.Writer, message string) {
 	w.WriteString(http.StatusOK, htmlStr)
 }
 
-func cloneRequest(w *response.Writer, r *http.Request, count int) ([]*http.Request, bool) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		logger.Error("error reading request body: " + err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		return nil, false
+// TODO: unit test
+func cloneRequest(r *http.Request) *http.Request {
+	clone := r.Clone(r.Context())
+	// TODO: investigate error handling: can ignoring this error cause a panic?
+	if body, err := io.ReadAll(r.Body); err == nil {
+		clone.Body = io.NopCloser(bytes.NewReader(body))
 	}
-
-	clones := make([]*http.Request, count)
-	for i := 0; i < count; i++ {
-		var rClone *http.Request
-		if i == 0 {
-			rClone = r
-		} else {
-			rClone = r.Clone(r.Context())
-		}
-		rClone.Body = io.NopCloser(bytes.NewReader(body))
-		clones[i] = rClone
-	}
-
-	return clones, true
+	return clone
 }

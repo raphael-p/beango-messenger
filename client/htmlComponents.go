@@ -1,6 +1,6 @@
 package client
 
-var loginPage string = `<span class="title"><span>> Beango Messenger </span></span>
+var loginPage string = `<span class="logo"><span>> Beango Messenger </span></span>
 	<div id="login-form">
 		<form hx-ext='json-enc'>
 			<div class="form-row">
@@ -19,4 +19,28 @@ var loginPage string = `<span class="title"><span>> Beango Messenger </span></sp
 		</form>
 	</div>`
 
-var homePage string = `<h1>You are home!</h1>`
+var homePage string = `<div id="chat-container">
+	<div id="sidebar">
+		<span class="heading-1">Chats</span>
+		<div id=chat-list>
+			{{ range .Chats }}
+			{{ block "chat-list" .}}
+				<div hx-get=/home/chat/{{ .ID }}/{{ .Name }} hx-target=#chat class="chat-selector list-item">[{{ .Type}}] <b>{{ .Name }}</b></div>
+			{{ end }}
+			{{ end }}
+		</div>
+	</div>
+	<div id="chat"></div>
+	</div>`
+
+var messagePane string = `<span class="heading-1">{{ .Title }}</span>
+	<table>
+		{{ range .Messages }}
+		{{ block "message-list" .}}
+			<tr class="list-item">
+				<td class="cue">{{ .UserDisplayName }}</td>
+				<td>{{ .Content }}</td>
+			</tr>
+		{{ end }}
+		{{ end }}
+	</table>`

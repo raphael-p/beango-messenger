@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css?family=VT323');
 @import url('https://fonts.googleapis.com/css?family=Megrim');
 
+/* GENERAL */
+
 :root {
 	--hacker-green: #37ff00;
 	--hacker-grey: #787171;
@@ -12,24 +14,24 @@ body {
 	background-color: black;
 	color: white;
 	font-family: var(--text-font);
+	margin: 0;
 }
 
-span.title  {
+/* LOGIN PAGE */
+
+span.logo  {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	width: 100%;
 	margin: 50px 0;
 	user-select: none;
-}
-
-.title span {
 	font-family: 'Megrim';
 	color: var(--hacker-green);
 	font-size: 75px;
 }
 
-.title span::after {
+span.logo span::after {
 	content: "|";
 	width: 0px;
 	background: var(--hacker-green);
@@ -42,7 +44,6 @@ span.title  {
 		opacity: 0;
 	}
 }
-  
 
 label {
 	font-family: var(--hacker-font);
@@ -112,3 +113,59 @@ form {
 form > div {
 	width: 30%;
 }
+
+/* HOME PAGE */
+
+span.heading-1  {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	margin: 10px 0;
+	user-select: none;
+	font-family: 'Megrim';
+	color: var(--hacker-green);
+	font-size: larger;
+}
+
+#sidebar {
+	width: 20%;
+	padding: 40px 30px;
+	box-sizing: border-box;
+}
+
+.chat-selector {
+	color: var(--hacker-grey);
+	cursor: pointer;
+}
+
+#chat-container {
+	display: flex;
+	width: 100%;
+	height: 100%;
+}
+
+#chat {
+	width: 100%;
+	padding: 40px 30px;
+	box-sizing: border-box;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+td {
+	padding: 0
+}
+
+.list-item {
+	font-size: small;
+	line-height: 2;
+}
+
+.cue {
+	color: var(--hacker-grey);
+	font-weight: bold;
+	padding-right: 10px;
+}
+
