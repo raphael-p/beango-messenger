@@ -45,39 +45,31 @@ func getRequestBody(r *http.Request, ptr any) *HTTPError {
 
 // Gets all requested context attached to a request.
 // Writes an HTTP error response + logs on failure.
-func getRequestContext(r *http.Request, keys ...string) (*database.User, map[string]string, *HTTPError) {
+func GetRequestContext(r *http.Request, paramKeys ...string) (*database.User, *RouteParams, *HTTPError) {
 	user, err := context.GetUser(r)
 	if err != nil {
 		logger.Error(err.Error())
 		return nil, nil, &HTTPError{http.StatusInternalServerError, "failed to fetch request user"}
 	}
 
-	params := make(map[string]string)
-	for _, key := range keys {
-		value, err := context.GetParam(r, key)
-		if err != nil {
-			logger.Error(err.Error())
-			return nil, nil, &HTTPError{
-				http.StatusInternalServerError,
-				fmt.Sprint("failed to fetch path parameter: ", key),
-			}
-		}
-		params[key] = value
+	routeParams, httpError := MakeRouteParams(r, paramKeys...)
+	if httpError != nil {
+		return nil, nil, httpError
 	}
 
-	return user, params, nil
+	return user, routeParams, nil
 }
 
 // Calls `getRequestBody()` then, if successful, `getRequestContext()`
 func getRequestBodyAndContext(
 	r *http.Request,
 	ptr any,
-	keys ...string,
-) (*database.User, map[string]string, *HTTPError) {
+	paramKeys ...string,
+) (*database.User, *RouteParams, *HTTPError) {
 	if httpError := getRequestBody(r, ptr); httpError != nil {
 		return nil, nil, httpError
 	}
-	return getRequestContext(r, keys...)
+	return GetRequestContext(r, paramKeys...)
 }
 
 type HTTPError struct {

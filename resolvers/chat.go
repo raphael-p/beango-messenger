@@ -29,7 +29,7 @@ func generateChatName(userID int64, users []database.User) string {
 
 // TODO: test
 func GetChatsData(w *response.Writer, r *http.Request, conn database.Connection) ([]GetChatsOutput, bool) {
-	user, _, httpError := getRequestContext(r)
+	user, _, httpError := GetRequestContext(r)
 	if ProcessHTTPError(w, httpError) {
 		return nil, false
 	}

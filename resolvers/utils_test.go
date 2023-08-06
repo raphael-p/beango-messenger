@@ -108,43 +108,42 @@ func TestGetRequestContext(t *testing.T) {
 
 	t.Run("Normal", func(t *testing.T) {
 		xUser := mocks.MakeUser()
-		key1 := "Param1"
-		key2 := "param2"
-		xParams := map[string]string{key1: "value1", key2: "value2"}
-		req, _ := setup(xUser, xParams)
+		key1 := USERNAME_KEY
+		key2 := CHAT_NAME_KEY
+		contextParams := map[string]string{key1: "value1", key2: "value2"}
+		req, _ := setup(xUser, contextParams)
 
-		user, params, err := getRequestContext(req, key1, key2)
+		user, routeParams, err := GetRequestContext(req, key1, key2)
 		assert.IsNil(t, err)
 		assert.DeepEquals(t, user, xUser)
-		assert.DeepEquals(t, params, xParams)
+		assert.DeepEquals(t, routeParams, &RouteParams{"value1", 0, "value2"})
 	})
 
 	t.Run("ExtraRequestParam", func(t *testing.T) {
-		key := "param1"
-		extraKey := "extra"
-		xParams := map[string]string{key: "value1", extraKey: "value2"}
-		req, _ := setup(mocks.MakeUser(), xParams)
+		key := USERNAME_KEY
+		extraKey := CHAT_NAME_KEY
+		contextParams := map[string]string{key: "value1", extraKey: "value2"}
+		req, _ := setup(mocks.MakeUser(), contextParams)
 
-		_, params, err := getRequestContext(req, key)
+		_, params, err := GetRequestContext(req, key)
 		assert.IsNil(t, err)
-		delete(xParams, extraKey)
-		assert.DeepEquals(t, params, xParams)
+		assert.DeepEquals(t, params, &RouteParams{"value1", 0, ""})
 	})
 
 	t.Run("NoParamKeys", func(t *testing.T) {
 		req, _ := setup(mocks.MakeUser(), map[string]string{"param1": "value1"})
 
-		_, params, err := getRequestContext(req)
+		_, params, err := GetRequestContext(req)
 		assert.IsNil(t, err)
-		assert.DeepEquals(t, params, map[string]string{})
+		assert.DeepEquals(t, params, &RouteParams{})
 	})
 
 	t.Run("MissingRequestParam", func(t *testing.T) {
-		key1 := "param1"
-		key2 := "param2"
+		key1 := USERNAME_KEY
+		key2 := CHAT_NAME_KEY
 		req, buf := setup(mocks.MakeUser(), map[string]string{key1: "some-value"})
 
-		_, _, err := getRequestContext(req, key1, key2)
+		_, _, err := GetRequestContext(req, key1, key2)
 		assert.IsNotNil(t, err)
 		assert.Equals(t, err.status, http.StatusInternalServerError)
 		assert.Equals(t, err.message, fmt.Sprint("failed to fetch path parameter: ", key2))
@@ -154,7 +153,7 @@ func TestGetRequestContext(t *testing.T) {
 	t.Run("NoUser", func(t *testing.T) {
 		req, buf := setup(nil, nil)
 
-		_, _, err := getRequestContext(req)
+		_, _, err := GetRequestContext(req)
 		assert.IsNotNil(t, err)
 		assert.Equals(t, err.status, http.StatusInternalServerError)
 		assert.Equals(t, err.message, "failed to fetch request user")

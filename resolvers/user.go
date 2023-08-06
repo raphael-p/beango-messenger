@@ -59,12 +59,12 @@ func CreateUser(w *response.Writer, r *http.Request, conn database.Connection) {
 }
 
 func GetUserByName(w *response.Writer, r *http.Request, conn database.Connection) {
-	_, params, httpError := getRequestContext(r, USERNAME_KEY)
+	_, params, httpError := GetRequestContext(r, USERNAME_KEY)
 	if ProcessHTTPError(w, httpError) {
 		return
 	}
 
-	user, _ := conn.GetUserByUsername(params[USERNAME_KEY])
+	user, _ := conn.GetUserByUsername(params.Username)
 	if user == nil {
 		w.WriteString(http.StatusNotFound, "user not found")
 		return
