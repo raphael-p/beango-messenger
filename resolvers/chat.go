@@ -36,7 +36,7 @@ func GetChatsData(w *response.Writer, r *http.Request, conn database.Connection)
 
 	chats, err := conn.GetChatsByUserID(user.ID)
 	if err != nil {
-		HandleDatabaseError(w, err)
+		ProcessHTTPError(HandleDatabaseError(err), w)
 		return nil, false
 	}
 
@@ -44,7 +44,7 @@ func GetChatsData(w *response.Writer, r *http.Request, conn database.Connection)
 	for i, chat := range chats {
 		users, err := conn.GetUsersByChatID(chat.ID)
 		if err != nil {
-			HandleDatabaseError(w, err)
+			ProcessHTTPError(HandleDatabaseError(err), w)
 			return nil, false
 		}
 
@@ -90,7 +90,7 @@ func CreatePrivateChat(w *response.Writer, r *http.Request, conn database.Connec
 	// Check if chat already exists
 	exists, err := conn.CheckPrivateChatExists(userIDs)
 	if err != nil {
-		HandleDatabaseError(w, err)
+		ProcessHTTPError(HandleDatabaseError(err), w)
 		return
 	}
 	if exists {
@@ -101,7 +101,7 @@ func CreatePrivateChat(w *response.Writer, r *http.Request, conn database.Connec
 	newChat := &database.Chat{Type: database.PRIVATE_CHAT}
 	newChat, err = conn.SetChat(newChat, userIDs[:]...)
 	if err != nil {
-		HandleDatabaseError(w, err)
+		ProcessHTTPError(HandleDatabaseError(err), w)
 		return
 	}
 	w.WriteJSON(http.StatusCreated, newChat)

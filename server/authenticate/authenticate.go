@@ -22,7 +22,7 @@ func FromCookie(w *response.Writer, req *http.Request, conn database.Connection)
 	user, err := conn.GetUser(userID)
 	if user == nil {
 		if err != nil {
-			resolvers.HandleDatabaseError(w, err)
+			resolvers.ProcessHTTPError(resolvers.HandleDatabaseError(err), w)
 		} else {
 			w.WriteString(http.StatusNotFound, "user not found during authentication")
 		}

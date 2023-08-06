@@ -52,7 +52,7 @@ func CreateUser(w *response.Writer, r *http.Request, conn database.Connection) {
 	}
 	newUser, err = conn.SetUser(newUser)
 	if err != nil {
-		HandleDatabaseError(w, err)
+		ProcessHTTPError(HandleDatabaseError(err), w)
 		return
 	}
 	w.WriteJSON(http.StatusCreated, stripFields(newUser))

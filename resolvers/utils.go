@@ -90,12 +90,27 @@ func getRequestBodyAndContext(
 	return getRequestContext(w, r, keys...)
 }
 
+type HTTPError struct {
+	message string
+	status  int
+}
+
+// Writes message and status of HTTPError to the response
+// Returns false if httpError is nil, true otherwise
+func ProcessHTTPError(httpError *HTTPError, w *response.Writer) bool {
+	if httpError == nil {
+		return false
+	}
+	w.WriteString(httpError.status, httpError.message)
+	return true
+}
+
 // Handles an unexpected error from the database
-func HandleDatabaseError(w *response.Writer, err error) {
+func HandleDatabaseError(err error) *HTTPError {
 	if err == nil {
-		return
+		return nil
 	}
 	message := "database operation failed"
 	logger.Error(message + ": " + err.Error())
-	w.WriteString(http.StatusInternalServerError, message)
+	return &HTTPError{message, http.StatusInternalServerError}
 }

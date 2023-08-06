@@ -168,13 +168,12 @@ func TestGetRequestContext(t *testing.T) {
 
 func TestHandleDatabaseError(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
-		w, _ := mockRequest("")
 		buf := logger.MockFileLogger(t)
 		errPrefix := "database operation failed"
 		errMessage := "this did not go well"
-		HandleDatabaseError(w, errors.New(errMessage))
-		assert.Equals(t, w.Status, http.StatusInternalServerError)
-		assert.Equals(t, string(w.Body), errPrefix)
+		httpError := HandleDatabaseError(errors.New(errMessage))
+		assert.Equals(t, httpError.status, http.StatusInternalServerError)
+		assert.Equals(t, httpError.message, errPrefix)
 		assert.Contains(t, buf.String(), "[ERROR] "+errPrefix+": "+errMessage)
 	})
 }

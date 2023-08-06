@@ -52,8 +52,12 @@ func Home(w *response.Writer, r *http.Request, conn database.Connection) {
 }
 
 func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
-	messages, ok := resolvers.GetChatMessagesData(w, r, conn)
+	userID, chatID, ok := resolvers.ExtractUserAndChatIDFromRequest(w, r)
 	if !ok {
+		return
+	}
+	messages, httpError := resolvers.GetChatMessagesDatabase(userID, chatID, conn)
+	if resolvers.ProcessHTTPError(httpError, w) {
 		return
 	}
 	chatName, err := context.GetParam(r, resolvers.CHAT_NAME_KEY)
