@@ -11,17 +11,14 @@ import (
 
 // TODO: generic version of this
 func ExtractUserAndChatIDFromRequest(w *response.Writer, r *http.Request) (int64, int64, bool) {
-	user, params, ok := getRequestContext(w, r, CHAT_ID_KEY)
-	if !ok {
+	user, params, httpError := getRequestContext(r, CHAT_ID_KEY)
+	if ProcessHTTPError(w, httpError) {
 		return 0, 0, false
 	}
-
-	chatID, err := strconv.ParseInt(params[CHAT_ID_KEY], 10, 64)
-	if err != nil {
-		w.WriteString(http.StatusBadRequest, "chat ID must be an integer")
+	chatID, httpErr := StringToInt(params[CHAT_ID_KEY], 64)
+	if ProcessHTTPError(w, httpErr) {
 		return 0, 0, false
 	}
-
 	return user.ID, chatID, true
 }
 
@@ -32,7 +29,7 @@ func GetChatMessagesDatabase(userID, chatID int64, conn database.Connection) ([]
 		return nil, HandleDatabaseError(err)
 	}
 	if chat == nil {
-		return nil, &HTTPError{"chat not found", http.StatusNotFound}
+		return nil, &HTTPError{http.StatusNotFound, "chat not found"}
 	}
 
 	messages, err := conn.GetMessagesByChatID(chatID)
@@ -49,7 +46,7 @@ func GetChatMessages(w *response.Writer, r *http.Request, conn database.Connecti
 	}
 	messages, httpError := GetChatMessagesDatabase(userID, chatID, conn)
 	fmt.Printf("messages: %v/n", messages)
-	if ProcessHTTPError(httpError, w) {
+	if ProcessHTTPError(w, httpError) {
 		return
 	}
 	w.WriteJSON(http.StatusOK, messages)
@@ -61,8 +58,8 @@ type SendMessageInput struct {
 
 func SendMessage(w *response.Writer, r *http.Request, conn database.Connection) {
 	var input SendMessageInput
-	user, params, ok := getRequestBodyAndContext(w, r, &input, CHAT_ID_KEY)
-	if !ok {
+	user, params, httpError := getRequestBodyAndContext(r, &input, CHAT_ID_KEY)
+	if ProcessHTTPError(w, httpError) {
 		return
 	}
 
@@ -83,7 +80,7 @@ func SendMessage(w *response.Writer, r *http.Request, conn database.Connection) 
 	}
 	newMessage, err = conn.SetMessage(newMessage)
 	if err != nil {
-		ProcessHTTPError(HandleDatabaseError(err), w)
+		ProcessHTTPError(w, HandleDatabaseError(err))
 		return
 	}
 	w.WriteJSON(http.StatusAccepted, newMessage)

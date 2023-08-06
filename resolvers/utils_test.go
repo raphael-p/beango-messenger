@@ -47,10 +47,10 @@ func TestBindRequestJSON(t *testing.T) {
 		Age  int    `json:"age"`
 	}
 
-	setup := func(body string, ptr any) (bool, *response.Writer) {
-		w, req := mockRequest(body)
-		ok := getRequestBody(w, req, ptr)
-		return ok, w
+	setup := func(body string, ptr any) *HTTPError {
+		_, req := mockRequest(body)
+		httpError := getRequestBody(req, ptr)
+		return httpError
 	}
 
 	t.Run("Normal", func(t *testing.T) {
@@ -58,56 +58,52 @@ func TestBindRequestJSON(t *testing.T) {
 		age := 30
 		body := fmt.Sprintf(`{"name": "%s", "Age": %d}`, name, age)
 		var testStruct TestStruct
-		ok, _ := setup(body, &testStruct)
-		assert.Equals(t, ok, true)
+		err := setup(body, &testStruct)
+		assert.IsNil(t, err)
 		xTestStruct := TestStruct{name, age}
 		assert.DeepEquals(t, testStruct, xTestStruct)
 	})
 
 	t.Run("NonPointerBind", func(t *testing.T) {
 		var testStruct TestStruct
-		ok, w := setup(`{"name": "John", "Age": 30}`, testStruct)
-		assert.Equals(t, ok, false)
-		assert.Equals(t, w.Status, http.StatusBadRequest)
-		xBody := "expected `ptr` to be a pointer to a struct, got resolvers.TestStruct"
-		assert.Equals(t, string(w.Body), xBody)
+		err := setup(`{"name": "John", "Age": 30}`, testStruct)
+		assert.IsNotNil(t, err)
+		assert.Equals(t, err.status, http.StatusBadRequest)
+		xMessage := "expected `ptr` to be a pointer to a struct, got resolvers.TestStruct"
+		assert.Equals(t, err.message, xMessage)
 	})
 
 	t.Run("NonStructBind", func(t *testing.T) {
 		var testStruct *string
-		ok, w := setup(`{"name": "John", "Age": 30}`, testStruct)
-		assert.Equals(t, ok, false)
-		assert.Equals(t, w.Status, http.StatusBadRequest)
-		assert.Equals(t, string(w.Body), "expected `ptr` to be a pointer to a struct, got *string")
+		err := setup(`{"name": "John", "Age": 30}`, testStruct)
+		assert.IsNotNil(t, err)
+		assert.Equals(t, err.status, http.StatusBadRequest)
+		assert.Equals(t, err.message, "expected `ptr` to be a pointer to a struct, got *string")
 	})
 
 	t.Run("MissingRequiredField", func(t *testing.T) {
 		var testStruct TestStruct
-		ok, w := setup(`{"name": "John"}`, &testStruct)
-		assert.Equals(t, ok, false)
-		assert.Equals(t, w.Status, http.StatusBadRequest)
-		assert.Equals(t, string(w.Body), "missing required field(s): [age]")
+		err := setup(`{"name": "John"}`, &testStruct)
+		assert.IsNotNil(t, err)
+		assert.Equals(t, err.status, http.StatusBadRequest)
+		assert.Equals(t, err.message, "missing required field(s): [age]")
 	})
 
 	t.Run("MalformedJSON", func(t *testing.T) {
 		var testStruct TestStruct
-		ok, w := setup(`{"name": "John",}`, &testStruct)
-		assert.Equals(t, ok, false)
-		assert.Equals(t, w.Status, http.StatusBadRequest)
-		assert.Contains(t, string(w.Body), "malformed request body: ")
+		err := setup(`{"name": "John",}`, &testStruct)
+		assert.IsNotNil(t, err)
+		assert.Equals(t, err.status, http.StatusBadRequest)
+		assert.Contains(t, err.message, "malformed request body: ")
 	})
 }
 
 func TestGetRequestContext(t *testing.T) {
-	setup := func(user *database.User, params map[string]string) (
-		*http.Request,
-		*response.Writer,
-		*bytes.Buffer,
-	) {
-		w, req := mockRequest("")
+	setup := func(user *database.User, params map[string]string) (*http.Request, *bytes.Buffer) {
+		_, req := mockRequest("")
 		req = setContext(t, req, user, params)
 		buf := logger.MockFileLogger(t)
-		return req, w, buf
+		return req, buf
 	}
 
 	t.Run("Normal", func(t *testing.T) {
@@ -115,10 +111,10 @@ func TestGetRequestContext(t *testing.T) {
 		key1 := "Param1"
 		key2 := "param2"
 		xParams := map[string]string{key1: "value1", key2: "value2"}
-		req, _, _ := setup(xUser, xParams)
+		req, _ := setup(xUser, xParams)
 
-		user, params, ok := getRequestContext(nil, req, key1, key2)
-		assert.Equals(t, ok, true)
+		user, params, err := getRequestContext(req, key1, key2)
+		assert.IsNil(t, err)
 		assert.DeepEquals(t, user, xUser)
 		assert.DeepEquals(t, params, xParams)
 	})
@@ -127,41 +123,41 @@ func TestGetRequestContext(t *testing.T) {
 		key := "param1"
 		extraKey := "extra"
 		xParams := map[string]string{key: "value1", extraKey: "value2"}
-		req, _, _ := setup(mocks.MakeUser(), xParams)
+		req, _ := setup(mocks.MakeUser(), xParams)
 
-		_, params, ok := getRequestContext(nil, req, key)
-		assert.Equals(t, ok, true)
+		_, params, err := getRequestContext(req, key)
+		assert.IsNil(t, err)
 		delete(xParams, extraKey)
 		assert.DeepEquals(t, params, xParams)
 	})
 
 	t.Run("NoParamKeys", func(t *testing.T) {
-		req, _, _ := setup(mocks.MakeUser(), map[string]string{"param1": "value1"})
+		req, _ := setup(mocks.MakeUser(), map[string]string{"param1": "value1"})
 
-		_, params, ok := getRequestContext(nil, req)
-		assert.Equals(t, ok, true)
+		_, params, err := getRequestContext(req)
+		assert.IsNil(t, err)
 		assert.DeepEquals(t, params, map[string]string{})
 	})
 
 	t.Run("MissingRequestParam", func(t *testing.T) {
 		key1 := "param1"
 		key2 := "param2"
-		req, w, buf := setup(mocks.MakeUser(), map[string]string{key1: "some-value"})
+		req, buf := setup(mocks.MakeUser(), map[string]string{key1: "some-value"})
 
-		_, _, ok := getRequestContext(w, req, key1, key2)
-		assert.Equals(t, ok, false)
-		assert.Equals(t, w.Status, http.StatusInternalServerError)
-		assert.Equals(t, string(w.Body), fmt.Sprint("failed to fetch path parameter: ", key2))
+		_, _, err := getRequestContext(req, key1, key2)
+		assert.IsNotNil(t, err)
+		assert.Equals(t, err.status, http.StatusInternalServerError)
+		assert.Equals(t, err.message, fmt.Sprint("failed to fetch path parameter: ", key2))
 		assert.Contains(t, buf.String(), "[ERROR]", fmt.Sprintf("path parameter %s not found", key2))
 	})
 
 	t.Run("NoUser", func(t *testing.T) {
-		req, w, buf := setup(nil, nil)
+		req, buf := setup(nil, nil)
 
-		_, _, ok := getRequestContext(w, req)
-		assert.Equals(t, ok, false)
-		assert.Equals(t, w.Status, http.StatusInternalServerError)
-		assert.Equals(t, string(w.Body), "failed to fetch request user")
+		_, _, err := getRequestContext(req)
+		assert.IsNotNil(t, err)
+		assert.Equals(t, err.status, http.StatusInternalServerError)
+		assert.Equals(t, err.message, "failed to fetch request user")
 		assert.Contains(t, buf.String(), "[ERROR]", "user not found in request context")
 	})
 }

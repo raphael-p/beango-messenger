@@ -29,14 +29,14 @@ func generateChatName(userID int64, users []database.User) string {
 
 // TODO: test
 func GetChatsData(w *response.Writer, r *http.Request, conn database.Connection) ([]GetChatsOutput, bool) {
-	user, _, ok := getRequestContext(w, r)
-	if !ok {
+	user, _, httpError := getRequestContext(r)
+	if ProcessHTTPError(w, httpError) {
 		return nil, false
 	}
 
 	chats, err := conn.GetChatsByUserID(user.ID)
 	if err != nil {
-		ProcessHTTPError(HandleDatabaseError(err), w)
+		ProcessHTTPError(w, HandleDatabaseError(err))
 		return nil, false
 	}
 
@@ -44,7 +44,7 @@ func GetChatsData(w *response.Writer, r *http.Request, conn database.Connection)
 	for i, chat := range chats {
 		users, err := conn.GetUsersByChatID(chat.ID)
 		if err != nil {
-			ProcessHTTPError(HandleDatabaseError(err), w)
+			ProcessHTTPError(w, HandleDatabaseError(err))
 			return nil, false
 		}
 
@@ -74,8 +74,8 @@ type CreateChatInput struct {
 func CreatePrivateChat(w *response.Writer, r *http.Request, conn database.Connection) {
 	// TODO: throw error if attempting to create self chat, create new chat type for that, called "note"
 	var input CreateChatInput
-	user, _, ok := getRequestBodyAndContext(w, r, &input)
-	if !ok {
+	user, _, httpError := getRequestBodyAndContext(r, &input)
+	if ProcessHTTPError(w, httpError) {
 		return
 	}
 	userIDs := [2]int64{user.ID, input.UserID}
@@ -90,7 +90,7 @@ func CreatePrivateChat(w *response.Writer, r *http.Request, conn database.Connec
 	// Check if chat already exists
 	exists, err := conn.CheckPrivateChatExists(userIDs)
 	if err != nil {
-		ProcessHTTPError(HandleDatabaseError(err), w)
+		ProcessHTTPError(w, HandleDatabaseError(err))
 		return
 	}
 	if exists {
@@ -101,7 +101,7 @@ func CreatePrivateChat(w *response.Writer, r *http.Request, conn database.Connec
 	newChat := &database.Chat{Type: database.PRIVATE_CHAT}
 	newChat, err = conn.SetChat(newChat, userIDs[:]...)
 	if err != nil {
-		ProcessHTTPError(HandleDatabaseError(err), w)
+		ProcessHTTPError(w, HandleDatabaseError(err))
 		return
 	}
 	w.WriteJSON(http.StatusCreated, newChat)

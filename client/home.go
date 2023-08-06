@@ -57,7 +57,7 @@ func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
 		return
 	}
 	messages, httpError := resolvers.GetChatMessagesDatabase(userID, chatID, conn)
-	if resolvers.ProcessHTTPError(httpError, w) {
+	if resolvers.ProcessHTTPError(w, httpError) {
 		return
 	}
 	chatName, err := context.GetParam(r, resolvers.CHAT_NAME_KEY)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"strconv"
 
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/utils/context"
@@ -15,49 +16,40 @@ import (
 
 // Decodes JSON from HTTP request body and binds it to a struct pointer.
 // Writes an HTTP error response on failure.
-func getRequestBody(w *response.Writer, r *http.Request, ptr any) bool {
+func getRequestBody(r *http.Request, ptr any) *HTTPError {
 	value := reflect.ValueOf(ptr)
 	if value.Kind() != reflect.Ptr || value.Elem().Kind() != reflect.Struct {
 		errorResponse := fmt.Sprintf(
 			"expected `ptr` to be a pointer to a struct, got %T",
 			ptr,
 		)
-		w.WriteString(http.StatusBadRequest, errorResponse)
-		return false
+		return &HTTPError{http.StatusBadRequest, errorResponse}
 	}
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(ptr); err != nil {
 		errorResponse := fmt.Sprint("malformed request body: ", err)
-		w.WriteString(http.StatusBadRequest, errorResponse)
-		return false
+		return &HTTPError{http.StatusBadRequest, errorResponse}
 	}
 
 	fields, err := validate.StructFromJSON(ptr)
 	if err != nil {
-		w.WriteString(http.StatusBadRequest, err.Error())
-		return false
+		return &HTTPError{http.StatusBadRequest, err.Error()}
 	}
 	if len(fields) != 0 {
 		errorResponse := fmt.Sprintf("missing required field(s): %s", fields)
-		w.WriteString(http.StatusBadRequest, errorResponse)
-		return false
+		return &HTTPError{http.StatusBadRequest, errorResponse}
 	}
-	return true
+	return nil
 }
 
 // Gets all requested context attached to a request.
 // Writes an HTTP error response + logs on failure.
-func getRequestContext(
-	w *response.Writer,
-	r *http.Request,
-	keys ...string,
-) (*database.User, map[string]string, bool) {
+func getRequestContext(r *http.Request, keys ...string) (*database.User, map[string]string, *HTTPError) {
 	user, err := context.GetUser(r)
 	if err != nil {
 		logger.Error(err.Error())
-		w.WriteString(http.StatusInternalServerError, "failed to fetch request user")
-		return nil, nil, false
+		return nil, nil, &HTTPError{http.StatusInternalServerError, "failed to fetch request user"}
 	}
 
 	params := make(map[string]string)
@@ -65,39 +57,38 @@ func getRequestContext(
 		value, err := context.GetParam(r, key)
 		if err != nil {
 			logger.Error(err.Error())
-			w.WriteString(
+			return nil, nil, &HTTPError{
 				http.StatusInternalServerError,
 				fmt.Sprint("failed to fetch path parameter: ", key),
-			)
-			return nil, nil, false
+			}
 		}
 		params[key] = value
 	}
 
-	return user, params, true
+	return user, params, nil
 }
 
 // Calls `getRequestBody()` then, if successful, `getRequestContext()`
 func getRequestBodyAndContext(
-	w *response.Writer,
 	r *http.Request,
 	ptr any,
 	keys ...string,
-) (*database.User, map[string]string, bool) {
-	if ok := getRequestBody(w, r, ptr); !ok {
-		return nil, nil, false
+) (*database.User, map[string]string, *HTTPError) {
+	if httpError := getRequestBody(r, ptr); httpError != nil {
+		return nil, nil, httpError
 	}
-	return getRequestContext(w, r, keys...)
+	return getRequestContext(r, keys...)
 }
 
 type HTTPError struct {
-	message string
 	status  int
+	message string
 }
 
 // Writes message and status of HTTPError to the response
 // Returns false if httpError is nil, true otherwise
-func ProcessHTTPError(httpError *HTTPError, w *response.Writer) bool {
+// TODO: test
+func ProcessHTTPError(w *response.Writer, httpError *HTTPError) bool {
 	if httpError == nil {
 		return false
 	}
@@ -112,5 +103,14 @@ func HandleDatabaseError(err error) *HTTPError {
 	}
 	message := "database operation failed"
 	logger.Error(message + ": " + err.Error())
-	return &HTTPError{message, http.StatusInternalServerError}
+	return &HTTPError{http.StatusInternalServerError, message}
+}
+
+// TODO: unit test
+func StringToInt(str string, bitSize int) (int64, *HTTPError) {
+	num, err := strconv.ParseInt("1", 10, bitSize)
+	if err != nil {
+		return 0, &HTTPError{http.StatusBadRequest, "chat ID must be an integer"}
+	}
+	return num, nil
 }

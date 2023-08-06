@@ -27,7 +27,7 @@ type CreateUserInput struct {
 
 func CreateUser(w *response.Writer, r *http.Request, conn database.Connection) {
 	var input CreateUserInput
-	if ok := getRequestBody(w, r, &input); !ok {
+	if ProcessHTTPError(w, getRequestBody(r, &input)) {
 		return
 	}
 
@@ -52,15 +52,15 @@ func CreateUser(w *response.Writer, r *http.Request, conn database.Connection) {
 	}
 	newUser, err = conn.SetUser(newUser)
 	if err != nil {
-		ProcessHTTPError(HandleDatabaseError(err), w)
+		ProcessHTTPError(w, HandleDatabaseError(err))
 		return
 	}
 	w.WriteJSON(http.StatusCreated, stripFields(newUser))
 }
 
 func GetUserByName(w *response.Writer, r *http.Request, conn database.Connection) {
-	_, params, ok := getRequestContext(w, r, USERNAME_KEY)
-	if !ok {
+	_, params, httpError := getRequestContext(r, USERNAME_KEY)
+	if ProcessHTTPError(w, httpError) {
 		return
 	}
 

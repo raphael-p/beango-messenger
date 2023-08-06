@@ -29,7 +29,7 @@ func CreateSession(w *response.Writer, r *http.Request, conn database.Connection
 	}
 
 	var input SessionInput
-	if ok := getRequestBody(w, r, &input); !ok {
+	if ProcessHTTPError(w, getRequestBody(r, &input)) {
 		return
 	}
 
