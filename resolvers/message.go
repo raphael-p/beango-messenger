@@ -1,7 +1,6 @@
 package resolvers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/raphael-p/beango/database"
@@ -9,7 +8,7 @@ import (
 )
 
 // TODO: unit testing
-func GetChatMessagesDatabase(userID, chatID int64, conn database.Connection) ([]database.MessageExtended, *HTTPError) {
+func ChatMessagesDatabase(userID, chatID int64, conn database.Connection) ([]database.MessageExtended, *HTTPError) {
 	chat, err := conn.GetChat(chatID, userID)
 	if err != nil {
 		return nil, HandleDatabaseError(err)
@@ -26,12 +25,11 @@ func GetChatMessagesDatabase(userID, chatID int64, conn database.Connection) ([]
 }
 
 func GetChatMessages(w *response.Writer, r *http.Request, conn database.Connection) {
-	user, params, httpError := GetRequestContext(r, CHAT_ID_KEY)
+	user, params, httpError := getRequestContext(r, CHAT_ID_KEY)
 	if ProcessHTTPError(w, httpError) {
 		return
 	}
-	messages, httpError := GetChatMessagesDatabase(user.ID, params.ChatID, conn)
-	fmt.Printf("messages: %v/n", messages)
+	messages, httpError := ChatMessagesDatabase(user.ID, params.ChatID, conn)
 	if ProcessHTTPError(w, httpError) {
 		return
 	}

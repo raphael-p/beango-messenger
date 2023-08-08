@@ -25,41 +25,48 @@ type CreateUserInput struct {
 	Password    string                     `json:"password"`
 }
 
+func CreateUserDatabase(username, displayName, password string, conn database.Connection) (*UserOutput, *HTTPError) {
+	if user, _ := conn.GetUserByUsername(username); user != nil {
+		return nil, &HTTPError{http.StatusConflict, "username is taken"}
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+	if err != nil {
+		return nil, &HTTPError{http.StatusBadRequest, err.Error()}
+	}
+
+	newUser := &database.User{
+		Username:    username,
+		DisplayName: displayName,
+		Key:         hash,
+	}
+	if newUser.DisplayName == "" {
+		newUser.DisplayName = username
+	}
+	newUser, err = conn.SetUser(newUser)
+	if err != nil {
+		return nil, HandleDatabaseError(err)
+	}
+
+	return stripFields(newUser), nil
+}
+
 func CreateUser(w *response.Writer, r *http.Request, conn database.Connection) {
 	var input CreateUserInput
 	if ProcessHTTPError(w, getRequestBody(r, &input)) {
 		return
 	}
 
-	if user, _ := conn.GetUserByUsername(input.Username); user != nil {
-		w.WriteString(http.StatusConflict, "username is taken")
+	newUser, httpError := CreateUserDatabase(input.Username, input.DisplayName.Value, input.Password, conn)
+	if ProcessHTTPError(w, httpError) {
 		return
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.MinCost)
-	if err != nil {
-		w.WriteString(http.StatusBadRequest, err.Error())
-		return
-	}
-
-	newUser := &database.User{
-		Username:    input.Username,
-		DisplayName: input.DisplayName.Value,
-		Key:         hash,
-	}
-	if newUser.DisplayName == "" {
-		newUser.DisplayName = input.Username
-	}
-	newUser, err = conn.SetUser(newUser)
-	if err != nil {
-		ProcessHTTPError(w, HandleDatabaseError(err))
-		return
-	}
-	w.WriteJSON(http.StatusCreated, stripFields(newUser))
+	w.WriteJSON(http.StatusCreated, newUser)
 }
 
 func GetUserByName(w *response.Writer, r *http.Request, conn database.Connection) {
-	_, params, httpError := GetRequestContext(r, USERNAME_KEY)
+	_, params, httpError := getRequestContext(r, USERNAME_KEY)
 	if ProcessHTTPError(w, httpError) {
 		return
 	}

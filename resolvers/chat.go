@@ -28,24 +28,17 @@ func generateChatName(userID int64, users []database.User) string {
 }
 
 // TODO: test
-func GetChatsData(w *response.Writer, r *http.Request, conn database.Connection) ([]GetChatsOutput, bool) {
-	user, _, httpError := GetRequestContext(r)
-	if ProcessHTTPError(w, httpError) {
-		return nil, false
-	}
-
-	chats, err := conn.GetChatsByUserID(user.ID)
+func ChatsDatabase(userID int64, conn database.Connection) ([]GetChatsOutput, *HTTPError) {
+	chats, err := conn.GetChatsByUserID(userID)
 	if err != nil {
-		ProcessHTTPError(w, HandleDatabaseError(err))
-		return nil, false
+		return nil, HandleDatabaseError(err)
 	}
 
 	chatOutput := make([]GetChatsOutput, len(chats))
 	for i, chat := range chats {
 		users, err := conn.GetUsersByChatID(chat.ID)
 		if err != nil {
-			ProcessHTTPError(w, HandleDatabaseError(err))
-			return nil, false
+			return nil, HandleDatabaseError(err)
 		}
 
 		outputUsers := make([]UserOutput, len(users))
@@ -54,17 +47,23 @@ func GetChatsData(w *response.Writer, r *http.Request, conn database.Connection)
 		}
 
 		if chat.Name == "" {
-			chat.Name = generateChatName(user.ID, users)
+			chat.Name = generateChatName(userID, users)
 		}
 		chatOutput[i] = GetChatsOutput{chat, outputUsers}
 	}
-	return chatOutput, true
+	return chatOutput, nil
 }
 
 func GetChats(w *response.Writer, r *http.Request, conn database.Connection) {
-	if chats, ok := GetChatsData(w, r, conn); ok {
-		w.WriteJSON(http.StatusOK, chats)
+	user, _, httpError := getRequestContext(r)
+	if ProcessHTTPError(w, httpError) {
+		return
 	}
+	chats, httpError := ChatsDatabase(user.ID, conn)
+	if ProcessHTTPError(w, httpError) {
+		return
+	}
+	w.WriteJSON(http.StatusOK, chats)
 }
 
 type CreateChatInput struct {

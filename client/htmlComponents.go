@@ -1,6 +1,6 @@
 package client
 
-var loginPage string = `<span class="logo"><span>> Beango Messenger </span></span>
+var LoginPage string = `<span class="logo"><span>> Beango Messenger </span></span>
 	<div id="login-form">
 		<form hx-ext='json-enc'>
 			<div class="form-row">
@@ -19,7 +19,7 @@ var loginPage string = `<span class="logo"><span>> Beango Messenger </span></spa
 		</form>
 	</div>`
 
-var homePage string = `<div id="chat-container">
+var HomePage string = `<div id="chat-container">
 	<div id="sidebar">
 		<span class="heading-1">Chats</span>
 		<div id=chat-list>

@@ -45,7 +45,7 @@ func getRequestBody(r *http.Request, ptr any) *HTTPError {
 
 // Gets all requested context attached to a request.
 // Writes an HTTP error response + logs on failure.
-func GetRequestContext(r *http.Request, paramKeys ...string) (*database.User, *RouteParams, *HTTPError) {
+func getRequestContext(r *http.Request, paramKeys ...string) (*database.User, *RouteParams, *HTTPError) {
 	user, err := context.GetUser(r)
 	if err != nil {
 		logger.Error(err.Error())
@@ -69,7 +69,7 @@ func getRequestBodyAndContext(
 	if httpError := getRequestBody(r, ptr); httpError != nil {
 		return nil, nil, httpError
 	}
-	return GetRequestContext(r, paramKeys...)
+	return getRequestContext(r, paramKeys...)
 }
 
 type HTTPError struct {

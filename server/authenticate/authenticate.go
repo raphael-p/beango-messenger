@@ -12,6 +12,7 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
+// TODO: return httpError instead of writing to response
 func FromCookie(w *response.Writer, req *http.Request, conn database.Connection) (*http.Request, bool) {
 	userID, err := getUserIDFromCookie(w, req, conn)
 	if err != nil {
