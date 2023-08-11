@@ -1,11 +1,11 @@
-package client
+package resolvers
 
 import (
 	"html/template"
 	"net/http"
 
+	"github.com/raphael-p/beango/client"
 	"github.com/raphael-p/beango/database"
-	"github.com/raphael-p/beango/resolvers"
 	"github.com/raphael-p/beango/utils/context"
 	"github.com/raphael-p/beango/utils/cookies"
 	"github.com/raphael-p/beango/utils/logger"
@@ -22,18 +22,18 @@ func Login(w *response.Writer, r *http.Request, conn database.Connection) {
 	}
 
 	if r.Header.Get("HX-Request") == "true" {
-		w.Write([]byte("<div id='content' hx-swap-oob='innerHTML'>" + loginPage + "</div>"))
+		w.Write([]byte("<div id='content' hx-swap-oob='innerHTML'>" + client.LoginPage + "</div>"))
 		return
 	}
 
-	skeleton, err := getSkeleton()
+	skeleton, err := client.GetSkeleton()
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteString(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	data := map[string]any{"content": template.HTML(loginPage)}
+	data := map[string]any{"content": template.HTML(client.LoginPage)}
 	if err := skeleton.Execute(w, data); err != nil {
 		logger.Error(err.Error())
 		w.WriteString(http.StatusInternalServerError, err.Error())
@@ -44,16 +44,21 @@ func SubmitLogin(w *response.Writer, r *http.Request, conn database.Connection) 
 	action, _ := context.GetParam(r, "action")
 
 	if action == "signup" {
-		resolvers.CreateUser(w, cloneRequest(r), conn)
-		if w.Status != http.StatusCreated {
-			displayError(w, string(w.Body))
+		var input CreateUserInput
+		if ProcessHTTPError(w, getRequestBody(r, &input)) {
+			return
+		}
+
+		_, httpError := createUserDatabase(input.Username, input.DisplayName.Value, input.Password, conn)
+		if ProcessHTTPError(w, httpError) {
+			client.DisplayError(w, httpError.message)
 			return
 		}
 	}
 
-	resolvers.CreateSession(w, r, conn)
+	CreateSession(w, r, conn)
 	if w.Status != http.StatusNoContent {
-		displayError(w, string(w.Body))
+		client.DisplayError(w, string(w.Body))
 		return
 	}
 

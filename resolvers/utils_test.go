@@ -113,7 +113,7 @@ func TestGetRequestContext(t *testing.T) {
 		contextParams := map[string]string{key1: "value1", key2: "value2"}
 		req, _ := setup(xUser, contextParams)
 
-		user, routeParams, err := GetRequestContext(req, key1, key2)
+		user, routeParams, err := getRequestContext(req, key1, key2)
 		assert.IsNil(t, err)
 		assert.DeepEquals(t, user, xUser)
 		assert.DeepEquals(t, routeParams, &RouteParams{"value1", 0, "value2"})
@@ -125,7 +125,7 @@ func TestGetRequestContext(t *testing.T) {
 		contextParams := map[string]string{key: "value1", extraKey: "value2"}
 		req, _ := setup(mocks.MakeUser(), contextParams)
 
-		_, params, err := GetRequestContext(req, key)
+		_, params, err := getRequestContext(req, key)
 		assert.IsNil(t, err)
 		assert.DeepEquals(t, params, &RouteParams{"value1", 0, ""})
 	})
@@ -133,7 +133,7 @@ func TestGetRequestContext(t *testing.T) {
 	t.Run("NoParamKeys", func(t *testing.T) {
 		req, _ := setup(mocks.MakeUser(), map[string]string{"param1": "value1"})
 
-		_, params, err := GetRequestContext(req)
+		_, params, err := getRequestContext(req)
 		assert.IsNil(t, err)
 		assert.DeepEquals(t, params, &RouteParams{})
 	})
@@ -143,7 +143,7 @@ func TestGetRequestContext(t *testing.T) {
 		key2 := CHAT_NAME_KEY
 		req, buf := setup(mocks.MakeUser(), map[string]string{key1: "some-value"})
 
-		_, _, err := GetRequestContext(req, key1, key2)
+		_, _, err := getRequestContext(req, key1, key2)
 		assert.IsNotNil(t, err)
 		assert.Equals(t, err.status, http.StatusInternalServerError)
 		assert.Equals(t, err.message, fmt.Sprint("failed to fetch path parameter: ", key2))
@@ -153,7 +153,7 @@ func TestGetRequestContext(t *testing.T) {
 	t.Run("NoUser", func(t *testing.T) {
 		req, buf := setup(nil, nil)
 
-		_, _, err := GetRequestContext(req)
+		_, _, err := getRequestContext(req)
 		assert.IsNotNil(t, err)
 		assert.Equals(t, err.status, http.StatusInternalServerError)
 		assert.Equals(t, err.message, "failed to fetch request user")

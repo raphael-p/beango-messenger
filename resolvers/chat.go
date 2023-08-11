@@ -28,7 +28,7 @@ func generateChatName(userID int64, users []database.User) string {
 }
 
 // TODO: test
-func ChatsDatabase(userID int64, conn database.Connection) ([]GetChatsOutput, *HTTPError) {
+func chatsDatabase(userID int64, conn database.Connection) ([]GetChatsOutput, *HTTPError) {
 	chats, err := conn.GetChatsByUserID(userID)
 	if err != nil {
 		return nil, HandleDatabaseError(err)
@@ -59,7 +59,7 @@ func GetChats(w *response.Writer, r *http.Request, conn database.Connection) {
 	if ProcessHTTPError(w, httpError) {
 		return
 	}
-	chats, httpError := ChatsDatabase(user.ID, conn)
+	chats, httpError := chatsDatabase(user.ID, conn)
 	if ProcessHTTPError(w, httpError) {
 		return
 	}

@@ -4,7 +4,7 @@ import "html/template"
 
 var skeleton *template.Template
 
-func getSkeleton() (*template.Template, error) {
+func GetSkeleton() (*template.Template, error) {
 	if skeleton != nil {
 		return skeleton, nil
 	}

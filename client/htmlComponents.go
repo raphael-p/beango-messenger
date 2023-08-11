@@ -33,7 +33,7 @@ var HomePage string = `<div id="chat-container">
 	<div id="chat"></div>
 	</div>`
 
-var messagePane string = `<span class="heading-1">{{ .Title }}</span>
+var MessagePane string = `<span class="heading-1">{{ .Title }}</span>
 	<table>
 		{{ range .Messages }}
 		{{ block "message-list" .}}

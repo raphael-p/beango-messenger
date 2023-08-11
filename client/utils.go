@@ -10,7 +10,7 @@ import (
 )
 
 // TODO: unit test
-func displayError(w *response.Writer, message string) {
+func DisplayError(w *response.Writer, message string) {
 	if message == "" {
 		return
 	}

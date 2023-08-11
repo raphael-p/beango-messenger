@@ -8,7 +8,7 @@ import (
 )
 
 // TODO: unit testing
-func ChatMessagesDatabase(userID, chatID int64, conn database.Connection) ([]database.MessageExtended, *HTTPError) {
+func chatMessagesDatabase(userID, chatID int64, conn database.Connection) ([]database.MessageExtended, *HTTPError) {
 	chat, err := conn.GetChat(chatID, userID)
 	if err != nil {
 		return nil, HandleDatabaseError(err)
@@ -29,7 +29,7 @@ func GetChatMessages(w *response.Writer, r *http.Request, conn database.Connecti
 	if ProcessHTTPError(w, httpError) {
 		return
 	}
-	messages, httpError := ChatMessagesDatabase(user.ID, params.ChatID, conn)
+	messages, httpError := chatMessagesDatabase(user.ID, params.ChatID, conn)
 	if ProcessHTTPError(w, httpError) {
 		return
 	}

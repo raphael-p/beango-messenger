@@ -1,12 +1,12 @@
-package client
+package resolvers
 
 import (
 	"bytes"
 	"html/template"
 	"net/http"
 
+	"github.com/raphael-p/beango/client"
 	"github.com/raphael-p/beango/database"
-	"github.com/raphael-p/beango/resolvers"
 	"github.com/raphael-p/beango/utils/context"
 	"github.com/raphael-p/beango/utils/logger"
 	"github.com/raphael-p/beango/utils/response"
@@ -18,11 +18,15 @@ import (
 // e.g. MessageExtended becomes Message & Message becomes MessageDatabase
 
 func Home(w *response.Writer, r *http.Request, conn database.Connection) {
-	chats, ok := resolvers.GetChatsData(w, r, conn)
-	if !ok {
+	user, _, httpError := getRequestContext(r)
+	if ProcessHTTPError(w, httpError) {
 		return
 	}
-	home, err := template.New("home").Parse(homePage)
+	chats, httpError := chatsDatabase(user.ID, conn)
+	if ProcessHTTPError(w, httpError) {
+		return
+	}
+	home, err := template.New("home").Parse(client.HomePage)
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteString(http.StatusInternalServerError, err.Error())
@@ -37,7 +41,7 @@ func Home(w *response.Writer, r *http.Request, conn database.Connection) {
 		return
 	}
 
-	skeleton, err := getSkeleton()
+	skeleton, err := client.GetSkeleton()
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteString(http.StatusInternalServerError, err.Error())
@@ -52,21 +56,21 @@ func Home(w *response.Writer, r *http.Request, conn database.Connection) {
 }
 
 func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
-	user, params, httpError := resolvers.GetRequestContext(r, resolvers.CHAT_ID_KEY)
-	if resolvers.ProcessHTTPError(w, httpError) {
+	user, params, httpError := getRequestContext(r, CHAT_ID_KEY)
+	if ProcessHTTPError(w, httpError) {
 		return
 	}
-	messages, httpError := resolvers.GetChatMessagesDatabase(user.ID, params.ChatID, conn)
-	if resolvers.ProcessHTTPError(w, httpError) {
+	messages, httpError := chatMessagesDatabase(user.ID, params.ChatID, conn)
+	if ProcessHTTPError(w, httpError) {
 		return
 	}
-	chatName, err := context.GetParam(r, resolvers.CHAT_NAME_KEY)
+	chatName, err := context.GetParam(r, CHAT_NAME_KEY)
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteString(http.StatusInternalServerError, err.Error())
 		return
 	}
-	homeChat, err := template.New("home").Parse(messagePane)
+	homeChat, err := template.New("home").Parse(client.MessagePane)
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteString(http.StatusInternalServerError, err.Error())

@@ -25,7 +25,7 @@ type CreateUserInput struct {
 	Password    string                     `json:"password"`
 }
 
-func CreateUserDatabase(username, displayName, password string, conn database.Connection) (*UserOutput, *HTTPError) {
+func createUserDatabase(username, displayName, password string, conn database.Connection) (*UserOutput, *HTTPError) {
 	if user, _ := conn.GetUserByUsername(username); user != nil {
 		return nil, &HTTPError{http.StatusConflict, "username is taken"}
 	}
@@ -57,7 +57,7 @@ func CreateUser(w *response.Writer, r *http.Request, conn database.Connection) {
 		return
 	}
 
-	newUser, httpError := CreateUserDatabase(input.Username, input.DisplayName.Value, input.Password, conn)
+	newUser, httpError := createUserDatabase(input.Username, input.DisplayName.Value, input.Password, conn)
 	if ProcessHTTPError(w, httpError) {
 		return
 	}

@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/raphael-p/beango/client"
 	"github.com/raphael-p/beango/config"
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/resolvers"
@@ -43,10 +42,10 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 	}
 
 	// frontend endpoints
-	router.GET("/login", client.Login)
-	router.POST("/login/:action", client.SubmitLogin)
-	router.GET("/home", client.Home, routing.AuthRedirect)
-	router.GET("/home/chat/:"+resolvers.CHAT_ID_KEY+"/:"+resolvers.CHAT_NAME_KEY, client.OpenChat, routing.AuthRedirect)
+	router.GET("/login", resolvers.Login)
+	router.POST("/login/:action", resolvers.SubmitLogin)
+	router.GET("/home", resolvers.Home, routing.AuthRedirect)
+	router.GET("/home/chat/:"+resolvers.CHAT_ID_KEY+"/:"+resolvers.CHAT_NAME_KEY, resolvers.OpenChat, routing.AuthRedirect)
 	router.GET("/favicon.ico", func(w *response.Writer, r *http.Request, conn database.Connection) {
 		http.FileServer(http.Dir(path)).ServeHTTP(w, r)
 	})
