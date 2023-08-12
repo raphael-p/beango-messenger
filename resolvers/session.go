@@ -19,10 +19,43 @@ type SessionInput struct {
 	Password string `json:"password"`
 }
 
+// TODO unit test
+func checkCredentials(username, password string, conn database.Connection) (int64, *HTTPError) {
+	unauthorised := func() *HTTPError {
+		return &HTTPError{http.StatusUnauthorized, "login credentials are incorrect"}
+	}
+	user, _ := conn.GetUserByUsername(username)
+	if user == nil {
+		return 0, unauthorised()
+	}
+	err := bcrypt.CompareHashAndPassword(user.Key, []byte(password))
+	if err != nil {
+		return 0, unauthorised()
+	}
+
+	return user.ID, nil
+}
+
+// TODO unit test
+func setSession(w *response.Writer, userID int64, conn database.Connection) *HTTPError {
+	expiryDuration := time.Duration(config.Values.Session.SecondsUntilExpiry) * time.Second
+	expiryDate := time.Now().UTC().Add(expiryDuration)
+	sessionID := uuid.NewString()
+	if err := cookies.Set(w, cookies.SESSION, sessionID, expiryDate); err != nil {
+		logger.Error(fmt.Sprint("failed to create session cookie: ", err))
+		return &HTTPError{http.StatusInternalServerError, "failed to create session cookie"}
+	}
+	conn.SetSession(database.Session{
+		ID:         sessionID,
+		UserID:     userID,
+		ExpiryDate: expiryDate,
+	})
+	return nil
+}
+
 func CreateSession(w *response.Writer, r *http.Request, conn database.Connection) {
 	if sessionID, err := cookies.Get(r, cookies.SESSION); err == nil {
-		_, ok := conn.CheckSession(sessionID)
-		if ok {
+		if _, ok := conn.CheckSession(sessionID); ok {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
@@ -33,33 +66,14 @@ func CreateSession(w *response.Writer, r *http.Request, conn database.Connection
 		return
 	}
 
-	unauthorised := func() {
-		w.WriteString(http.StatusUnauthorized, "login credentials are incorrect")
-	}
-	user, _ := conn.GetUserByUsername(input.Username)
-	if user == nil {
-		unauthorised()
-		return
-	}
-	err := bcrypt.CompareHashAndPassword(user.Key, []byte(input.Password))
-	if err != nil {
-		unauthorised()
+	userID, httpError := checkCredentials(input.Username, input.Password, conn)
+	if ProcessHTTPError(w, httpError) {
 		return
 	}
 
-	sessionID := uuid.NewString()
-	expiryDuration := time.Duration(config.Values.Session.SecondsUntilExpiry) * time.Second
-	expiryDate := time.Now().UTC().Add(expiryDuration)
-	err = cookies.Set(w, cookies.SESSION, sessionID, expiryDate)
-	if err != nil {
-		logger.Error(fmt.Sprint("failed to create session cookie: ", err))
-		w.WriteString(http.StatusInternalServerError, "failed to create session cookie")
+	if ProcessHTTPError(w, setSession(w, userID, conn)) {
 		return
 	}
-	conn.SetSession(database.Session{
-		ID:         sessionID,
-		UserID:     user.ID,
-		ExpiryDate: expiryDate,
-	})
+
 	w.WriteHeader(http.StatusNoContent)
 }

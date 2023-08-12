@@ -56,11 +56,21 @@ func SubmitLogin(w *response.Writer, r *http.Request, conn database.Connection) 
 		}
 	}
 
-	CreateSession(w, r, conn)
-	if w.Status != http.StatusNoContent {
+	var input SessionInput
+	if ProcessHTTPError(w, getRequestBody(r, &input)) {
+		return
+	}
+
+	userID, httpError := checkCredentials(input.Username, input.Password, conn)
+	if ProcessHTTPError(w, httpError) {
 		client.DisplayError(w, string(w.Body))
 		return
 	}
 
+	if ProcessHTTPError(w, setSession(w, userID, conn)) {
+		return
+	}
+
 	w.Header().Set("HX-Redirect", "/home")
+	w.WriteHeader(http.StatusNoContent)
 }
