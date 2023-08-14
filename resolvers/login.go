@@ -42,23 +42,17 @@ func Login(w *response.Writer, r *http.Request, conn database.Connection) {
 
 func SubmitLogin(w *response.Writer, r *http.Request, conn database.Connection) {
 	action, _ := context.GetParam(r, "action")
+	var input CreateUserInput
+	if ProcessHTTPError(w, getRequestBody(r, &input)) {
+		return
+	}
 
 	if action == "signup" {
-		var input CreateUserInput
-		if ProcessHTTPError(w, getRequestBody(r, &input)) {
-			return
-		}
-
 		_, httpError := createUserDatabase(input.Username, input.DisplayName.Value, input.Password, conn)
 		if ProcessHTTPError(w, httpError) {
 			client.DisplayError(w, httpError.Message)
 			return
 		}
-	}
-
-	var input SessionInput
-	if ProcessHTTPError(w, getRequestBody(r, &input)) {
-		return
 	}
 
 	userID, httpError := checkCredentials(input.Username, input.Password, conn)

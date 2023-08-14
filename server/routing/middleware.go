@@ -4,18 +4,21 @@ import (
 	"net/http"
 
 	"github.com/raphael-p/beango/database"
+	"github.com/raphael-p/beango/resolvers"
 	"github.com/raphael-p/beango/server/authenticate"
 	"github.com/raphael-p/beango/utils/response"
 )
 
 type Middleware func(w *response.Writer, r *http.Request, conn database.Connection) (*http.Request, bool)
 
-var Auth Middleware = authenticate.FromCookie
+var Auth Middleware = func(w *response.Writer, newRequest *http.Request, conn database.Connection) (*http.Request, bool) {
+	newRequest, httpError := authenticate.Auth(w, newRequest, conn)
+	return newRequest, !resolvers.ProcessHTTPError(w, httpError)
+}
 
 var AuthRedirect Middleware = func(w *response.Writer, r *http.Request, conn database.Connection) (*http.Request, bool) {
-	if newRequest, ok := authenticate.FromCookie(w, r, conn); ok {
-		return newRequest, true
-	} else {
+	newRequest, httpError := authenticate.Auth(w, r, conn)
+	if httpError != nil {
 		if r.Header.Get("HX-Request") == "true" {
 			w.Header().Set("HX-Redirect", "/home")
 		} else {
@@ -24,4 +27,6 @@ var AuthRedirect Middleware = func(w *response.Writer, r *http.Request, conn dat
 		}
 		return newRequest, false
 	}
+
+	return newRequest, true
 }

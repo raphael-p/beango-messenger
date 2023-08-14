@@ -12,31 +12,35 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-// TODO: return httpError instead of writing to response
-func FromCookie(w *response.Writer, req *http.Request, conn database.Connection) (*http.Request, bool) {
-	userID, err := getUserIDFromCookie(w, req, conn)
+func Auth(w *response.Writer, r *http.Request, conn database.Connection) (*http.Request, *resolvers.HTTPError) {
+	userID, err := getUserIDFromCookie(w, r, conn)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return req, false
+		return r, &resolvers.HTTPError{Status: http.StatusUnauthorized}
 	}
 
 	user, err := conn.GetUser(userID)
 	if user == nil {
+		var httpError *resolvers.HTTPError
 		if err != nil {
-			resolvers.ProcessHTTPError(w, resolvers.HandleDatabaseError(err))
+			httpError = resolvers.HandleDatabaseError(err)
 		} else {
-			w.WriteString(http.StatusNotFound, "user not found during authentication")
+			httpError = &resolvers.HTTPError{
+				Status:  http.StatusNotFound,
+				Message: "user not found during authentication",
+			}
 		}
-		return req, false
+		return r, httpError
 	}
 
-	req, err = context.SetUser(req, user)
+	r, err = context.SetUser(r, user)
 	if err != nil {
 		logger.Error(err.Error())
-		w.WriteString(http.StatusInternalServerError, err.Error())
-		return req, false
+		return r, &resolvers.HTTPError{
+			Status:  http.StatusInternalServerError,
+			Message: err.Error(),
+		}
 	}
-	return req, true
+	return r, nil
 }
 
 func getUserIDFromCookie(w *response.Writer, req *http.Request, conn database.Connection) (int64, error) {

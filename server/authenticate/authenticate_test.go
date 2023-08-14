@@ -32,12 +32,12 @@ func setup(name, sessionID string) (*response.Writer, *http.Request, database.Co
 
 var sessionCookie string = string(cookies.SESSION)
 
-func TestFromCookie(t *testing.T) {
+func TestAuth(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		w, req, conn := setup(sessionCookie, "")
 
-		req, ok := FromCookie(w, req, conn)
-		assert.Equals(t, ok, true)
+		req, httpError := Auth(w, req, conn)
+		assert.IsNil(t, httpError)
 		user, err := context.GetUser(req)
 		assert.IsNil(t, err)
 		assert.DeepEquals(t, user, mocks.Admin)
@@ -47,10 +47,11 @@ func TestFromCookie(t *testing.T) {
 		w, req, conn := setup("raisin", "")
 		reqCopy := *req
 
-		req, ok := FromCookie(w, req, conn)
-		assert.Equals(t, ok, false)
+		req, httpError := Auth(w, req, conn)
+		assert.IsNotNil(t, httpError)
 		assert.DeepEquals(t, *req, reqCopy)
-		assert.Equals(t, w.Status, http.StatusUnauthorized)
+		assert.Equals(t, httpError.Status, http.StatusUnauthorized)
+		assert.Equals(t, httpError.Message, "")
 	})
 
 	t.Run("UserNotFound", func(t *testing.T) {
@@ -60,26 +61,26 @@ func TestFromCookie(t *testing.T) {
 		reqCopy := *req
 		conn.SetSession(sesh)
 
-		req, ok := FromCookie(w, req, conn)
-		assert.Equals(t, ok, false)
+		req, httpError := Auth(w, req, conn)
+		assert.IsNotNil(t, httpError)
 		assert.DeepEquals(t, *req, reqCopy)
-		assert.Equals(t, w.Status, http.StatusNotFound)
-		assert.Equals(t, string(w.Body), "user not found during authentication")
+		assert.Equals(t, httpError.Status, http.StatusNotFound)
+		assert.Equals(t, httpError.Message, "user not found during authentication")
 	})
 
 	t.Run("CannotSetNewContext", func(t *testing.T) {
 		w, req, conn := setup(sessionCookie, "")
 		buf := logger.MockFileLogger(t)
 
-		req, ok := FromCookie(w, req, conn) // adds user to request context
+		req, httpError := Auth(w, req, conn) // adds user to request context
 		reqCopy := *req
-		assert.Equals(t, ok, true)
-		req, ok = FromCookie(w, req, conn) // request context already has user
-		assert.Equals(t, ok, false)
+		assert.IsNil(t, httpError)
+		req, httpError = Auth(w, req, conn) // request context already has user
+		assert.IsNotNil(t, httpError)
 		assert.DeepEquals(t, *req, reqCopy)
-		assert.Equals(t, w.Status, http.StatusInternalServerError)
+		assert.Equals(t, httpError.Status, http.StatusInternalServerError)
 		xMessage := "user already in request context"
-		assert.Equals(t, string(w.Body), xMessage)
+		assert.Equals(t, httpError.Message, xMessage)
 		assert.Contains(t, buf.String(), fmt.Sprint("[ERROR] ", xMessage))
 	})
 }
