@@ -68,33 +68,33 @@ func TestBindRequestJSON(t *testing.T) {
 		var testStruct TestStruct
 		err := setup(`{"name": "John", "Age": 30}`, testStruct)
 		assert.IsNotNil(t, err)
-		assert.Equals(t, err.status, http.StatusBadRequest)
+		assert.Equals(t, err.Status, http.StatusBadRequest)
 		xMessage := "expected `ptr` to be a pointer to a struct, got resolvers.TestStruct"
-		assert.Equals(t, err.message, xMessage)
+		assert.Equals(t, err.Message, xMessage)
 	})
 
 	t.Run("NonStructBind", func(t *testing.T) {
 		var testStruct *string
 		err := setup(`{"name": "John", "Age": 30}`, testStruct)
 		assert.IsNotNil(t, err)
-		assert.Equals(t, err.status, http.StatusBadRequest)
-		assert.Equals(t, err.message, "expected `ptr` to be a pointer to a struct, got *string")
+		assert.Equals(t, err.Status, http.StatusBadRequest)
+		assert.Equals(t, err.Message, "expected `ptr` to be a pointer to a struct, got *string")
 	})
 
 	t.Run("MissingRequiredField", func(t *testing.T) {
 		var testStruct TestStruct
 		err := setup(`{"name": "John"}`, &testStruct)
 		assert.IsNotNil(t, err)
-		assert.Equals(t, err.status, http.StatusBadRequest)
-		assert.Equals(t, err.message, "missing required field(s): [age]")
+		assert.Equals(t, err.Status, http.StatusBadRequest)
+		assert.Equals(t, err.Message, "missing required field(s): [age]")
 	})
 
 	t.Run("MalformedJSON", func(t *testing.T) {
 		var testStruct TestStruct
 		err := setup(`{"name": "John",}`, &testStruct)
 		assert.IsNotNil(t, err)
-		assert.Equals(t, err.status, http.StatusBadRequest)
-		assert.Contains(t, err.message, "malformed request body: ")
+		assert.Equals(t, err.Status, http.StatusBadRequest)
+		assert.Contains(t, err.Message, "malformed request body: ")
 	})
 }
 
@@ -145,8 +145,8 @@ func TestGetRequestContext(t *testing.T) {
 
 		_, _, err := getRequestContext(req, key1, key2)
 		assert.IsNotNil(t, err)
-		assert.Equals(t, err.status, http.StatusInternalServerError)
-		assert.Equals(t, err.message, fmt.Sprint("failed to fetch path parameter: ", key2))
+		assert.Equals(t, err.Status, http.StatusInternalServerError)
+		assert.Equals(t, err.Message, fmt.Sprint("failed to fetch path parameter: ", key2))
 		assert.Contains(t, buf.String(), "[ERROR]", fmt.Sprintf("path parameter %s not found", key2))
 	})
 
@@ -155,8 +155,8 @@ func TestGetRequestContext(t *testing.T) {
 
 		_, _, err := getRequestContext(req)
 		assert.IsNotNil(t, err)
-		assert.Equals(t, err.status, http.StatusInternalServerError)
-		assert.Equals(t, err.message, "failed to fetch request user")
+		assert.Equals(t, err.Status, http.StatusInternalServerError)
+		assert.Equals(t, err.Message, "failed to fetch request user")
 		assert.Contains(t, buf.String(), "[ERROR]", "user not found in request context")
 	})
 }
@@ -167,8 +167,8 @@ func TestHandleDatabaseError(t *testing.T) {
 		errPrefix := "database operation failed"
 		errMessage := "this did not go well"
 		httpError := HandleDatabaseError(errors.New(errMessage))
-		assert.Equals(t, httpError.status, http.StatusInternalServerError)
-		assert.Equals(t, httpError.message, errPrefix)
+		assert.Equals(t, httpError.Status, http.StatusInternalServerError)
+		assert.Equals(t, httpError.Message, errPrefix)
 		assert.Contains(t, buf.String(), "[ERROR] "+errPrefix+": "+errMessage)
 	})
 }

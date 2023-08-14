@@ -73,8 +73,8 @@ func getRequestBodyAndContext(
 }
 
 type HTTPError struct {
-	status  int
-	message string
+	Status  int
+	Message string
 }
 
 // Writes message and status of HTTPError to the response
@@ -84,7 +84,7 @@ func ProcessHTTPError(w *response.Writer, httpError *HTTPError) bool {
 	if httpError == nil {
 		return false
 	}
-	w.WriteString(httpError.status, httpError.message)
+	w.WriteString(httpError.Status, httpError.Message)
 	return true
 }
 

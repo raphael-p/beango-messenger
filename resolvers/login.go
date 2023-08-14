@@ -51,7 +51,7 @@ func SubmitLogin(w *response.Writer, r *http.Request, conn database.Connection) 
 
 		_, httpError := createUserDatabase(input.Username, input.DisplayName.Value, input.Password, conn)
 		if ProcessHTTPError(w, httpError) {
-			client.DisplayError(w, httpError.message)
+			client.DisplayError(w, httpError.Message)
 			return
 		}
 	}
