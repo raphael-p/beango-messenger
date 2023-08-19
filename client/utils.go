@@ -7,7 +7,6 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-// TODO: unit test
 func DisplayError(w *response.Writer, message string) {
 	if message == "" {
 		return
