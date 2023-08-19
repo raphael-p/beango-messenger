@@ -71,10 +71,13 @@ type CreateChatInput struct {
 }
 
 func CreatePrivateChat(w *response.Writer, r *http.Request, conn database.Connection) {
-	// TODO: throw error if attempting to create self chat, create new chat type for that, called "note"
 	var input CreateChatInput
 	user, _, httpError := getRequestBodyAndContext(r, &input)
 	if ProcessHTTPError(w, httpError) {
+		return
+	}
+	if user.ID == input.UserID {
+		w.WriteString(http.StatusBadRequest, "cannot create a chat with yourself")
 		return
 	}
 	userIDs := [2]int64{user.ID, input.UserID}

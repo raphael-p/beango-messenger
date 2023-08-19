@@ -10,7 +10,9 @@ import (
 
 type chatType string
 
+// TODO: add support for NOTE and GROUP CHAT
 const (
+	NOTE         chatType = "note"
 	PRIVATE_CHAT chatType = "private"
 	GROUP_CHAT   chatType = "group"
 )

@@ -44,6 +44,7 @@ func Setup(conn *MongoConnection) {
 			SELECT 1 FROM pg_type WHERE typname = 'chattype'
 		) THEN
 			CREATE TYPE CHATTYPE AS ENUM (
+				'note',
 				'private',
 				'group'
 			);

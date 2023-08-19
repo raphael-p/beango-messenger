@@ -86,7 +86,10 @@ func TestCreatePrivateChat(t *testing.T) {
 	t.Run("SelfChat", func(t *testing.T) {
 		conn := mocks.MakeMockConnection()
 		w, req := setup(t, mocks.Admin.ID)
-		createAndCheck(w, req, conn)
+
+		CreatePrivateChat(w, req, conn)
+		assert.Equals(t, w.Status, http.StatusBadRequest)
+		assert.Equals(t, string(w.Body), "cannot create a chat with yourself")
 	})
 
 	t.Run("UserDoesNotExist", func(t *testing.T) {
