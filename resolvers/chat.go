@@ -3,19 +3,18 @@ package resolvers
 import (
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/utils/response"
 )
 
-// TODO: Use ChatExtended struct?
 type GetChatsOutput struct {
 	database.Chat
 	Users []UserOutput `json:"users"`
 }
 
-// TODO: test
 func generateChatName(userID int64, users []database.User) string {
 	var displayNames []string
 	for _, user := range users {
@@ -23,11 +22,11 @@ func generateChatName(userID int64, users []database.User) string {
 			displayNames = append(displayNames, user.DisplayName)
 		}
 	}
+	sort.Strings(displayNames)
 
 	return strings.Join(displayNames, ", ")
 }
 
-// TODO: test
 func chatsDatabase(userID int64, conn database.Connection) ([]GetChatsOutput, *HTTPError) {
 	chats, err := conn.GetChatsByUserID(userID)
 	if err != nil {

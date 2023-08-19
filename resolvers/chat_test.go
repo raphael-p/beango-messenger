@@ -12,7 +12,61 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-func TestGetChats(t *testing.T) {
+func TestGenerateChatName(t *testing.T) {
+	t.Run("Normal", func(t *testing.T) {
+		users := []database.User{
+			{ID: 98, DisplayName: "TARIK"},
+			{ID: 11, DisplayName: "GEORGE"},
+			{ID: 12, DisplayName: "AMY"},
+		}
+		chatName := generateChatName(98, users)
+		assert.Equals(t, chatName, "AMY, GEORGE")
+	})
+
+	t.Run("OrderAgnostic", func(t *testing.T) {
+		users := []database.User{
+			{ID: 32, DisplayName: "TARIK"},
+			{ID: 5, DisplayName: "GEORGE"},
+			{ID: 34, DisplayName: "AMY"},
+		}
+		chatName := generateChatName(5, users)
+		assert.Equals(t, chatName, "AMY, TARIK")
+
+		users = []database.User{
+			{ID: 34, DisplayName: "AMY"},
+			{ID: 5, DisplayName: "GEORGE"},
+			{ID: 32, DisplayName: "TARIK"},
+		}
+		chatName = generateChatName(5, users)
+		assert.Equals(t, chatName, "AMY, TARIK")
+	})
+
+	t.Run("NoOtherUsers", func(t *testing.T) {
+		users := []database.User{
+			{ID: 5, DisplayName: "GEORGE"},
+		}
+		chatName := generateChatName(5, users)
+		assert.Equals(t, chatName, "")
+	})
+
+	t.Run("EmptyUserSlice", func(t *testing.T) {
+		users := []database.User{}
+		chatName := generateChatName(5, users)
+		assert.Equals(t, chatName, "")
+	})
+
+	t.Run("UserNotInSlice", func(t *testing.T) {
+		users := []database.User{
+			{ID: 98, DisplayName: "TARIK"},
+			{ID: 11, DisplayName: "GEORGE"},
+			{ID: 12, DisplayName: "AMY"},
+		}
+		chatName := generateChatName(1, users)
+		assert.Equals(t, chatName, "AMY, GEORGE, TARIK")
+	})
+}
+
+func TestChatsDatabase(t *testing.T) {
 	adminID := mocks.ADMIN_ID
 	testCases := []struct {
 		name          string
@@ -39,20 +93,33 @@ func TestGetChats(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			conn := mocks.MakeMockConnection()
-			w, req := mockRequest("")
-			req = setContext(t, req, mocks.Admin, nil)
 			for _, pair := range testCase.chatUsers {
 				conn.SetChat(mocks.MakePrivateChat(), pair...)
 			}
 
-			GetChats(w, req, conn)
-			assert.Equals(t, w.Status, http.StatusOK)
-			chats := &[]database.Chat{}
-			err := json.Unmarshal(w.Body, chats)
-			assert.IsNil(t, err)
-			assert.HasLength(t, *chats, testCase.expectedCount)
+			chats, httpError := chatsDatabase(adminID, conn)
+			assert.IsNil(t, httpError)
+			assert.HasLength(t, chats, testCase.expectedCount)
 		})
 	}
+}
+
+func TestGetChats(t *testing.T) {
+	adminID := mocks.ADMIN_ID
+
+	t.Run("Normal", func(t *testing.T) {
+		conn := mocks.MakeMockConnection()
+		w, req := mockRequest("")
+		req = setContext(t, req, mocks.Admin, nil)
+		conn.SetChat(mocks.MakePrivateChat(), adminID, 13)
+
+		GetChats(w, req, conn)
+		assert.Equals(t, w.Status, http.StatusOK)
+		chats := &[]database.Chat{}
+		err := json.Unmarshal(w.Body, chats)
+		assert.IsNil(t, err)
+		assert.HasLength(t, *chats, 1)
+	})
 }
 
 func TestCreatePrivateChat(t *testing.T) {
