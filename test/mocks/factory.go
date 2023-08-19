@@ -53,8 +53,8 @@ func MakePrivateChat() *database.Chat {
 	}
 }
 
-func MakeMessage(userID, chatID int64) *database.Message {
-	return &database.Message{
+func MakeMessage(userID, chatID int64) *database.MessageDatabase {
+	return &database.MessageDatabase{
 		UserID:  userID,
 		ChatID:  chatID,
 		Content: "Lorem Ipsum Dolor",

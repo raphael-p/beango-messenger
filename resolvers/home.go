@@ -12,11 +12,6 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-// TODO: big refactor
-// need to separate resolver into service + resolver
-// move some client stuff to resolver
-// e.g. MessageExtended becomes Message & Message becomes MessageDatabase
-
 func Home(w *response.Writer, r *http.Request, conn database.Connection) {
 	user, _, httpError := getRequestContext(r)
 	if ProcessHTTPError(w, httpError) {

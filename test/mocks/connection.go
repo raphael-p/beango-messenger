@@ -18,7 +18,7 @@ type MockConnection struct {
 	users     map[int64]database.User
 	chats     map[int64]database.Chat
 	chatUsers map[int64]database.ChatUser
-	messages  map[int64]database.Message
+	messages  map[int64]database.MessageDatabase
 	sessions  map[string]database.Session
 }
 
@@ -27,7 +27,7 @@ func MakeMockConnection() *MockConnection {
 		make(map[int64]database.User),
 		make(map[int64]database.Chat),
 		make(map[int64]database.ChatUser),
-		make(map[int64]database.Message),
+		make(map[int64]database.MessageDatabase),
 		make(map[string]database.Session),
 	}
 	populateMockDB(conn)
@@ -115,11 +115,11 @@ func (mc *MockConnection) SetChat(chat *database.Chat, userIDs ...int64) (*datab
 	return chat, nil
 }
 
-func (mc *MockConnection) GetMessagesByChatID(chatID int64) ([]database.MessageExtended, error) {
-	messages := []database.MessageExtended{}
+func (mc *MockConnection) GetMessagesByChatID(chatID int64) ([]database.Message, error) {
+	messages := []database.Message{}
 	for _, m := range mc.messages {
 		if m.ChatID == chatID {
-			messages = append(messages, database.MessageExtended{
+			messages = append(messages, database.Message{
 				ID:            m.ID,
 				UserID:        m.UserID,
 				ChatID:        m.ChatID,
@@ -132,7 +132,7 @@ func (mc *MockConnection) GetMessagesByChatID(chatID int64) ([]database.MessageE
 	return messages, nil
 }
 
-func (mc *MockConnection) SetMessage(message *database.Message) (*database.Message, error) {
+func (mc *MockConnection) SetMessage(message *database.MessageDatabase) (*database.MessageDatabase, error) {
 	message.ID = int64(len(mc.messages) + 1)
 	mc.messages[message.ID] = *message
 	return message, nil

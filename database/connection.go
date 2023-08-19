@@ -11,7 +11,7 @@ import (
 var Users = make(map[int64]User)
 var Chats = make(map[int64]Chat)
 var ChatUsers = make(map[int64]ChatUser)
-var Messages = make(map[int64]Message)
+var Messages = make(map[int64]MessageDatabase)
 var Sessions = make(map[string]Session)
 
 type Connection interface {
@@ -19,8 +19,8 @@ type Connection interface {
 	GetChatsByUserID(userID int64) ([]Chat, error)
 	CheckPrivateChatExists(userIDs [2]int64) (bool, error)
 	SetChat(chat *Chat, userIDs ...int64) (*Chat, error)
-	GetMessagesByChatID(chatID int64) ([]MessageExtended, error)
-	SetMessage(message *Message) (*Message, error)
+	GetMessagesByChatID(chatID int64) ([]Message, error)
+	SetMessage(message *MessageDatabase) (*MessageDatabase, error)
 	GetUser(id int64) (*User, error)
 	GetUserByUsername(username string) (*User, error)
 	GetUsersByChatID(chatID int64) ([]User, error)

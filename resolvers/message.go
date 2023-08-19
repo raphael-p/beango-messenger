@@ -8,7 +8,7 @@ import (
 )
 
 // TODO: unit testing
-func chatMessagesDatabase(userID, chatID int64, conn database.Connection) ([]database.MessageExtended, *HTTPError) {
+func chatMessagesDatabase(userID, chatID int64, conn database.Connection) ([]database.Message, *HTTPError) {
 	chat, err := conn.GetChat(chatID, userID)
 	if err != nil {
 		return nil, HandleDatabaseError(err)
@@ -52,7 +52,7 @@ func SendMessage(w *response.Writer, r *http.Request, conn database.Connection) 
 		return
 	}
 
-	newMessage := &database.Message{
+	newMessage := &database.MessageDatabase{
 		UserID:  user.ID,
 		ChatID:  params.ChatID,
 		Content: input.Content,

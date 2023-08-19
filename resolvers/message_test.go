@@ -40,7 +40,7 @@ func TestGetChatMessages(t *testing.T) {
 
 		GetChatMessages(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusOK)
-		messages := &[]database.Message{}
+		messages := &[]database.MessageDatabase{}
 		err := json.Unmarshal(w.Body, messages)
 		assert.IsNil(t, err)
 		assert.HasLength(t, *messages, 2)
@@ -80,7 +80,7 @@ func TestSendMessage(t *testing.T) {
 
 		SendMessage(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusAccepted)
-		message := &database.Message{}
+		message := &database.MessageDatabase{}
 		err := json.Unmarshal(w.Body, message)
 		assert.IsNil(t, err)
 		assert.Equals(t, message.UserID, mocks.Admin.ID)

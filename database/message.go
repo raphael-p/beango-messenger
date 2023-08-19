@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type Message struct {
+type MessageDatabase struct {
 	ID            int64     `json:"id"`
 	UserID        int64     `json:"userID"`
 	ChatID        int64     `json:"chatID"`
@@ -13,7 +13,7 @@ type Message struct {
 	LastUpdatedAt time.Time `json:"lastUpdatedAt"`
 }
 
-type MessageExtended struct {
+type Message struct {
 	ID              int64     `json:"id"`
 	UserID          int64     `json:"userID"`
 	ChatID          int64     `json:"chatID"`
@@ -23,8 +23,8 @@ type MessageExtended struct {
 	UserDisplayName string    `json:"userDisplayName"`
 }
 
-func (conn *MongoConnection) GetMessagesByChatID(chatID int64) ([]MessageExtended, error) {
-	return scanRows[MessageExtended](conn.Query(
+func (conn *MongoConnection) GetMessagesByChatID(chatID int64) ([]Message, error) {
+	return scanRows[Message](conn.Query(
 		`SELECT
 			m.*,
 			u.display_name as user_display_name
@@ -36,8 +36,8 @@ func (conn *MongoConnection) GetMessagesByChatID(chatID int64) ([]MessageExtende
 	))
 }
 
-func (conn *MongoConnection) SetMessage(message *Message) (*Message, error) {
-	return scanRow[Message](conn.QueryRow(
+func (conn *MongoConnection) SetMessage(message *MessageDatabase) (*MessageDatabase, error) {
+	return scanRow[MessageDatabase](conn.QueryRow(
 		`INSERT INTO message (user_id, chat_id, content)
 		VALUES ($1, $2, $3)
 		RETURNING *`,
