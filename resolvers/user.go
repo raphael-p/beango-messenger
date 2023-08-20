@@ -28,12 +28,12 @@ type CreateUserInput struct {
 
 func createUserDatabase(username, displayName, password string, conn database.Connection) (*UserOutput, *resolverutils.HTTPError) {
 	if user, _ := conn.GetUserByUsername(username); user != nil {
-		return nil, &resolverutils.HTTPError{http.StatusConflict, "username is taken"}
+		return nil, &resolverutils.HTTPError{Status: http.StatusConflict, Message: "username is taken"}
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {
-		return nil, &resolverutils.HTTPError{http.StatusBadRequest, err.Error()}
+		return nil, &resolverutils.HTTPError{Status: http.StatusBadRequest, Message: err.Error()}
 	}
 
 	newUser := &database.User{

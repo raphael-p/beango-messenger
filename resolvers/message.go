@@ -14,7 +14,10 @@ func chatMessagesDatabase(userID, chatID int64, conn database.Connection) ([]dat
 		return nil, resolverutils.HandleDatabaseError(err)
 	}
 	if chat == nil {
-		return nil, &resolverutils.HTTPError{http.StatusNotFound, "chat not found"}
+		return nil, &resolverutils.HTTPError{
+			Status:  http.StatusNotFound,
+			Message: "chat not found",
+		}
 	}
 
 	messages, err := conn.GetMessagesByChatID(chatID)

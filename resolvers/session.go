@@ -20,10 +20,12 @@ type SessionInput struct {
 	Password string `json:"password"`
 }
 
-// TODO unit test
 func checkCredentials(username, password string, conn database.Connection) (int64, *resolverutils.HTTPError) {
 	unauthorised := func() *resolverutils.HTTPError {
-		return &resolverutils.HTTPError{http.StatusUnauthorized, "login credentials are incorrect"}
+		return &resolverutils.HTTPError{
+			Status:  http.StatusUnauthorized,
+			Message: "login credentials are incorrect",
+		}
 	}
 	user, _ := conn.GetUserByUsername(username)
 	if user == nil {
@@ -37,20 +39,26 @@ func checkCredentials(username, password string, conn database.Connection) (int6
 	return user.ID, nil
 }
 
-// TODO unit test
-func setSession(w *response.Writer, userID int64, conn database.Connection) *resolverutils.HTTPError {
+func makeSession(userID int64) *database.Session {
+	sessionID := uuid.NewString()
 	expiryDuration := time.Duration(config.Values.Session.SecondsUntilExpiry) * time.Second
 	expiryDate := time.Now().UTC().Add(expiryDuration)
-	sessionID := uuid.NewString()
-	if err := cookies.Set(w, cookies.SESSION, sessionID, expiryDate); err != nil {
-		logger.Error(fmt.Sprint("failed to create session cookie: ", err))
-		return &resolverutils.HTTPError{http.StatusInternalServerError, "failed to create session cookie"}
-	}
-	conn.SetSession(database.Session{
+	return &database.Session{
 		ID:         sessionID,
 		UserID:     userID,
 		ExpiryDate: expiryDate,
-	})
+	}
+}
+
+func setSession(w *response.Writer, session *database.Session, conn database.Connection) *resolverutils.HTTPError {
+	if err := cookies.Set(w, cookies.SESSION, session.ID, session.ExpiryDate); err != nil {
+		logger.Error(fmt.Sprint("failed to create session cookie: ", err))
+		return &resolverutils.HTTPError{
+			Status:  http.StatusInternalServerError,
+			Message: "failed to create session cookie",
+		}
+	}
+	conn.SetSession(*session)
 	return nil
 }
 
@@ -72,7 +80,7 @@ func CreateSession(w *response.Writer, r *http.Request, conn database.Connection
 		return
 	}
 
-	if resolverutils.ProcessHTTPError(w, setSession(w, userID, conn)) {
+	if resolverutils.ProcessHTTPError(w, setSession(w, makeSession(userID), conn)) {
 		return
 	}
 

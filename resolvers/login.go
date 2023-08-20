@@ -62,7 +62,7 @@ func SubmitLogin(w *response.Writer, r *http.Request, conn database.Connection) 
 		return
 	}
 
-	if resolverutils.ProcessHTTPError(w, setSession(w, userID, conn)) {
+	if resolverutils.ProcessHTTPError(w, setSession(w, makeSession(userID), conn)) {
 		return
 	}
 
