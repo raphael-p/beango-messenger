@@ -12,62 +12,82 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-func setupMessageTests(t *testing.T, body string, userID1, userID2 int64) (
-	*response.Writer,
-	*http.Request,
+func setupMessageTests(userID1, userID2 int64) (
 	database.Connection,
 	int64,
 ) {
-	w, req := mockRequest(body)
 	conn := mocks.MakeMockConnection()
 	var chatID int64
 	if userID1 != 0 && userID2 != 0 {
 		chat, _ := conn.SetChat(mocks.MakePrivateChat(), userID1, userID2)
 		chatID = chat.ID
 	}
+	return conn, chatID
+}
+
+func makeMessageRequest(t *testing.T, body string, chatID int64) (*response.Writer, *http.Request) {
+	w, req := mockRequest(body)
 	param := map[string]string{CHAT_ID_KEY: fmt.Sprint(chatID)}
 	req = setContext(t, req, mocks.Admin, param)
-	return w, req, conn, chatID
+	return w, req
+}
+
+func TestChatMessagesDatabase(t *testing.T) {
+	t.Run("Normal", func(t *testing.T) {
+		userID1 := mocks.ADMIN_ID
+		var userID2 int64 = 12
+		conn, chatID := setupMessageTests(userID1, userID2)
+		conn.SetMessage(mocks.MakeMessage(userID1, chatID))
+		conn.SetMessage(mocks.MakeMessage(userID2, chatID))
+
+		messages, httpError := chatMessagesDatabase(mocks.ADMIN_ID, chatID, conn)
+		assert.IsNil(t, httpError)
+		assert.HasLength(t, messages, 2)
+	})
+
+	t.Run("NoMessages", func(t *testing.T) {
+		conn, chatID := setupMessageTests(mocks.ADMIN_ID, 11)
+
+		messages, httpError := chatMessagesDatabase(mocks.ADMIN_ID, chatID, conn)
+		assert.IsNil(t, httpError)
+		assert.HasLength(t, messages, 0)
+	})
+
+	t.Run("NoChat", func(t *testing.T) {
+		conn, chatID := setupMessageTests(0, 0)
+
+		messages, httpError := chatMessagesDatabase(mocks.ADMIN_ID, chatID, conn)
+		assert.IsNil(t, messages)
+		assert.IsNotNil(t, httpError)
+		assert.Equals(t, httpError.Status, http.StatusNotFound)
+		assert.Equals(t, httpError.Message, "chat not found")
+	})
+
+	t.Run("NotChatUser", func(t *testing.T) {
+		conn, chatID := setupMessageTests(11, 12)
+		messages, httpError := chatMessagesDatabase(mocks.ADMIN_ID, chatID, conn)
+		assert.IsNil(t, messages)
+		assert.IsNotNil(t, httpError)
+		assert.Equals(t, httpError.Status, http.StatusNotFound)
+		assert.Equals(t, httpError.Message, "chat not found")
+	})
 }
 
 func TestGetChatMessages(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		userID1 := mocks.ADMIN_ID
 		var userID2 int64 = 12
-		w, req, conn, chatID := setupMessageTests(t, "", userID1, userID2)
+
+		conn, chatID := setupMessageTests(userID1, userID2)
+		w, req := makeMessageRequest(t, "", chatID)
 		conn.SetMessage(mocks.MakeMessage(userID1, chatID))
-		conn.SetMessage(mocks.MakeMessage(userID2, chatID))
 
 		GetChatMessages(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusOK)
 		messages := &[]database.MessageDatabase{}
 		err := json.Unmarshal(w.Body, messages)
 		assert.IsNil(t, err)
-		assert.HasLength(t, *messages, 2)
-	})
-
-	t.Run("NoMessages", func(t *testing.T) {
-		w, req, conn, _ := setupMessageTests(t, "", mocks.ADMIN_ID, 11)
-
-		GetChatMessages(w, req, conn)
-		assert.Equals(t, w.Status, http.StatusOK)
-		assert.Equals(t, string(w.Body), "[]")
-	})
-
-	t.Run("NoChat", func(t *testing.T) {
-		w, req, conn, _ := setupMessageTests(t, "", 0, 0)
-
-		GetChatMessages(w, req, conn)
-		assert.Equals(t, w.Status, http.StatusNotFound)
-		assert.Equals(t, string(w.Body), "chat not found")
-	})
-
-	t.Run("NotChatUser", func(t *testing.T) {
-		w, req, conn, _ := setupMessageTests(t, "", 11, 12)
-
-		GetChatMessages(w, req, conn)
-		assert.Equals(t, w.Status, http.StatusNotFound)
-		assert.Equals(t, string(w.Body), "chat not found")
+		assert.HasLength(t, *messages, 1)
 	})
 }
 
@@ -76,7 +96,8 @@ func TestSendMessage(t *testing.T) {
 	body := fmt.Sprintf(`{"content": "%s"}`, content)
 
 	t.Run("Normal", func(t *testing.T) {
-		w, req, conn, chatID := setupMessageTests(t, body, mocks.ADMIN_ID, 12)
+		conn, chatID := setupMessageTests(mocks.ADMIN_ID, 12)
+		w, req := makeMessageRequest(t, body, chatID)
 
 		SendMessage(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusAccepted)
@@ -89,7 +110,8 @@ func TestSendMessage(t *testing.T) {
 	})
 
 	t.Run("NoChat", func(t *testing.T) {
-		w, req, conn, _ := setupMessageTests(t, body, 0, 0)
+		conn, chatID := setupMessageTests(0, 0)
+		w, req := makeMessageRequest(t, body, chatID)
 
 		SendMessage(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusNotFound)
@@ -97,7 +119,8 @@ func TestSendMessage(t *testing.T) {
 	})
 
 	t.Run("NotChatUser", func(t *testing.T) {
-		w, req, conn, _ := setupMessageTests(t, body, 11, 12)
+		conn, chatID := setupMessageTests(11, 12)
+		w, req := makeMessageRequest(t, body, chatID)
 
 		SendMessage(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusNotFound)

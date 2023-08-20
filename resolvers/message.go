@@ -7,7 +7,6 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-// TODO: unit testing
 func chatMessagesDatabase(userID, chatID int64, conn database.Connection) ([]database.Message, *HTTPError) {
 	chat, err := conn.GetChat(chatID, userID)
 	if err != nil {
