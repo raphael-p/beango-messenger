@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/raphael-p/beango/database"
+	"github.com/raphael-p/beango/resolvers/resolverutils"
 	"github.com/raphael-p/beango/test/assert"
 	"github.com/raphael-p/beango/test/mocks"
 	"github.com/raphael-p/beango/utils/response"
@@ -109,8 +110,8 @@ func TestGetChats(t *testing.T) {
 
 	t.Run("Normal", func(t *testing.T) {
 		conn := mocks.MakeMockConnection()
-		w, req := mockRequest("")
-		req = setContext(t, req, mocks.Admin, nil)
+		w, req := resolverutils.MockRequest("")
+		req = resolverutils.SetContext(t, req, mocks.Admin, nil)
 		conn.SetChat(mocks.MakePrivateChat(), adminID, 13)
 
 		GetChats(w, req, conn)
@@ -124,8 +125,8 @@ func TestGetChats(t *testing.T) {
 
 func TestCreatePrivateChat(t *testing.T) {
 	setup := func(t *testing.T, userID int64) (*response.Writer, *http.Request) {
-		w, req := mockRequest(fmt.Sprintf(`{"userID": %d}`, userID))
-		req = setContext(t, req, mocks.Admin, nil)
+		w, req := resolverutils.MockRequest(fmt.Sprintf(`{"userID": %d}`, userID))
+		req = resolverutils.SetContext(t, req, mocks.Admin, nil)
 		return w, req
 	}
 

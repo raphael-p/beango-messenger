@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/raphael-p/beango/database"
-	"github.com/raphael-p/beango/resolvers"
+	"github.com/raphael-p/beango/resolvers/resolverutils"
 	"github.com/raphael-p/beango/server/authenticate"
 	"github.com/raphael-p/beango/utils/response"
 )
@@ -13,7 +13,7 @@ type Middleware func(w *response.Writer, r *http.Request, conn database.Connecti
 
 var Auth Middleware = func(w *response.Writer, newRequest *http.Request, conn database.Connection) (*http.Request, bool) {
 	newRequest, httpError := authenticate.Auth(w, newRequest, conn)
-	return newRequest, !resolvers.ProcessHTTPError(w, httpError)
+	return newRequest, !resolverutils.ProcessHTTPError(w, httpError)
 }
 
 var AuthRedirect Middleware = func(w *response.Writer, r *http.Request, conn database.Connection) (*http.Request, bool) {

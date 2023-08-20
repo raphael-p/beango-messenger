@@ -4,32 +4,33 @@ import (
 	"net/http"
 
 	"github.com/raphael-p/beango/database"
+	"github.com/raphael-p/beango/resolvers/resolverutils"
 	"github.com/raphael-p/beango/utils/response"
 )
 
-func chatMessagesDatabase(userID, chatID int64, conn database.Connection) ([]database.Message, *HTTPError) {
+func chatMessagesDatabase(userID, chatID int64, conn database.Connection) ([]database.Message, *resolverutils.HTTPError) {
 	chat, err := conn.GetChat(chatID, userID)
 	if err != nil {
-		return nil, HandleDatabaseError(err)
+		return nil, resolverutils.HandleDatabaseError(err)
 	}
 	if chat == nil {
-		return nil, &HTTPError{http.StatusNotFound, "chat not found"}
+		return nil, &resolverutils.HTTPError{http.StatusNotFound, "chat not found"}
 	}
 
 	messages, err := conn.GetMessagesByChatID(chatID)
 	if err != nil {
-		return nil, HandleDatabaseError(err)
+		return nil, resolverutils.HandleDatabaseError(err)
 	}
 	return messages, nil
 }
 
 func GetChatMessages(w *response.Writer, r *http.Request, conn database.Connection) {
-	user, params, httpError := getRequestContext(r, CHAT_ID_KEY)
-	if ProcessHTTPError(w, httpError) {
+	user, params, httpError := resolverutils.GetRequestContext(r, resolverutils.CHAT_ID_KEY)
+	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
 	messages, httpError := chatMessagesDatabase(user.ID, params.ChatID, conn)
-	if ProcessHTTPError(w, httpError) {
+	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
 	w.WriteJSON(http.StatusOK, messages)
@@ -41,8 +42,8 @@ type SendMessageInput struct {
 
 func SendMessage(w *response.Writer, r *http.Request, conn database.Connection) {
 	var input SendMessageInput
-	user, params, httpError := getRequestBodyAndContext(r, &input, CHAT_ID_KEY)
-	if ProcessHTTPError(w, httpError) {
+	user, params, httpError := resolverutils.GetRequestBodyAndContext(r, &input, resolverutils.CHAT_ID_KEY)
+	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
 
@@ -58,7 +59,7 @@ func SendMessage(w *response.Writer, r *http.Request, conn database.Connection) 
 	}
 	newMessage, err := conn.SetMessage(newMessage)
 	if err != nil {
-		ProcessHTTPError(w, HandleDatabaseError(err))
+		resolverutils.ProcessHTTPError(w, resolverutils.HandleDatabaseError(err))
 		return
 	}
 	w.WriteJSON(http.StatusAccepted, newMessage)

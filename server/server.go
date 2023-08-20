@@ -9,6 +9,7 @@ import (
 	"github.com/raphael-p/beango/config"
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/resolvers"
+	"github.com/raphael-p/beango/resolvers/resolverutils"
 	"github.com/raphael-p/beango/server/routing"
 	"github.com/raphael-p/beango/utils/logger"
 	"github.com/raphael-p/beango/utils/path"
@@ -41,11 +42,16 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 		panic("failed to get path at runtime")
 	}
 
+	// aliases for readability
+	chatID := resolverutils.CHAT_ID_KEY
+	chatName := resolverutils.CHAT_NAME_KEY
+	username := resolverutils.USERNAME_KEY
+
 	// frontend endpoints
 	router.GET("/login", resolvers.Login)
 	router.POST("/login/:action", resolvers.SubmitLogin)
 	router.GET("/home", resolvers.Home, routing.AuthRedirect)
-	router.GET("/home/chat/:"+resolvers.CHAT_ID_KEY+"/:"+resolvers.CHAT_NAME_KEY, resolvers.OpenChat, routing.AuthRedirect)
+	router.GET("/home/chat/:"+chatID+"/:"+chatName, resolvers.OpenChat, routing.AuthRedirect)
 	router.GET("/favicon.ico", func(w *response.Writer, r *http.Request, conn database.Connection) {
 		http.FileServer(http.Dir(path)).ServeHTTP(w, r)
 	})
@@ -56,11 +62,11 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 	// backend endpoints
 	router.POST("/session", resolvers.CreateSession)
 	router.POST("/user", resolvers.CreateUser)
-	router.GET("/user/:"+resolvers.USERNAME_KEY, resolvers.GetUserByName, routing.Auth)
+	router.GET("/user/:"+username, resolvers.GetUserByName, routing.Auth)
 	router.GET("/chats", resolvers.GetChats, routing.Auth)
 	router.POST("/chat", resolvers.CreatePrivateChat, routing.Auth)
-	router.GET("/chat/:"+resolvers.CHAT_ID_KEY+"/messages", resolvers.GetChatMessages, routing.Auth)
-	router.POST("/chat/:"+resolvers.CHAT_ID_KEY+"/message", resolvers.SendMessage, routing.Auth)
+	router.GET("/chat/:"+chatID+"/messages", resolvers.GetChatMessages, routing.Auth)
+	router.POST("/chat/:"+chatID+"/message", resolvers.SendMessage, routing.Auth)
 
 	return conn, router, ok
 }

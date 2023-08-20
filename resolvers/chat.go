@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/raphael-p/beango/database"
+	"github.com/raphael-p/beango/resolvers/resolverutils"
 	"github.com/raphael-p/beango/utils/response"
 )
 
@@ -27,17 +28,17 @@ func generateChatName(userID int64, users []database.User) string {
 	return strings.Join(displayNames, ", ")
 }
 
-func chatsDatabase(userID int64, conn database.Connection) ([]GetChatsOutput, *HTTPError) {
+func chatsDatabase(userID int64, conn database.Connection) ([]GetChatsOutput, *resolverutils.HTTPError) {
 	chats, err := conn.GetChatsByUserID(userID)
 	if err != nil {
-		return nil, HandleDatabaseError(err)
+		return nil, resolverutils.HandleDatabaseError(err)
 	}
 
 	chatOutput := make([]GetChatsOutput, len(chats))
 	for i, chat := range chats {
 		users, err := conn.GetUsersByChatID(chat.ID)
 		if err != nil {
-			return nil, HandleDatabaseError(err)
+			return nil, resolverutils.HandleDatabaseError(err)
 		}
 
 		outputUsers := make([]UserOutput, len(users))
@@ -54,12 +55,12 @@ func chatsDatabase(userID int64, conn database.Connection) ([]GetChatsOutput, *H
 }
 
 func GetChats(w *response.Writer, r *http.Request, conn database.Connection) {
-	user, _, httpError := getRequestContext(r)
-	if ProcessHTTPError(w, httpError) {
+	user, _, httpError := resolverutils.GetRequestContext(r)
+	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
 	chats, httpError := chatsDatabase(user.ID, conn)
-	if ProcessHTTPError(w, httpError) {
+	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
 	w.WriteJSON(http.StatusOK, chats)
@@ -71,8 +72,8 @@ type CreateChatInput struct {
 
 func CreatePrivateChat(w *response.Writer, r *http.Request, conn database.Connection) {
 	var input CreateChatInput
-	user, _, httpError := getRequestBodyAndContext(r, &input)
-	if ProcessHTTPError(w, httpError) {
+	user, _, httpError := resolverutils.GetRequestBodyAndContext(r, &input)
+	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
 	if user.ID == input.UserID {
@@ -91,7 +92,7 @@ func CreatePrivateChat(w *response.Writer, r *http.Request, conn database.Connec
 	// Check if chat already exists
 	exists, err := conn.CheckPrivateChatExists(userIDs)
 	if err != nil {
-		ProcessHTTPError(w, HandleDatabaseError(err))
+		resolverutils.ProcessHTTPError(w, resolverutils.HandleDatabaseError(err))
 		return
 	}
 	if exists {
@@ -102,7 +103,7 @@ func CreatePrivateChat(w *response.Writer, r *http.Request, conn database.Connec
 	newChat := &database.Chat{Type: database.PRIVATE_CHAT}
 	newChat, err = conn.SetChat(newChat, userIDs[:]...)
 	if err != nil {
-		ProcessHTTPError(w, HandleDatabaseError(err))
+		resolverutils.ProcessHTTPError(w, resolverutils.HandleDatabaseError(err))
 		return
 	}
 	w.WriteJSON(http.StatusCreated, newChat)

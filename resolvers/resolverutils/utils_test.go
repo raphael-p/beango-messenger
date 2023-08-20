@@ -1,45 +1,17 @@
-package resolvers
+package resolverutils
 
 import (
 	"bytes"
 	"errors"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/test/assert"
 	"github.com/raphael-p/beango/test/mocks"
-	"github.com/raphael-p/beango/utils/context"
 	"github.com/raphael-p/beango/utils/logger"
-	"github.com/raphael-p/beango/utils/response"
 )
-
-func mockRequest(body string) (*response.Writer, *http.Request) {
-	req := httptest.NewRequest(http.MethodPost, "/test", bytes.NewBufferString(body))
-	req.Header.Set("Content-Type", "application/json")
-	w := response.NewWriter(httptest.NewRecorder())
-	return w, req
-}
-
-func setContext(
-	t *testing.T,
-	req *http.Request,
-	user *database.User,
-	params map[string]string,
-) *http.Request {
-	var err error = nil
-	if user != nil {
-		req, err = context.SetUser(req, user)
-		assert.IsNil(t, err)
-	}
-	for key, value := range params {
-		req, err = context.SetParam(req, key, value)
-		assert.IsNil(t, err)
-	}
-	return req
-}
 
 func TestBindRequestJSON(t *testing.T) {
 	type TestStruct struct {
@@ -48,8 +20,8 @@ func TestBindRequestJSON(t *testing.T) {
 	}
 
 	setup := func(body string, ptr any) *HTTPError {
-		_, req := mockRequest(body)
-		httpError := getRequestBody(req, ptr)
+		_, req := MockRequest(body)
+		httpError := GetRequestBody(req, ptr)
 		return httpError
 	}
 
@@ -69,7 +41,7 @@ func TestBindRequestJSON(t *testing.T) {
 		err := setup(`{"name": "John", "Age": 30}`, testStruct)
 		assert.IsNotNil(t, err)
 		assert.Equals(t, err.Status, http.StatusBadRequest)
-		xMessage := "expected `ptr` to be a pointer to a struct, got resolvers.TestStruct"
+		xMessage := "expected `ptr` to be a pointer to a struct, got resolverutils.TestStruct"
 		assert.Equals(t, err.Message, xMessage)
 	})
 
@@ -100,8 +72,8 @@ func TestBindRequestJSON(t *testing.T) {
 
 func TestGetRequestContext(t *testing.T) {
 	setup := func(user *database.User, params map[string]string) (*http.Request, *bytes.Buffer) {
-		_, req := mockRequest("")
-		req = setContext(t, req, user, params)
+		_, req := MockRequest("")
+		req = SetContext(t, req, user, params)
 		buf := logger.MockFileLogger(t)
 		return req, buf
 	}
@@ -113,7 +85,7 @@ func TestGetRequestContext(t *testing.T) {
 		contextParams := map[string]string{key1: "value1", key2: "value2"}
 		req, _ := setup(xUser, contextParams)
 
-		user, routeParams, err := getRequestContext(req, key1, key2)
+		user, routeParams, err := GetRequestContext(req, key1, key2)
 		assert.IsNil(t, err)
 		assert.DeepEquals(t, user, xUser)
 		assert.DeepEquals(t, routeParams, &RouteParams{"value1", 0, "value2"})
@@ -125,7 +97,7 @@ func TestGetRequestContext(t *testing.T) {
 		contextParams := map[string]string{key: "value1", extraKey: "value2"}
 		req, _ := setup(mocks.MakeUser(), contextParams)
 
-		_, params, err := getRequestContext(req, key)
+		_, params, err := GetRequestContext(req, key)
 		assert.IsNil(t, err)
 		assert.DeepEquals(t, params, &RouteParams{"value1", 0, ""})
 	})
@@ -133,7 +105,7 @@ func TestGetRequestContext(t *testing.T) {
 	t.Run("NoParamKeys", func(t *testing.T) {
 		req, _ := setup(mocks.MakeUser(), map[string]string{"param1": "value1"})
 
-		_, params, err := getRequestContext(req)
+		_, params, err := GetRequestContext(req)
 		assert.IsNil(t, err)
 		assert.DeepEquals(t, params, &RouteParams{})
 	})
@@ -143,7 +115,7 @@ func TestGetRequestContext(t *testing.T) {
 		key2 := CHAT_NAME_KEY
 		req, buf := setup(mocks.MakeUser(), map[string]string{key1: "some-value"})
 
-		_, _, err := getRequestContext(req, key1, key2)
+		_, _, err := GetRequestContext(req, key1, key2)
 		assert.IsNotNil(t, err)
 		assert.Equals(t, err.Status, http.StatusInternalServerError)
 		assert.Equals(t, err.Message, fmt.Sprint("failed to fetch path parameter: ", key2))
@@ -153,7 +125,7 @@ func TestGetRequestContext(t *testing.T) {
 	t.Run("NoUser", func(t *testing.T) {
 		req, buf := setup(nil, nil)
 
-		_, _, err := getRequestContext(req)
+		_, _, err := GetRequestContext(req)
 		assert.IsNotNil(t, err)
 		assert.Equals(t, err.Status, http.StatusInternalServerError)
 		assert.Equals(t, err.Message, "failed to fetch request user")

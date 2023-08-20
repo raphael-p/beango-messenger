@@ -1,4 +1,4 @@
-package resolvers
+package resolverutils
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ type RouteParams struct {
 }
 
 // TODO: unit test, move some stuff that was meant to test GetRequestContext
-func MakeRouteParams(r *http.Request, paramKeys ...string) (*RouteParams, *HTTPError) {
+func extractRouteParams(r *http.Request, paramKeys ...string) (*RouteParams, *HTTPError) {
 	routeParams := new(RouteParams)
 	for _, paramKey := range paramKeys {
 		value, err := context.GetParam(r, paramKey)

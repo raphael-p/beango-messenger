@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/raphael-p/beango/database"
+	"github.com/raphael-p/beango/resolvers/resolverutils"
 	"github.com/raphael-p/beango/test/assert"
 	"github.com/raphael-p/beango/test/mocks"
 	"github.com/raphael-p/beango/utils/response"
@@ -26,9 +27,9 @@ func setupMessageTests(userID1, userID2 int64) (
 }
 
 func makeMessageRequest(t *testing.T, body string, chatID int64) (*response.Writer, *http.Request) {
-	w, req := mockRequest(body)
-	param := map[string]string{CHAT_ID_KEY: fmt.Sprint(chatID)}
-	req = setContext(t, req, mocks.Admin, param)
+	w, req := resolverutils.MockRequest(body)
+	param := map[string]string{resolverutils.CHAT_ID_KEY: fmt.Sprint(chatID)}
+	req = resolverutils.SetContext(t, req, mocks.Admin, param)
 	return w, req
 }
 

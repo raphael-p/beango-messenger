@@ -5,26 +5,26 @@ import (
 	"net/http"
 
 	"github.com/raphael-p/beango/database"
-	"github.com/raphael-p/beango/resolvers"
+	"github.com/raphael-p/beango/resolvers/resolverutils"
 	"github.com/raphael-p/beango/utils/context"
 	"github.com/raphael-p/beango/utils/cookies"
 	"github.com/raphael-p/beango/utils/logger"
 	"github.com/raphael-p/beango/utils/response"
 )
 
-func Auth(w *response.Writer, r *http.Request, conn database.Connection) (*http.Request, *resolvers.HTTPError) {
+func Auth(w *response.Writer, r *http.Request, conn database.Connection) (*http.Request, *resolverutils.HTTPError) {
 	userID, err := getUserIDFromCookie(w, r, conn)
 	if err != nil {
-		return r, &resolvers.HTTPError{Status: http.StatusUnauthorized}
+		return r, &resolverutils.HTTPError{Status: http.StatusUnauthorized}
 	}
 
 	user, err := conn.GetUser(userID)
 	if user == nil {
-		var httpError *resolvers.HTTPError
+		var httpError *resolverutils.HTTPError
 		if err != nil {
-			httpError = resolvers.HandleDatabaseError(err)
+			httpError = resolverutils.HandleDatabaseError(err)
 		} else {
-			httpError = &resolvers.HTTPError{
+			httpError = &resolverutils.HTTPError{
 				Status:  http.StatusNotFound,
 				Message: "user not found during authentication",
 			}
@@ -35,7 +35,7 @@ func Auth(w *response.Writer, r *http.Request, conn database.Connection) (*http.
 	r, err = context.SetUser(r, user)
 	if err != nil {
 		logger.Error(err.Error())
-		return r, &resolvers.HTTPError{
+		return r, &resolverutils.HTTPError{
 			Status:  http.StatusInternalServerError,
 			Message: err.Error(),
 		}

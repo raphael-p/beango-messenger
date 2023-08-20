@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/raphael-p/beango/database"
+	"github.com/raphael-p/beango/resolvers/resolverutils"
 	"github.com/raphael-p/beango/utils/response"
 	"github.com/raphael-p/beango/utils/validate"
 	"golang.org/x/crypto/bcrypt"
@@ -25,14 +26,14 @@ type CreateUserInput struct {
 	Password    string                     `json:"password"`
 }
 
-func createUserDatabase(username, displayName, password string, conn database.Connection) (*UserOutput, *HTTPError) {
+func createUserDatabase(username, displayName, password string, conn database.Connection) (*UserOutput, *resolverutils.HTTPError) {
 	if user, _ := conn.GetUserByUsername(username); user != nil {
-		return nil, &HTTPError{http.StatusConflict, "username is taken"}
+		return nil, &resolverutils.HTTPError{http.StatusConflict, "username is taken"}
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {
-		return nil, &HTTPError{http.StatusBadRequest, err.Error()}
+		return nil, &resolverutils.HTTPError{http.StatusBadRequest, err.Error()}
 	}
 
 	newUser := &database.User{
@@ -45,7 +46,7 @@ func createUserDatabase(username, displayName, password string, conn database.Co
 	}
 	newUser, err = conn.SetUser(newUser)
 	if err != nil {
-		return nil, HandleDatabaseError(err)
+		return nil, resolverutils.HandleDatabaseError(err)
 	}
 
 	return stripFields(newUser), nil
@@ -53,12 +54,12 @@ func createUserDatabase(username, displayName, password string, conn database.Co
 
 func CreateUser(w *response.Writer, r *http.Request, conn database.Connection) {
 	var input CreateUserInput
-	if ProcessHTTPError(w, getRequestBody(r, &input)) {
+	if resolverutils.ProcessHTTPError(w, resolverutils.GetRequestBody(r, &input)) {
 		return
 	}
 
 	newUser, httpError := createUserDatabase(input.Username, input.DisplayName.Value, input.Password, conn)
-	if ProcessHTTPError(w, httpError) {
+	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
 
@@ -66,8 +67,8 @@ func CreateUser(w *response.Writer, r *http.Request, conn database.Connection) {
 }
 
 func GetUserByName(w *response.Writer, r *http.Request, conn database.Connection) {
-	_, params, httpError := getRequestContext(r, USERNAME_KEY)
-	if ProcessHTTPError(w, httpError) {
+	_, params, httpError := resolverutils.GetRequestContext(r, resolverutils.USERNAME_KEY)
+	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
 

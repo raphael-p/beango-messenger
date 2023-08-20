@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/raphael-p/beango/database"
+	"github.com/raphael-p/beango/resolvers/resolverutils"
 	"github.com/raphael-p/beango/test/assert"
 	"github.com/raphael-p/beango/test/mocks"
 	"github.com/raphael-p/beango/utils/response"
@@ -32,7 +33,7 @@ func TestCreateUser(t *testing.T) {
 				pass,
 			)
 		}
-		w, req := mockRequest(body)
+		w, req := resolverutils.MockRequest(body)
 		conn := mocks.MakeMockConnection()
 		return w, req, conn
 	}
@@ -92,7 +93,7 @@ func TestGetUserByName(t *testing.T) {
 		*http.Request,
 		database.Connection,
 	) {
-		w, req := mockRequest("")
+		w, req := resolverutils.MockRequest("")
 		conn := mocks.MakeMockConnection()
 		if key == "" {
 			key = "username"
@@ -101,7 +102,7 @@ func TestGetUserByName(t *testing.T) {
 			value = mocks.Admin.Username
 		}
 		params := map[string]string{key: value}
-		req = setContext(t, req, mocks.MakeUser(), params)
+		req = resolverutils.SetContext(t, req, mocks.MakeUser(), params)
 		return w, req, conn
 	}
 

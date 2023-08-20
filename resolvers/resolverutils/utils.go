@@ -1,4 +1,4 @@
-package resolvers
+package resolverutils
 
 import (
 	"encoding/json"
@@ -16,7 +16,7 @@ import (
 
 // Decodes JSON from HTTP request body and binds it to a struct pointer.
 // Writes an HTTP error response on failure.
-func getRequestBody(r *http.Request, ptr any) *HTTPError {
+func GetRequestBody(r *http.Request, ptr any) *HTTPError {
 	value := reflect.ValueOf(ptr)
 	if value.Kind() != reflect.Ptr || value.Elem().Kind() != reflect.Struct {
 		errorResponse := fmt.Sprintf(
@@ -45,14 +45,14 @@ func getRequestBody(r *http.Request, ptr any) *HTTPError {
 
 // Gets all requested context attached to a request.
 // Writes an HTTP error response + logs on failure.
-func getRequestContext(r *http.Request, paramKeys ...string) (*database.User, *RouteParams, *HTTPError) {
+func GetRequestContext(r *http.Request, paramKeys ...string) (*database.User, *RouteParams, *HTTPError) {
 	user, err := context.GetUser(r)
 	if err != nil {
 		logger.Error(err.Error())
 		return nil, nil, &HTTPError{http.StatusInternalServerError, "failed to fetch request user"}
 	}
 
-	routeParams, httpError := MakeRouteParams(r, paramKeys...)
+	routeParams, httpError := extractRouteParams(r, paramKeys...)
 	if httpError != nil {
 		return nil, nil, httpError
 	}
@@ -60,16 +60,16 @@ func getRequestContext(r *http.Request, paramKeys ...string) (*database.User, *R
 	return user, routeParams, nil
 }
 
-// Calls `getRequestBody()` then, if successful, `getRequestContext()`
-func getRequestBodyAndContext(
+// Calls `resolverutils.GetRequestBody()` then, if successful, `resolverutils.GetRequestContext()`
+func GetRequestBodyAndContext(
 	r *http.Request,
 	ptr any,
 	paramKeys ...string,
 ) (*database.User, *RouteParams, *HTTPError) {
-	if httpError := getRequestBody(r, ptr); httpError != nil {
+	if httpError := GetRequestBody(r, ptr); httpError != nil {
 		return nil, nil, httpError
 	}
-	return getRequestContext(r, paramKeys...)
+	return GetRequestContext(r, paramKeys...)
 }
 
 type HTTPError struct {

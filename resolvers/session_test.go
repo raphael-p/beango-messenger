@@ -7,6 +7,7 @@ import (
 
 	"github.com/raphael-p/beango/config"
 	"github.com/raphael-p/beango/database"
+	"github.com/raphael-p/beango/resolvers/resolverutils"
 	"github.com/raphael-p/beango/test/assert"
 	"github.com/raphael-p/beango/test/mocks"
 	"github.com/raphael-p/beango/utils/cookies"
@@ -22,7 +23,7 @@ func TestCreateSession(t *testing.T) {
 		database.Connection,
 	) {
 		body := fmt.Sprintf(`{"Username": "%s", "Password": "%s"}`, username, password)
-		w, req := mockRequest(body)
+		w, req := resolverutils.MockRequest(body)
 		return w, req, mocks.MakeMockConnection()
 	}
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/raphael-p/beango/client"
 	"github.com/raphael-p/beango/database"
+	"github.com/raphael-p/beango/resolvers/resolverutils"
 	"github.com/raphael-p/beango/utils/context"
 	"github.com/raphael-p/beango/utils/cookies"
 	"github.com/raphael-p/beango/utils/logger"
@@ -43,25 +44,25 @@ func Login(w *response.Writer, r *http.Request, conn database.Connection) {
 func SubmitLogin(w *response.Writer, r *http.Request, conn database.Connection) {
 	action, _ := context.GetParam(r, "action")
 	var input CreateUserInput
-	if ProcessHTTPError(w, getRequestBody(r, &input)) {
+	if resolverutils.ProcessHTTPError(w, resolverutils.GetRequestBody(r, &input)) {
 		return
 	}
 
 	if action == "signup" {
 		_, httpError := createUserDatabase(input.Username, input.DisplayName.Value, input.Password, conn)
-		if ProcessHTTPError(w, httpError) {
+		if resolverutils.ProcessHTTPError(w, httpError) {
 			client.DisplayError(w, httpError.Message)
 			return
 		}
 	}
 
 	userID, httpError := checkCredentials(input.Username, input.Password, conn)
-	if ProcessHTTPError(w, httpError) {
+	if resolverutils.ProcessHTTPError(w, httpError) {
 		client.DisplayError(w, string(w.Body))
 		return
 	}
 
-	if ProcessHTTPError(w, setSession(w, userID, conn)) {
+	if resolverutils.ProcessHTTPError(w, setSession(w, userID, conn)) {
 		return
 	}
 
