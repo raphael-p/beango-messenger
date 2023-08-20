@@ -52,6 +52,7 @@ func (w *Writer) WriteJSON(code int, responseObject any) {
 	w.writeBody(string(response))
 }
 
+// TODO: remove once no longer needed
 func (w *Writer) Commit() (int, error) {
 	w.Header().Set(
 		"Content-Length",
