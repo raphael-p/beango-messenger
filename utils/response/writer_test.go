@@ -18,7 +18,7 @@ func TestWriteHeader(t *testing.T) {
 		xStatus := http.StatusAccepted
 		writer.WriteHeader(xStatus)
 		assert.Equals(t, writer.Status, xStatus)
-		assert.Equals(t, recorder.Code, http.StatusOK) // default
+		assert.Equals(t, recorder.Code, xStatus)
 	})
 }
 
@@ -32,8 +32,8 @@ func TestWriteString(t *testing.T) {
 		writer.WriteString(xStatus, xBody)
 		assert.Equals(t, writer.Status, xStatus)
 		assert.Equals(t, string(writer.Body), xBody)
-		assert.Equals(t, recorder.Code, http.StatusOK) // default
-		assert.Equals(t, recorder.Body.String(), "")   // default
+		assert.Equals(t, recorder.Code, xStatus)
+		assert.Equals(t, recorder.Body.String(), xBody)
 	})
 }
 
@@ -47,8 +47,6 @@ func TestWriteJSON(t *testing.T) {
 		assert.Equals(t, recorder.Header().Get("Content-Type"), "application/json")
 		assert.Equals(t, writer.Status, xStatus)
 		assert.Equals(t, string(writer.Body), "{\"message\":\"Hello, world!\"}")
-		assert.Equals(t, recorder.Code, http.StatusOK) // default
-		assert.Equals(t, recorder.Body.String(), "")   // default
 	})
 
 	t.Run("InvalidJSON", func(t *testing.T) {
@@ -60,8 +58,6 @@ func TestWriteJSON(t *testing.T) {
 		xStatus := http.StatusBadRequest
 		assert.Equals(t, writer.Status, xStatus)
 		assert.Equals(t, string(writer.Body), "json: unsupported type: func(string)")
-		assert.Equals(t, recorder.Code, http.StatusOK) // default
-		assert.Equals(t, recorder.Body.String(), "")   // default
 	})
 }
 
@@ -76,21 +72,16 @@ func TestString(t *testing.T) {
 		xOut := fmt.Sprintf("status %d (took %dms)\n\tresponse: %s", http.StatusOK, writer.Time, writer.Body)
 		assert.Equals(t, writer.String(), xOut)
 	})
-}
 
-func TestCommit(t *testing.T) {
-	t.Run("Normal", func(t *testing.T) {
+	t.Run("BodyHidden", func(t *testing.T) {
 		recorder := httptest.NewRecorder()
 		writer := NewWriter(recorder)
-		xStatus := 573
-		xBody := "Hello, World!"
-		writer.Status = xStatus
-		writer.Body = []byte(xBody)
+		writer.Status = http.StatusOK
+		writer.Time = 100 * time.Millisecond.Milliseconds()
+		writer.Body = []byte("Hello, world!")
+		writer.HideResponse = true
 
-		assert.Equals(t, recorder.Code, http.StatusOK)
-		assert.Equals(t, recorder.Body.String(), "")
-		writer.Commit()
-		assert.Equals(t, recorder.Code, xStatus)
-		assert.Equals(t, recorder.Body.String(), xBody)
+		xOut := fmt.Sprintf("status %d (took %dms)", http.StatusOK, writer.Time)
+		assert.Equals(t, writer.String(), xOut)
 	})
 }

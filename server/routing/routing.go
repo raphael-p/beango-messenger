@@ -148,7 +148,6 @@ func (r *route) handler(w *response.Writer, req *http.Request, conn database.Con
 	var next bool
 	for _, middleware := range r.middleware {
 		if req, next = middleware(w, req, conn); !next {
-			w.Commit()
 			return
 		}
 	}
@@ -156,7 +155,6 @@ func (r *route) handler(w *response.Writer, req *http.Request, conn database.Con
 	// Log response
 	start := time.Now()
 	r.innerHandler(w, req, conn)
-	w.Commit()
 	w.Time = time.Since(start).Milliseconds()
 	logger.Info(fmt.Sprintf("%s resolved with %s", requestString, w))
 }

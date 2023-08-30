@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 )
 
 type Writer struct {
@@ -21,22 +20,24 @@ func NewWriter(w http.ResponseWriter) *Writer {
 
 func (w *Writer) WriteHeader(code int) {
 	w.Status = code
+	if w.Status != 0 {
+		w.ResponseWriter.WriteHeader(w.Status)
+	}
 }
 
-func (w *Writer) writeBody(body string) {
-	w.Body = []byte(body)
+func (w *Writer) writeBody(body []byte) (int, error) {
+	w.Body = append(w.Body, body...)
+	return w.ResponseWriter.Write(body)
 }
 
 func (w *Writer) WriteString(code int, response string) {
 	w.WriteHeader(code)
-	w.writeBody(response)
+	w.writeBody([]byte(response))
 }
 
 func (w *Writer) Write(bytes []byte) (int, error) {
 	w.HideResponse = true
-	w.Body = append(w.Body, bytes...)
-
-	return len(bytes), nil
+	return w.writeBody(bytes)
 }
 
 func (w *Writer) WriteJSON(code int, responseObject any) {
@@ -49,19 +50,7 @@ func (w *Writer) WriteJSON(code int, responseObject any) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	w.writeBody(string(response))
-}
-
-// TODO: remove once no longer needed
-func (w *Writer) Commit() (int, error) {
-	w.Header().Set(
-		"Content-Length",
-		strconv.FormatInt(int64(len(w.Body)), 10),
-	)
-	if w.Status != 0 {
-		w.ResponseWriter.WriteHeader(w.Status)
-	}
-	return w.ResponseWriter.Write(w.Body)
+	w.writeBody(response)
 }
 
 func (w *Writer) String() string {
