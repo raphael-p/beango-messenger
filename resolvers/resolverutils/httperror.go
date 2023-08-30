@@ -14,7 +14,6 @@ type HTTPError struct {
 
 // Writes message and status of HTTPError to the response
 // Returns false if httpError is nil, true otherwise
-// TODO: test
 func ProcessHTTPError(w *response.Writer, httpError *HTTPError) bool {
 	if httpError == nil {
 		return false
