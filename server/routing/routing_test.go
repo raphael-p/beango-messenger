@@ -14,7 +14,6 @@ import (
 	"github.com/raphael-p/beango/test/assert"
 	"github.com/raphael-p/beango/test/mocks"
 	"github.com/raphael-p/beango/utils/context"
-	"github.com/raphael-p/beango/utils/cookies"
 	"github.com/raphael-p/beango/utils/logger"
 	"github.com/raphael-p/beango/utils/response"
 )
@@ -269,38 +268,14 @@ func TestServeHTTP(t *testing.T) {
 	})
 }
 
-// TODO: move Auth* tests to middleware_test.go
 func TestRouteHandler(t *testing.T) {
-	method := http.MethodGet
-	path := "/"
-	status := http.StatusOK
-	body := "success"
-	handler := func(w *response.Writer, r *http.Request, conn database.Connection) {
-		w.WriteString(status, body)
-	}
-	params := []string{}
-	authRoute := makeRoute(method, path, handler, params)
-	authRoute.middleware = []Middleware{Auth}
-	noAuthRoute := makeRoute(method, path, handler, params)
-
-	setup := func(t *testing.T) (*response.Writer, *http.Request, *bytes.Buffer, database.Connection) {
-		req := httptest.NewRequest(method, path, nil)
-		w := response.NewWriter(httptest.NewRecorder())
-		buf := logger.MockFileLogger(t)
-		conn := mocks.MakeMockConnection()
-		return w, req, buf, conn
-	}
-
-	assertSuccess := func(t *testing.T, w *response.Writer, buf *bytes.Buffer) {
-		assert.Equals(t, w.Status, status)
-		assert.Equals(t, string(w.Body), body)
-		reqString := fmt.Sprint(method, " ", path)
-		receivedMessage := fmt.Sprint("[INFO] received ", reqString)
-		successMessage := fmt.Sprintf("[INFO] %s resolved with %s", reqString, w)
-		assert.Contains(t, buf.String(), receivedMessage, successMessage)
-	}
-
 	t.Run("RunsMiddleware", func(t *testing.T) {
+		method := http.MethodGet
+		path := "/"
+		handler := func(w *response.Writer, r *http.Request, conn database.Connection) {
+			w.WriteString(http.StatusOK, "success")
+		}
+		params := []string{}
 		newRoute := makeRoute(method, path, handler, params)
 		xStatus := http.StatusUnauthorized
 		xBody := "Lorem Ipsum Dolor"
@@ -314,37 +289,12 @@ func TestRouteHandler(t *testing.T) {
 				return r, false
 			},
 		}
+		req := httptest.NewRequest(method, path, nil)
+		w := response.NewWriter(httptest.NewRecorder())
+		conn := mocks.MakeMockConnection()
 
-		w, req, _, conn := setup(t)
 		newRoute.handler(w, req, conn)
 		assert.Equals(t, w.Status, xStatus)
 		assert.Equals(t, string(w.Body), xBody)
-	})
-
-	t.Run("AuthSucceeds", func(t *testing.T) {
-		w, req, buf, conn := setup(t)
-		cookie := &http.Cookie{Name: string(cookies.SESSION), Value: mocks.AdminSesh.ID}
-		req.AddCookie(cookie)
-
-		authRoute.handler(w, req, conn)
-		assertSuccess(t, w, buf)
-	})
-
-	t.Run("AuthFails", func(t *testing.T) {
-		w, req, buf, conn := setup(t)
-
-		authRoute.handler(w, req, conn)
-		assert.Equals(t, w.Status, http.StatusUnauthorized)
-		receivedMessage := fmt.Sprint("[INFO] received ", method, " ", path)
-		logs := buf.String()
-		assert.Contains(t, logs, receivedMessage)
-		assert.NotContains(t, logs, "resolved")
-	})
-
-	t.Run("AuthSkipped", func(t *testing.T) {
-		w, req, buf, conn := setup(t)
-
-		noAuthRoute.handler(w, req, conn)
-		assertSuccess(t, w, buf)
 	})
 }

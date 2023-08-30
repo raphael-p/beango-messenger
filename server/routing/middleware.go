@@ -20,7 +20,7 @@ var AuthRedirect Middleware = func(w *response.Writer, r *http.Request, conn dat
 	newRequest, httpError := authenticate.Auth(w, r, conn)
 	if httpError != nil {
 		if r.Header.Get("HX-Request") == "true" {
-			w.Header().Set("HX-Redirect", "/home")
+			w.Header().Set("HX-Redirect", "/login")
 		} else {
 			w.Header().Set("Location", "/login")
 			w.WriteHeader(http.StatusSeeOther)
