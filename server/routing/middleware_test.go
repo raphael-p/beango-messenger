@@ -2,27 +2,18 @@ package routing
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
-	"github.com/raphael-p/beango/database"
+	"github.com/raphael-p/beango/resolvers/resolverutils"
 	"github.com/raphael-p/beango/test/assert"
 	"github.com/raphael-p/beango/test/mocks"
 	"github.com/raphael-p/beango/utils/context"
 	"github.com/raphael-p/beango/utils/cookies"
-	"github.com/raphael-p/beango/utils/response"
 )
 
 func TestAuth(t *testing.T) {
-	setup := func(t *testing.T) (*response.Writer, *http.Request, database.Connection) {
-		req := httptest.NewRequest(http.MethodGet, "/", nil)
-		w := response.NewWriter(httptest.NewRecorder())
-		conn := mocks.MakeMockConnection()
-		return w, req, conn
-	}
-
 	t.Run("AuthSucceeds", func(t *testing.T) {
-		w, req, conn := setup(t)
+		w, req, conn := resolverutils.CommonSetup("")
 		cookie := &http.Cookie{Name: string(cookies.SESSION), Value: mocks.AdminSesh.ID}
 		req.AddCookie(cookie)
 
@@ -34,7 +25,7 @@ func TestAuth(t *testing.T) {
 	})
 
 	t.Run("AuthFails", func(t *testing.T) {
-		w, req, conn := setup(t)
+		w, req, conn := resolverutils.CommonSetup("")
 
 		_, proceed := Auth(w, req, conn)
 		assert.Equals(t, proceed, false)
@@ -43,15 +34,8 @@ func TestAuth(t *testing.T) {
 }
 
 func TestAuthRedirect(t *testing.T) {
-	setup := func(t *testing.T) (*response.Writer, *http.Request, database.Connection) {
-		req := httptest.NewRequest(http.MethodGet, "/", nil)
-		w := response.NewWriter(httptest.NewRecorder())
-		conn := mocks.MakeMockConnection()
-		return w, req, conn
-	}
-
 	t.Run("NoRedirectOnSuccess", func(t *testing.T) {
-		w, req, conn := setup(t)
+		w, req, conn := resolverutils.CommonSetup("")
 		cookie := &http.Cookie{Name: string(cookies.SESSION), Value: mocks.AdminSesh.ID}
 		req.AddCookie(cookie)
 
@@ -63,7 +47,7 @@ func TestAuthRedirect(t *testing.T) {
 	})
 
 	t.Run("RedirectOnFailure", func(t *testing.T) {
-		w, req, conn := setup(t)
+		w, req, conn := resolverutils.CommonSetup("")
 
 		_, proceed := AuthRedirect(w, req, conn)
 		assert.Equals(t, proceed, false)
@@ -72,7 +56,7 @@ func TestAuthRedirect(t *testing.T) {
 	})
 
 	t.Run("HXRedirectOnFailure", func(t *testing.T) {
-		w, req, conn := setup(t)
+		w, req, conn := resolverutils.CommonSetup("")
 		req.Header.Set("HX-Request", "true")
 
 		_, proceed := AuthRedirect(w, req, conn)

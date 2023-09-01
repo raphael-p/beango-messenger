@@ -11,8 +11,8 @@ import (
 
 	"github.com/raphael-p/beango/config"
 	"github.com/raphael-p/beango/database"
+	"github.com/raphael-p/beango/resolvers/resolverutils"
 	"github.com/raphael-p/beango/test/assert"
-	"github.com/raphael-p/beango/test/mocks"
 	"github.com/raphael-p/beango/utils/context"
 	"github.com/raphael-p/beango/utils/logger"
 	"github.com/raphael-p/beango/utils/response"
@@ -289,9 +289,7 @@ func TestRouteHandler(t *testing.T) {
 				return r, false
 			},
 		}
-		req := httptest.NewRequest(method, path, nil)
-		w := response.NewWriter(httptest.NewRecorder())
-		conn := mocks.MakeMockConnection()
+		w, req, conn := resolverutils.CommonSetup("")
 
 		newRoute.handler(w, req, conn)
 		assert.Equals(t, w.Status, xStatus)

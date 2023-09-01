@@ -33,9 +33,7 @@ func TestCreateUser(t *testing.T) {
 				pass,
 			)
 		}
-		w, req := resolverutils.MockRequest(body)
-		conn := mocks.MakeMockConnection()
-		return w, req, conn
+		return resolverutils.CommonSetup(body)
 	}
 
 	t.Run("Normal", func(t *testing.T) {
@@ -93,8 +91,7 @@ func TestGetUserByName(t *testing.T) {
 		*http.Request,
 		database.Connection,
 	) {
-		w, req := resolverutils.MockRequest("")
-		conn := mocks.MakeMockConnection()
+		w, req, conn := resolverutils.CommonSetup("")
 		if key == "" {
 			key = "username"
 		}

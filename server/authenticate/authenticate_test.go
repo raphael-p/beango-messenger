@@ -3,11 +3,11 @@ package authenticate
 import (
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/raphael-p/beango/database"
+	"github.com/raphael-p/beango/resolvers/resolverutils"
 	"github.com/raphael-p/beango/test/assert"
 	"github.com/raphael-p/beango/test/mocks"
 	"github.com/raphael-p/beango/utils/context"
@@ -17,9 +17,7 @@ import (
 )
 
 func setup(name, sessionID string) (*response.Writer, *http.Request, database.Connection) {
-	w := response.NewWriter(httptest.NewRecorder())
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	conn := mocks.MakeMockConnection()
+	w, req, conn := resolverutils.CommonSetup("")
 	if name != "" {
 		if sessionID == "" {
 			sessionID = mocks.AdminSesh.ID

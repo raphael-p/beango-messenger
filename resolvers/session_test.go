@@ -48,8 +48,8 @@ func TestSetSession(t *testing.T) {
 		database.Connection,
 	) {
 		body := fmt.Sprintf(`{"Username": "%s", "Password": "%s"}`, username, password)
-		w, _ := resolverutils.MockRequest(body)
-		return w, mocks.MakeMockConnection()
+		w, _, conn := resolverutils.CommonSetup(body)
+		return w, conn
 	}
 
 	t.Run("Normal", func(t *testing.T) {
@@ -89,8 +89,7 @@ func TestCreateSession(t *testing.T) {
 		database.Connection,
 	) {
 		body := fmt.Sprintf(`{"Username": "%s", "Password": "%s"}`, username, password)
-		w, req := resolverutils.MockRequest(body)
-		return w, req, mocks.MakeMockConnection()
+		return resolverutils.CommonSetup(body)
 	}
 
 	t.Run("Normal", func(t *testing.T) {

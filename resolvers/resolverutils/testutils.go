@@ -8,15 +8,16 @@ import (
 
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/test/assert"
+	"github.com/raphael-p/beango/test/mocks"
 	"github.com/raphael-p/beango/utils/context"
 	"github.com/raphael-p/beango/utils/response"
 )
 
-func MockRequest(body string) (*response.Writer, *http.Request) {
+func CommonSetup(body string) (*response.Writer, *http.Request, database.Connection) {
 	req := httptest.NewRequest(http.MethodPost, "/test", bytes.NewBufferString(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := response.NewWriter(httptest.NewRecorder())
-	return w, req
+	return w, req, mocks.MakeMockConnection()
 }
 
 func SetContext(

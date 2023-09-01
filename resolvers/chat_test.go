@@ -109,8 +109,7 @@ func TestGetChats(t *testing.T) {
 	adminID := mocks.ADMIN_ID
 
 	t.Run("Normal", func(t *testing.T) {
-		conn := mocks.MakeMockConnection()
-		w, req := resolverutils.MockRequest("")
+		w, req, conn := resolverutils.CommonSetup("")
 		req = resolverutils.SetContext(t, req, mocks.Admin, nil)
 		conn.SetChat(mocks.MakePrivateChat(), adminID, 13)
 
@@ -125,7 +124,7 @@ func TestGetChats(t *testing.T) {
 
 func TestCreatePrivateChat(t *testing.T) {
 	setup := func(t *testing.T, userID int64) (*response.Writer, *http.Request) {
-		w, req := resolverutils.MockRequest(fmt.Sprintf(`{"userID": %d}`, userID))
+		w, req, _ := resolverutils.CommonSetup(fmt.Sprintf(`{"userID": %d}`, userID))
 		req = resolverutils.SetContext(t, req, mocks.Admin, nil)
 		return w, req
 	}

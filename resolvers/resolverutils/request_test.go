@@ -19,7 +19,7 @@ func TestBindRequestJSON(t *testing.T) {
 	}
 
 	setup := func(body string, ptr any) *HTTPError {
-		_, req := MockRequest(body)
+		_, req, _ := CommonSetup(body)
 		httpError := GetRequestBody(req, ptr)
 		return httpError
 	}
@@ -71,7 +71,7 @@ func TestBindRequestJSON(t *testing.T) {
 
 func TestGetRequestContext(t *testing.T) {
 	setup := func(user *database.User, params map[string]string) (*http.Request, *bytes.Buffer) {
-		_, req := MockRequest("")
+		_, req, _ := CommonSetup("")
 		req = SetContext(t, req, user, params)
 		buf := logger.MockFileLogger(t)
 		return req, buf
