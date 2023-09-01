@@ -21,7 +21,6 @@ type RouteParams struct {
 	ChatName string
 }
 
-// TODO: unit test, move some stuff that was meant to test GetRequestContext
 func extractRouteParams(r *http.Request, paramKeys ...string) (*RouteParams, *HTTPError) {
 	routeParams := new(RouteParams)
 	for _, paramKey := range paramKeys {

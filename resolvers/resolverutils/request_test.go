@@ -1,9 +1,9 @@
 package resolverutils
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/raphael-p/beango/database"
@@ -70,11 +70,10 @@ func TestBindRequestJSON(t *testing.T) {
 }
 
 func TestGetRequestContext(t *testing.T) {
-	setup := func(user *database.User, params map[string]string) (*http.Request, *bytes.Buffer) {
-		_, req, _ := CommonSetup("")
+	setup := func(user *database.User, params map[string]string) *http.Request {
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
 		req = SetContext(t, req, user, params)
-		buf := logger.MockFileLogger(t)
-		return req, buf
+		return req
 	}
 
 	t.Run("Normal", func(t *testing.T) {
@@ -82,7 +81,7 @@ func TestGetRequestContext(t *testing.T) {
 		key1 := USERNAME_KEY
 		key2 := CHAT_NAME_KEY
 		contextParams := map[string]string{key1: "value1", key2: "value2"}
-		req, _ := setup(xUser, contextParams)
+		req := setup(xUser, contextParams)
 
 		user, routeParams, err := GetRequestContext(req, key1, key2)
 		assert.IsNil(t, err)
@@ -90,39 +89,16 @@ func TestGetRequestContext(t *testing.T) {
 		assert.DeepEquals(t, routeParams, &RouteParams{"value1", 0, "value2"})
 	})
 
-	t.Run("ExtraRequestParam", func(t *testing.T) {
-		key := USERNAME_KEY
-		extraKey := CHAT_NAME_KEY
-		contextParams := map[string]string{key: "value1", extraKey: "value2"}
-		req, _ := setup(mocks.MakeUser(), contextParams)
+	t.Run("ParamExtractionFails", func(t *testing.T) {
+		req := setup(mocks.MakeUser(), nil)
 
-		_, params, err := GetRequestContext(req, key)
-		assert.IsNil(t, err)
-		assert.DeepEquals(t, params, &RouteParams{"value1", 0, ""})
-	})
-
-	t.Run("NoParamKeys", func(t *testing.T) {
-		req, _ := setup(mocks.MakeUser(), map[string]string{"param1": "value1"})
-
-		_, params, err := GetRequestContext(req)
-		assert.IsNil(t, err)
-		assert.DeepEquals(t, params, &RouteParams{})
-	})
-
-	t.Run("MissingRequestParam", func(t *testing.T) {
-		key1 := USERNAME_KEY
-		key2 := CHAT_NAME_KEY
-		req, buf := setup(mocks.MakeUser(), map[string]string{key1: "some-value"})
-
-		_, _, err := GetRequestContext(req, key1, key2)
+		_, _, err := GetRequestContext(req, USERNAME_KEY)
 		assert.IsNotNil(t, err)
-		assert.Equals(t, err.Status, http.StatusInternalServerError)
-		assert.Equals(t, err.Message, fmt.Sprint("failed to fetch path parameter: ", key2))
-		assert.Contains(t, buf.String(), "[ERROR]", fmt.Sprintf("path parameter %s not found", key2))
 	})
 
 	t.Run("NoUser", func(t *testing.T) {
-		req, buf := setup(nil, nil)
+		req := setup(nil, nil)
+		buf := logger.MockFileLogger(t)
 
 		_, _, err := GetRequestContext(req)
 		assert.IsNotNil(t, err)
