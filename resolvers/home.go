@@ -43,7 +43,6 @@ func Home(w *response.Writer, r *http.Request, conn database.Connection) {
 		w.WriteString(http.StatusInternalServerError, err.Error())
 		return
 	}
-
 	data := map[string]any{"content": template.HTML(homeWithChatlist.String())}
 	if err := skeleton.Execute(w, data); err != nil {
 		logger.Error(err.Error())
@@ -66,6 +65,7 @@ func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
 		w.WriteString(http.StatusInternalServerError, err.Error())
 		return
 	}
+
 	homeChat, err := template.New("home").Parse(client.MessagePane)
 	if err != nil {
 		logger.Error(err.Error())
@@ -73,5 +73,8 @@ func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
 		return
 	}
 	chatlist := map[string]any{"Title": chatName, "Messages": messages}
-	homeChat.Execute(w, chatlist)
+	if err := homeChat.Execute(w, chatlist); err != nil {
+		logger.Error(err.Error())
+		w.WriteString(http.StatusInternalServerError, err.Error())
+	}
 }

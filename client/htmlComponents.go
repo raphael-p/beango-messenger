@@ -43,4 +43,8 @@ var MessagePane string = `<span class="heading-1">{{ .Title }}</span>
 			</tr>
 		{{ end }}
 		{{ end }}
-	</table>`
+	</table>
+	<div class="message-bar">
+		<span class="message-prompt">> </span>
+		<textarea class="message-input" placeholder="Type your message"></textarea>
+	</div>`

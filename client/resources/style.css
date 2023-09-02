@@ -45,32 +45,29 @@ span.logo span::after {
 	}
 }
 
-label {
+div.form-row {
+	margin-top: 20px;
+	margin-bottom: 20px;
+	letter-spacing: 2px;
+}
+
+div.form-row label {
 	font-family: var(--hacker-font);
 	font-size: medium;
 	text-transform: uppercase;
   }
   
-input {
+div.form-row input {
 	display: inline-block;
 	vertical-align: middle;
 	font-family: var(--text-font);
 	width: 60%;
 	margin: 0 20px;
 	border: none;
+	outline: none;
 	background-color: transparent;
 	color: var(--hacker-grey);
 	caret-color: var(--hacker-green);
-}
-
-input:focus {
-	outline:none;
-}
-
-div.form-row {
-	margin-top: 20px;
-	margin-bottom: 20px;
-	letter-spacing: 2px;
 }
 
 div.button-row {
@@ -169,3 +166,31 @@ td {
 	padding-right: 10px;
 }
 
+.message-bar {
+	margin-top: 20px;
+}
+
+.message-prompt {
+	color: var(--hacker-green);
+	margin-right: 10px;
+	vertical-align: top;
+	line-height: 1;
+}
+
+.message-input {
+	font-size: small;
+	border: none;
+	outline: none;
+	background-color: transparent;
+	caret-color: var(--hacker-green);	
+	color: white;
+	line-height: 1;
+	height: 10vh;
+	resize: none;
+	width: 60%;
+}
+
+::placeholder {
+	color: var(--hacker-grey);
+	font-family: var(--text-font);
+  }

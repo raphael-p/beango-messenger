@@ -37,6 +37,9 @@ func (w *Writer) WriteString(code int, response string) {
 
 func (w *Writer) Write(bytes []byte) (int, error) {
 	w.HideResponse = true
+	if w.Status == 0 {
+		w.WriteHeader(http.StatusOK)
+	}
 	return w.writeBody(bytes)
 }
 
