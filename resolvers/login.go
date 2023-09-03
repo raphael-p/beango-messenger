@@ -44,25 +44,23 @@ func Login(w *response.Writer, r *http.Request, conn database.Connection) {
 func SubmitLogin(w *response.Writer, r *http.Request, conn database.Connection) {
 	action, _ := context.GetParam(r, "action")
 	var input CreateUserInput
-	if resolverutils.ProcessHTTPError(w, resolverutils.GetRequestBody(r, &input)) {
+	if resolverutils.DisplayHTTPError(w, resolverutils.GetRequestBody(r, &input)) {
 		return
 	}
 
 	if action == "signup" {
 		_, httpError := createUserDatabase(input.Username, input.DisplayName.Value, input.Password, conn)
-		if resolverutils.ProcessHTTPError(w, httpError) {
-			client.DisplayError(w, httpError.Message)
+		if resolverutils.DisplayHTTPError(w, httpError) {
 			return
 		}
 	}
 
 	userID, httpError := checkCredentials(input.Username, input.Password, conn)
-	if resolverutils.ProcessHTTPError(w, httpError) {
-		client.DisplayError(w, string(w.Body))
+	if resolverutils.DisplayHTTPError(w, httpError) {
 		return
 	}
 
-	if resolverutils.ProcessHTTPError(w, setSession(w, makeSession(userID), conn)) {
+	if resolverutils.DisplayHTTPError(w, setSession(w, makeSession(userID), conn)) {
 		return
 	}
 

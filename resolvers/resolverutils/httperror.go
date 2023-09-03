@@ -1,6 +1,7 @@
 package resolverutils
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/raphael-p/beango/utils/logger"
@@ -30,4 +31,14 @@ func HandleDatabaseError(err error) *HTTPError {
 	message := "database operation failed"
 	logger.Error(message + ": " + err.Error())
 	return &HTTPError{http.StatusInternalServerError, message}
+}
+
+// Provides an error div for HTMX
+func DisplayHTTPError(w *response.Writer, httpError *HTTPError) bool {
+	if httpError == nil {
+		return false
+	}
+	htmlStr := fmt.Sprintf("<div id='errors' class='error' hx-swap-oob='innerHTML'>%s</div>", httpError.Message)
+	w.WriteString(http.StatusOK, htmlStr)
+	return true
 }

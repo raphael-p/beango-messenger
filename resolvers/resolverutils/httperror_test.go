@@ -2,6 +2,7 @@ package resolverutils
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -49,5 +50,26 @@ func TestHandleDatabaseError(t *testing.T) {
 
 		assert.IsNil(t, HandleDatabaseError(nil))
 		assert.Equals(t, buf.String(), "")
+	})
+}
+
+func TestDisplayHTTPError(t *testing.T) {
+	t.Run("WithError", func(t *testing.T) {
+		xError := &HTTPError{100, "this is a message"}
+		w := response.NewWriter(httptest.NewRecorder())
+
+		hasError := DisplayHTTPError(w, xError)
+		assert.Equals(t, hasError, true)
+		assert.Equals(t, w.Status, http.StatusOK)
+		assert.Contains(t, string(w.Body), fmt.Sprintf(">%s<", xError.Message))
+	})
+
+	t.Run("WithoutError", func(t *testing.T) {
+		w := response.NewWriter(httptest.NewRecorder())
+
+		hasError := DisplayHTTPError(w, nil)
+		assert.Equals(t, hasError, false)
+		assert.Equals(t, w.Status, 0)
+		assert.Equals(t, string(w.Body), "")
 	})
 }
