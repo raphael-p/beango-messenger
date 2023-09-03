@@ -50,6 +50,10 @@ func Home(w *response.Writer, r *http.Request, conn database.Connection) {
 	}
 }
 
+// TODO: line breaks not shown
+// TODO: make chat height more consistent
+// TODO: only fetch new messages + pagination
+// TODO: regular chat refresh without clearing message bar
 func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
 	user, params, httpError := resolverutils.GetRequestContext(r, resolverutils.CHAT_ID_KEY)
 	if resolverutils.ProcessHTTPError(w, httpError) {
@@ -72,9 +76,30 @@ func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
 		w.WriteString(http.StatusInternalServerError, err.Error())
 		return
 	}
-	chatlist := map[string]any{"Title": chatName, "Messages": messages}
+	w.Header().Set("HX-Trigger-After-Settle", "chat-opened") // has to be set before .Execute()
+	chatlist := map[string]any{"Name": chatName, "Messages": messages, "ID": params.ChatID}
 	if err := homeChat.Execute(w, chatlist); err != nil {
+		w.Header().Del("HX-Trigger-After-Settle")
 		logger.Error(err.Error())
 		w.WriteString(http.StatusInternalServerError, err.Error())
+		return
 	}
+}
+
+func SendChatMessage(w *response.Writer, r *http.Request, conn database.Connection) {
+	content := r.PostFormValue("content")
+	if content == "" {
+		w.WriteString(http.StatusBadRequest, "cannot send an empty message")
+		return
+	}
+	user, params, httpError := resolverutils.GetRequestContext(r, resolverutils.CHAT_ID_KEY)
+	if resolverutils.ProcessHTTPError(w, httpError) {
+		return
+	}
+
+	_, httpError = sendMessageDatabase(user.ID, params.ChatID, content, conn)
+	if resolverutils.ProcessHTTPError(w, httpError) {
+		return
+	}
+	w.Header().Set("HX-Trigger", "chat-refresh")
 }

@@ -25,7 +25,12 @@ var HomePage string = `<div id="chat-container">
 		<div id=chat-list>
 			{{ range .Chats }}
 			{{ block "chat-list" .}}
-				<div hx-get=/home/chat/{{ .ID }}/{{ .Name }} hx-target=#chat class="chat-selector list-item">[{{ .Type}}] <b>{{ .Name }}</b></div>
+				<div 
+					hx-get=/home/chat/{{ .ID }}/{{ .Name }} 
+					hx-target=#chat class="chat-selector list-item"
+				>
+					[{{ .Type}}] <b>{{ .Name }}</b>
+				</div>
 			{{ end }}
 			{{ end }}
 		</div>
@@ -33,7 +38,7 @@ var HomePage string = `<div id="chat-container">
 	<div id="chat"></div>
 	</div>`
 
-var MessagePane string = `<span class="heading-1">{{ .Title }}</span>
+var MessagePane string = `<span class="heading-1">{{ .Name }}</span>
 	<table>
 		{{ range .Messages }}
 		{{ block "message-list" .}}
@@ -46,5 +51,16 @@ var MessagePane string = `<span class="heading-1">{{ .Title }}</span>
 	</table>
 	<div class="message-bar">
 		<span class="message-prompt">> </span>
-		<textarea class="message-input" placeholder="Type your message"></textarea>
+		<textarea 
+			class="message-input" 
+			name="content" 
+			hx-post=/home/chat/{{ .ID }}/sendMessage 
+			hx-trigger="send-message"
+			placeholder="Type your message"
+		></textarea>
+		<div 
+			hx-get=/home/chat/{{ .ID }}/{{ .Name }} 
+			hx-target=#chat class="chat-selector list-item"
+			hx-trigger="chat-refresh from:document"
+		/>
 	</div>`

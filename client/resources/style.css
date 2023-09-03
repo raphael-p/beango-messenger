@@ -174,23 +174,19 @@ td {
 	color: var(--hacker-green);
 	margin-right: 10px;
 	vertical-align: top;
-	line-height: 1;
+	line-height: 1.5;
 }
 
 .message-input {
+	font-family: var(--text-font);
 	font-size: small;
 	border: none;
 	outline: none;
 	background-color: transparent;
 	caret-color: var(--hacker-green);	
 	color: white;
-	line-height: 1;
+	line-height: 1.5;
 	height: 10vh;
 	resize: none;
 	width: 60%;
 }
-
-::placeholder {
-	color: var(--hacker-grey);
-	font-family: var(--text-font);
-  }

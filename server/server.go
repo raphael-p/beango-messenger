@@ -51,7 +51,8 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 	router.GET("/login", resolvers.Login)
 	router.POST("/login/:action", resolvers.SubmitLogin)
 	router.GET("/home", resolvers.Home, routing.AuthRedirect)
-	router.GET("/home/chat/:"+chatID+"/:"+chatName, resolvers.OpenChat, routing.AuthRedirect)
+	router.GET("/home/chat/:"+chatID+"/:"+chatName, resolvers.OpenChat, routing.AuthRedirect) // TODO: try making chat name an optional query param
+	router.POST("/home/chat/:"+chatID+"/sendMessage", resolvers.SendChatMessage, routing.AuthRedirect)
 	router.GET("/favicon.ico", func(w *response.Writer, r *http.Request, conn database.Connection) {
 		http.FileServer(http.Dir(path)).ServeHTTP(w, r)
 	})

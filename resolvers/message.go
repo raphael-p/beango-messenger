@@ -43,6 +43,24 @@ type SendMessageInput struct {
 	Content string `json:"content"`
 }
 
+// TODO: test
+func sendMessageDatabase(userID, chatID int64, content string, conn database.Connection) (*database.MessageDatabase, *resolverutils.HTTPError) {
+	if chat, _ := conn.GetChat(chatID, userID); chat == nil {
+		return nil, &resolverutils.HTTPError{
+			Status:  http.StatusNotFound,
+			Message: "chat not found",
+		}
+	}
+
+	newMessage := &database.MessageDatabase{
+		UserID:  userID,
+		ChatID:  chatID,
+		Content: content,
+	}
+	newMessage, err := conn.SetMessage(newMessage)
+	return newMessage, resolverutils.HandleDatabaseError(err)
+}
+
 func SendMessage(w *response.Writer, r *http.Request, conn database.Connection) {
 	var input SendMessageInput
 	user, params, httpError := resolverutils.GetRequestBodyAndContext(r, &input, resolverutils.CHAT_ID_KEY)
@@ -50,19 +68,8 @@ func SendMessage(w *response.Writer, r *http.Request, conn database.Connection) 
 		return
 	}
 
-	if chat, _ := conn.GetChat(params.ChatID, user.ID); chat == nil {
-		w.WriteString(http.StatusNotFound, "chat not found")
-		return
-	}
-
-	newMessage := &database.MessageDatabase{
-		UserID:  user.ID,
-		ChatID:  params.ChatID,
-		Content: input.Content,
-	}
-	newMessage, err := conn.SetMessage(newMessage)
-	if err != nil {
-		resolverutils.ProcessHTTPError(w, resolverutils.HandleDatabaseError(err))
+	newMessage, httpError := sendMessageDatabase(user.ID, params.ChatID, input.Content, conn)
+	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
 	w.WriteJSON(http.StatusAccepted, newMessage)
