@@ -43,7 +43,6 @@ type SendMessageInput struct {
 	Content string `json:"content"`
 }
 
-// TODO: test
 func sendMessageDatabase(userID, chatID int64, content string, conn database.Connection) (*database.MessageDatabase, *resolverutils.HTTPError) {
 	if chat, _ := conn.GetChat(chatID, userID); chat == nil {
 		return nil, &resolverutils.HTTPError{

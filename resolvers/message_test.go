@@ -93,10 +93,9 @@ func TestGetChatMessages(t *testing.T) {
 }
 
 func TestSendMessage(t *testing.T) {
-	content := "Hello, World!"
-	body := fmt.Sprintf(`{"content": "%s"}`, content)
-
 	t.Run("Normal", func(t *testing.T) {
+		content := "Hello, World!"
+		body := fmt.Sprintf(`{"content": "%s"}`, content)
 		conn, chatID := setupMessageTests(mocks.ADMIN_ID, 12)
 		w, req := makeMessageRequest(t, body, chatID)
 
@@ -109,22 +108,37 @@ func TestSendMessage(t *testing.T) {
 		assert.Equals(t, message.ChatID, chatID)
 		assert.Equals(t, message.Content, content)
 	})
+}
+
+func TestSendMessageDatabase(t *testing.T) {
+	content := "Hello, World!"
+
+	t.Run("Normal", func(t *testing.T) {
+		conn, chatID := setupMessageTests(mocks.ADMIN_ID, 12)
+		message, httpError := sendMessageDatabase(mocks.ADMIN_ID, chatID, content, conn)
+		assert.IsNil(t, httpError)
+		assert.Equals(t, message.UserID, mocks.Admin.ID)
+		assert.Equals(t, message.ChatID, chatID)
+		assert.Equals(t, message.Content, content)
+	})
 
 	t.Run("NoChat", func(t *testing.T) {
 		conn, chatID := setupMessageTests(0, 0)
-		w, req := makeMessageRequest(t, body, chatID)
 
-		SendMessage(w, req, conn)
-		assert.Equals(t, w.Status, http.StatusNotFound)
-		assert.Equals(t, string(w.Body), "chat not found")
+		message, httpError := sendMessageDatabase(mocks.ADMIN_ID, chatID, content, conn)
+		assert.IsNil(t, message)
+		assert.IsNotNil(t, httpError)
+		assert.Equals(t, httpError.Status, http.StatusNotFound)
+		assert.Equals(t, httpError.Message, "chat not found")
 	})
 
 	t.Run("NotChatUser", func(t *testing.T) {
 		conn, chatID := setupMessageTests(11, 12)
-		w, req := makeMessageRequest(t, body, chatID)
 
-		SendMessage(w, req, conn)
-		assert.Equals(t, w.Status, http.StatusNotFound)
-		assert.Equals(t, string(w.Body), "chat not found")
+		message, httpError := sendMessageDatabase(mocks.ADMIN_ID, chatID, content, conn)
+		assert.IsNil(t, message)
+		assert.IsNotNil(t, httpError)
+		assert.Equals(t, httpError.Status, http.StatusNotFound)
+		assert.Equals(t, httpError.Message, "chat not found")
 	})
 }

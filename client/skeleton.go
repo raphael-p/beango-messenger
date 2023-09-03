@@ -4,6 +4,7 @@ import "html/template"
 
 var skeleton *template.Template
 
+// TODO: use local htmx.min & json-enc instead of having to download from unpkg
 func GetSkeleton() (*template.Template, error) {
 	if skeleton != nil {
 		return skeleton, nil
