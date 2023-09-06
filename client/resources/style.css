@@ -113,6 +113,12 @@ form > div {
 
 /* HOME PAGE */
 
+.homepage-column {
+	display: block;
+	height: 70vh;
+	overflow-y: auto;
+}
+
 span.heading-1  {
 	display: flex;
 	flex-direction: column;

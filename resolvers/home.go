@@ -50,8 +50,6 @@ func Home(w *response.Writer, r *http.Request, conn database.Connection) {
 	}
 }
 
-// TODO: line breaks not shown
-// TODO: make chat height more consistent
 // TODO: only fetch new messages + pagination
 // TODO: regular chat refresh without clearing message bar
 func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {

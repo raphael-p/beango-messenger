@@ -22,7 +22,7 @@ var LoginPage string = `<span class="logo"><span>> Beango Messenger </span></spa
 var HomePage string = `<div id="chat-container">
 	<div id="sidebar">
 		<span class="heading-1">Chats</span>
-		<div id=chat-list>
+		<div id=chat-list class="homepage-column">
 			{{ range .Chats }}
 			{{ block "chat-list" .}}
 				<div 
@@ -39,7 +39,7 @@ var HomePage string = `<div id="chat-container">
 	</div>`
 
 var MessagePane string = `<span class="heading-1">{{ .Name }}</span>
-	<table>
+	<table class="homepage-column">
 		{{ range .Messages }}
 		{{ block "message-list" .}}
 			<tr class="list-item">
