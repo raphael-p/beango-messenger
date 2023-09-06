@@ -151,19 +151,22 @@ table {
 	border-collapse: collapse;
 }
 
-td {
-	padding: 0
-}
-
 .list-item {
 	font-size: small;
 	line-height: 2;
 }
 
-.cue {
+td.cue {
 	color: var(--hacker-grey);
 	font-weight: bold;
 	padding-right: 10px;
+	vertical-align: top;
+}
+
+td.message {
+	padding: 0;
+	white-space: pre-wrap;
+	vertical-align: top;
 }
 
 .message-bar {

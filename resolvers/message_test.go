@@ -141,4 +141,14 @@ func TestSendMessageDatabase(t *testing.T) {
 		assert.Equals(t, httpError.Status, http.StatusNotFound)
 		assert.Equals(t, httpError.Message, "chat not found")
 	})
+
+	t.Run("TrimsSpace", func(t *testing.T) {
+		paddedContent := " \n \r " + content + " \n \r "
+		conn, chatID := setupMessageTests(mocks.ADMIN_ID, 12)
+		message, httpError := sendMessageDatabase(mocks.ADMIN_ID, chatID, paddedContent, conn)
+		assert.IsNil(t, httpError)
+		assert.Equals(t, message.UserID, mocks.Admin.ID)
+		assert.Equals(t, message.ChatID, chatID)
+		assert.Equals(t, message.Content, content)
+	})
 }

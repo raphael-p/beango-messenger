@@ -1,9 +1,9 @@
 const sendMessageEvent = new Event("send-message");
 const handleKeypress = (event) => {
-    if (event.key === "Enter") {
+    if (event.key === "Enter" & !(event.shiftKey || event.altKey || event.ctrlKey || event.metaKey)) {
         event.preventDefault();
         event.target.dispatchEvent(sendMessageEvent);
-        // event.target.value = "";
+        event.target.value = "";
     }
 };
 

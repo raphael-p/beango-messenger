@@ -44,7 +44,7 @@ var MessagePane string = `<span class="heading-1">{{ .Name }}</span>
 		{{ block "message-list" .}}
 			<tr class="list-item">
 				<td class="cue">{{ .UserDisplayName }}</td>
-				<td>{{ .Content }}</td>
+				<td class="message">{{ .Content }}</td>
 			</tr>
 		{{ end }}
 		{{ end }}

@@ -2,6 +2,7 @@ package resolvers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/resolvers/resolverutils"
@@ -54,7 +55,7 @@ func sendMessageDatabase(userID, chatID int64, content string, conn database.Con
 	newMessage := &database.MessageDatabase{
 		UserID:  userID,
 		ChatID:  chatID,
-		Content: content,
+		Content: strings.TrimSpace(content),
 	}
 	newMessage, err := conn.SetMessage(newMessage)
 	return newMessage, resolverutils.HandleDatabaseError(err)
