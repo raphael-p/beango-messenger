@@ -44,14 +44,13 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 
 	// aliases for readability
 	chatID := resolverutils.CHAT_ID_KEY
-	chatName := resolverutils.CHAT_NAME_KEY
 	username := resolverutils.USERNAME_KEY
 
 	// frontend endpoints
 	router.GET("/login", resolvers.Login)
 	router.POST("/login/:action", resolvers.SubmitLogin)
 	router.GET("/home", resolvers.Home, routing.AuthRedirect)
-	router.GET("/home/chat/:"+chatID+"/:"+chatName, resolvers.OpenChat, routing.AuthRedirect) // TODO: try making chat name an optional query param
+	router.GET("/home/chat/:"+chatID, resolvers.OpenChat, routing.AuthRedirect)
 	router.POST("/home/chat/:"+chatID+"/sendMessage", resolvers.SendChatMessage, routing.AuthRedirect)
 	router.GET("/favicon.ico", func(w *response.Writer, r *http.Request, conn database.Connection) {
 		http.FileServer(http.Dir(path)).ServeHTTP(w, r)

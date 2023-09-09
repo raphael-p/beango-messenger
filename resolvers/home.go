@@ -8,7 +8,6 @@ import (
 	"github.com/raphael-p/beango/client"
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/resolvers/resolverutils"
-	"github.com/raphael-p/beango/utils/context"
 	"github.com/raphael-p/beango/utils/logger"
 	"github.com/raphael-p/beango/utils/response"
 )
@@ -61,10 +60,8 @@ func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
-	chatName, err := context.GetParam(r, resolverutils.CHAT_NAME_KEY)
-	if err != nil {
-		logger.Error(err.Error())
-		w.WriteString(http.StatusInternalServerError, err.Error())
+	chatName, httpError := resolverutils.GetRequestQueryParam(r, "name", true, true)
+	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
 

@@ -26,8 +26,9 @@ var HomePage string = `<div id="chat-container">
 			{{ range .Chats }}
 			{{ block "chat-list" .}}
 				<div 
-					hx-get=/home/chat/{{ .ID }}/{{ .Name }} 
-					hx-target=#chat class="chat-selector list-item"
+					hx-get="/home/chat/{{ .ID }}?name={{ .Name }}" 
+					hx-target=#chat 
+					class="chat-selector list-item"
 				>
 					[{{ .Type}}] <b>{{ .Name }}</b>
 				</div>
@@ -59,8 +60,9 @@ var MessagePane string = `<span class="heading-1">{{ .Name }}</span>
 			placeholder="Type your message"
 		></textarea>
 		<div 
-			hx-get=/home/chat/{{ .ID }}/{{ .Name }} 
-			hx-target=#chat class="chat-selector list-item"
+			hx-get="/home/chat/{{ .ID }}?name={{ .Name }}" 
+			hx-target=#chat
+			class="chat-selector list-item"
 			hx-trigger="chat-refresh from:document"
 		/>
 	</div>`
