@@ -69,3 +69,15 @@ func GetRequestBodyAndContext(
 	}
 	return GetRequestContext(r, paramKeys...)
 }
+
+func GetRequestQueryParam(r *http.Request, key string, required, nonEmpty bool) (string, *HTTPError) {
+	query := r.URL.Query()
+	if (required || nonEmpty) && !query.Has(key) {
+		return "", &HTTPError{http.StatusBadRequest, "missing required query parameter: " + key}
+	}
+	value := query.Get(key)
+	if nonEmpty && value == "" {
+		return "", &HTTPError{http.StatusBadRequest, "query parameter cannot be empty: " + key}
+	}
+	return value, nil
+}

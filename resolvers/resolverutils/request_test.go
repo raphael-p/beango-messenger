@@ -107,3 +107,74 @@ func TestGetRequestContext(t *testing.T) {
 		assert.Contains(t, buf.String(), "[ERROR]", "user not found in request context")
 	})
 }
+
+func TestGetRequestQueryParam(t *testing.T) {
+	regularParam := [3]string{"Regular", "loremIpsum"}
+	emptyParam := [3]string{"Empty", "", "query parameter cannot be empty: Empty"}
+	missingParam := [3]string{"Missing", "", "missing required query parameter: Missing"}
+	path := fmt.Sprintf("/path?%s=%s&%s=%s", regularParam[0], regularParam[1], emptyParam[0], emptyParam[1])
+
+	type testCase struct {
+		param       [3]string
+		expectError bool
+	}
+
+	check := func(t *testing.T, testCase testCase, value string, httpError *HTTPError) {
+		if testCase.expectError {
+			assert.Equals(t, value, "")
+			assert.Equals(t, httpError.Status, http.StatusBadRequest)
+			assert.Equals(t, httpError.Message, testCase.param[2])
+		} else {
+			assert.IsNil(t, httpError)
+			assert.Equals(t, value, testCase.param[1])
+		}
+	}
+
+	t.Run("NoChecks", func(t *testing.T) {
+		testCases := [3]testCase{
+			{regularParam, false},
+			{emptyParam, false},
+			{missingParam, false},
+		}
+
+		for _, testCase := range testCases {
+			t.Run(testCase.param[0], func(t *testing.T) {
+				req := httptest.NewRequest(http.MethodGet, path, nil)
+				value, httpError := GetRequestQueryParam(req, testCase.param[0], false, false)
+				check(t, testCase, value, httpError)
+			})
+		}
+	})
+
+	t.Run("RequiredCheck", func(t *testing.T) {
+		testCases := [3]testCase{
+			{regularParam, false},
+			{emptyParam, false},
+			{missingParam, true},
+		}
+
+		for _, testCase := range testCases {
+			t.Run(testCase.param[0], func(t *testing.T) {
+				req := httptest.NewRequest(http.MethodGet, path, nil)
+				value, httpError := GetRequestQueryParam(req, testCase.param[0], true, false)
+				check(t, testCase, value, httpError)
+			})
+		}
+	})
+
+	t.Run("NonEmptyCheck", func(t *testing.T) {
+		testCases := [3]testCase{
+			{regularParam, false},
+			{emptyParam, true},
+			{missingParam, true},
+		}
+
+		for _, testCase := range testCases {
+			t.Run(testCase.param[0], func(t *testing.T) {
+				req := httptest.NewRequest(http.MethodGet, path, nil)
+				value, httpError := GetRequestQueryParam(req, testCase.param[0], false, true)
+				check(t, testCase, value, httpError)
+			})
+		}
+	})
+}
