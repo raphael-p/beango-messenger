@@ -2,7 +2,7 @@ package client
 
 var LoginPage string = `<span class="logo"><span>> Beango Messenger </span></span>
 	<div id="login-form">
-		<form hx-ext='json-enc'>
+		<form hx-ext="json-enc">
 			<div class="form-row">
 				<label for="username">Username:</label>
 				<input type="text" name="username">
@@ -28,7 +28,7 @@ var HomePage string = `<div id="chat-container">
 				<div 
 					class="chat-selector list-item"
 					hx-get="/home/chat/{{ .ID }}?name={{ .Name }}" 
-					hx-target=#chat
+					hx-target="#chat"
 				>
 					[{{ .Type}}] <b>{{ .Name }}</b>
 				</div>
@@ -44,14 +44,14 @@ var MessagePane string = `<span class="heading-1">{{ .Name }}</span>
 	<div class="message-bar">
 		<span class="message-prompt">> </span>
 		<textarea
-			hx-on::after-process-node="htmx.on(this, 'keypress', handleKeypress)"
 			class="message-input"
+			placeholder="Type your message"
+			hx-on:keypress="handleKeypress(event)"
 			name="content"
 			hx-post="/home/chat/{{ .ID }}/sendMessage"
 			hx-trigger="send-message"
 			hx-swap="none"
 			hx-on::after-request="if(event.detail.successful) this.value = '';"
-			placeholder="Type your message"
 		></textarea>
 	</div>` + newMessageFetcher
 
