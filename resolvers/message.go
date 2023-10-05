@@ -9,7 +9,7 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-func chatMessagesDatabase(userID, chatID int64, conn database.Connection) ([]database.Message, *resolverutils.HTTPError) {
+func chatMessagesDatabase(userID, chatID int64, fromMessageID int64, conn database.Connection) ([]database.Message, *resolverutils.HTTPError) {
 	chat, err := conn.GetChat(chatID, userID)
 	if err != nil {
 		return nil, resolverutils.HandleDatabaseError(err)
@@ -21,7 +21,7 @@ func chatMessagesDatabase(userID, chatID int64, conn database.Connection) ([]dat
 		}
 	}
 
-	messages, err := conn.GetMessagesByChatID(chatID)
+	messages, err := conn.GetMessagesByChatID(chatID, fromMessageID)
 	if err != nil {
 		return nil, resolverutils.HandleDatabaseError(err)
 	}
@@ -33,7 +33,7 @@ func GetChatMessages(w *response.Writer, r *http.Request, conn database.Connecti
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
-	messages, httpError := chatMessagesDatabase(user.ID, params.ChatID, conn)
+	messages, httpError := chatMessagesDatabase(user.ID, params.ChatID, 0, conn)
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}

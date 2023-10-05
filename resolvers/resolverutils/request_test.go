@@ -133,36 +133,20 @@ func TestGetRequestQueryParam(t *testing.T) {
 	t.Run("NoChecks", func(t *testing.T) {
 		testCases := [3]testCase{
 			{regularParam, false},
-			{emptyParam, false},
+			{emptyParam, true},
 			{missingParam, false},
 		}
 
 		for _, testCase := range testCases {
 			t.Run(testCase.param[0], func(t *testing.T) {
 				req := httptest.NewRequest(http.MethodGet, path, nil)
-				value, httpError := GetRequestQueryParam(req, testCase.param[0], false, false)
+				value, httpError := GetRequestQueryParam(req, testCase.param[0], false)
 				check(t, testCase, value, httpError)
 			})
 		}
 	})
 
 	t.Run("RequiredCheck", func(t *testing.T) {
-		testCases := [3]testCase{
-			{regularParam, false},
-			{emptyParam, false},
-			{missingParam, true},
-		}
-
-		for _, testCase := range testCases {
-			t.Run(testCase.param[0], func(t *testing.T) {
-				req := httptest.NewRequest(http.MethodGet, path, nil)
-				value, httpError := GetRequestQueryParam(req, testCase.param[0], true, false)
-				check(t, testCase, value, httpError)
-			})
-		}
-	})
-
-	t.Run("NonEmptyCheck", func(t *testing.T) {
 		testCases := [3]testCase{
 			{regularParam, false},
 			{emptyParam, true},
@@ -172,7 +156,7 @@ func TestGetRequestQueryParam(t *testing.T) {
 		for _, testCase := range testCases {
 			t.Run(testCase.param[0], func(t *testing.T) {
 				req := httptest.NewRequest(http.MethodGet, path, nil)
-				value, httpError := GetRequestQueryParam(req, testCase.param[0], false, true)
+				value, httpError := GetRequestQueryParam(req, testCase.param[0], true)
 				check(t, testCase, value, httpError)
 			})
 		}

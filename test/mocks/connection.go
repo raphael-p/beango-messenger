@@ -115,7 +115,7 @@ func (mc *MockConnection) SetChat(chat *database.Chat, userIDs ...int64) (*datab
 	return chat, nil
 }
 
-func (mc *MockConnection) GetMessagesByChatID(chatID int64) ([]database.Message, error) {
+func (mc *MockConnection) GetMessagesByChatID(chatID, fromMessageID int64) ([]database.Message, error) {
 	messages := []database.Message{}
 	for _, m := range mc.messages {
 		if m.ChatID == chatID {

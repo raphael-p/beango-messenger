@@ -23,16 +23,16 @@ type Message struct {
 	UserDisplayName string    `json:"userDisplayName"`
 }
 
-func (conn *MongoConnection) GetMessagesByChatID(chatID int64) ([]Message, error) {
+func (conn *MongoConnection) GetMessagesByChatID(chatID int64, fromMessageID int64) ([]Message, error) {
 	return scanRows[Message](conn.Query(
 		`SELECT
 			m.*,
 			u.display_name as user_display_name
 		FROM message m
 		LEFT JOIN "user" u ON u.id = m.user_id
-		WHERE chat_id = $1
+		WHERE chat_id = $1 AND m.id > $2
 		ORDER BY m.created_at ASC;`,
-		chatID,
+		chatID, fromMessageID,
 	))
 }
 

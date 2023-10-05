@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"html/template"
 	"net/http"
+	"strconv"
 
 	"github.com/raphael-p/beango/client"
 	"github.com/raphael-p/beango/database"
@@ -51,30 +52,55 @@ func Home(w *response.Writer, r *http.Request, conn database.Connection) {
 
 // TODO: only fetch new messages + pagination
 // TODO: regular chat refresh without clearing message bar
+// TODO: investigate adding message directly after sending (instead of triggering update event)
+// TODO: refactor into 2 separate endpoints
+// TODO: use hx-swap to automatically scroll to the bottom of messages on opening a chat (but not on refresh)
 func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
 	user, params, httpError := resolverutils.GetRequestContext(r, resolverutils.CHAT_ID_KEY)
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
-	messages, httpError := chatMessagesDatabase(user.ID, params.ChatID, conn)
+
+	isRefresh := r.URL.Query().Has("refresh")
+	fromMessageIDParam, httpError := resolverutils.GetRequestQueryParam(r, "from", isRefresh)
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
-	chatName, httpError := resolverutils.GetRequestQueryParam(r, "name", true, true)
+	var fromMessageID int64
+	if fromMessageIDParam != "" {
+		var err error
+		fromMessageID, err = strconv.ParseInt(fromMessageIDParam, 10, 64)
+		if err != nil {
+			w.WriteString(http.StatusBadRequest, "query parameter 'from' must be an integer")
+			return
+		}
+	}
+
+	messages, httpError := chatMessagesDatabase(user.ID, params.ChatID, fromMessageID, conn)
+	if resolverutils.ProcessHTTPError(w, httpError) {
+		return
+	}
+	lastMessageID := messages[len(messages)-1].ID
+
+	chatName, httpError := resolverutils.GetRequestQueryParam(r, "name", !isRefresh)
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
 
-	homeChat, err := template.New("home").Parse(client.MessagePane)
+	var templateToParse string
+	if isRefresh {
+		templateToParse = client.MessagePaneRefresh
+	} else {
+		templateToParse = client.MessagePane
+	}
+	chatTemplate, err := template.New("home").Parse(templateToParse)
 	if err != nil {
 		logger.Error(err.Error())
 		w.WriteString(http.StatusInternalServerError, err.Error())
 		return
 	}
-	w.Header().Set("HX-Trigger-After-Settle", "chat-opened") // has to be set before .Execute()
-	chatlist := map[string]any{"Name": chatName, "Messages": messages, "ID": params.ChatID}
-	if err := homeChat.Execute(w, chatlist); err != nil {
-		w.Header().Del("HX-Trigger-After-Settle")
+	chatlist := map[string]any{"Name": chatName, "Messages": messages, "ID": params.ChatID, "FromMessageID": lastMessageID}
+	if err := chatTemplate.Execute(w, chatlist); err != nil {
 		logger.Error(err.Error())
 		w.WriteString(http.StatusInternalServerError, err.Error())
 		return
@@ -97,4 +123,5 @@ func SendChatMessage(w *response.Writer, r *http.Request, conn database.Connecti
 		return
 	}
 	w.Header().Set("HX-Trigger", "chat-refresh")
+	w.WriteHeader(http.StatusNoContent)
 }
