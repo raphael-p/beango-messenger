@@ -3,6 +3,7 @@ package resolvers
 import (
 	"bytes"
 	"html/template"
+	"math"
 	"net/http"
 	"strconv"
 
@@ -50,8 +51,6 @@ func Home(w *response.Writer, r *http.Request, conn database.Connection) {
 	}
 }
 
-// TODO: only fetch new messages + pagination
-// TODO: regular chat refresh without clearing message bar
 // TODO: investigate adding message directly after sending (instead of triggering update event)
 // TODO: refactor into 2 separate endpoints
 // TODO: use hx-swap to automatically scroll to the bottom of messages on opening a chat (but not on refresh)
@@ -80,7 +79,15 @@ func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
-	lastMessageID := messages[len(messages)-1].ID
+	var lastMessageID int64
+	if len(messages) != 0 {
+		lastMessageIndex := int(math.Max(float64(len(messages)-1), 0))
+		lastMessageID = messages[lastMessageIndex].ID
+	} else if isRefresh {
+		w.Header().Set("HX-Reswap", "none")
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 
 	chatName, httpError := resolverutils.GetRequestQueryParam(r, "name", !isRefresh)
 	if resolverutils.ProcessHTTPError(w, httpError) {
