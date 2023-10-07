@@ -84,7 +84,6 @@ func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
 		lastMessageIndex := int(math.Max(float64(len(messages)-1), 0))
 		lastMessageID = messages[lastMessageIndex].ID
 	} else if isRefresh {
-		w.Header().Set("HX-Reswap", "none")
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}

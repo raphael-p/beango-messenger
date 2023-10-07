@@ -40,13 +40,17 @@ var HomePage string = `<div id="chat-container">
 	</div>`
 
 var MessagePane string = `<span class="heading-1">{{ .Name }}</span>
-	<table id="message-table" class="homepage-column">` + messageRows + `</table>
+	<table
+		id="message-table"
+		class="homepage-column"
+		hx-on="htmx:after-process-node: adjustScroll(event)"
+	>` + messageRows + `</table>
 	<div class="message-bar">
 		<span class="message-prompt">> </span>
 		<textarea
 			class="message-input"
 			placeholder="Type your message"
-			hx-on:keypress="handleKeypress(event)"
+			hx-on:keypress="sendMessageOnEnter(event)"
 			name="content"
 			hx-post="/home/chat/{{ .ID }}/sendMessage"
 			hx-trigger="send-message"
