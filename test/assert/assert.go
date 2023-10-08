@@ -13,15 +13,19 @@ func HasLength[T any](t *testing.T, list []T, expectedLength int) {
 	}
 }
 
-func IsNil(t *testing.T, value any) {
-	if value != nil && !reflect.ValueOf(value).IsNil() {
-		t.Errorf("expected nil, got \"%v\"", value)
+func IsNil(t *testing.T, values ...any) {
+	for _, value := range values {
+		if value != nil && !reflect.ValueOf(value).IsNil() {
+			t.Errorf("expected nil, got \"%v\"", value)
+		}
 	}
 }
 
-func IsNotNil(t *testing.T, value any) {
-	if value == nil || reflect.ValueOf(value).IsNil() {
-		t.Error("expected non-nil, got nil")
+func IsNotNil(t *testing.T, values ...any) {
+	for _, value := range values {
+		if value == nil || reflect.ValueOf(value).IsNil() {
+			t.Error("expected non-nil, got nil")
+		}
 	}
 }
 
