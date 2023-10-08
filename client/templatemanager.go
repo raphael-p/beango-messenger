@@ -10,7 +10,6 @@ import (
 
 var templateMap map[string]*template.Template = make(map[string]*template.Template)
 
-// TODO: test
 func getTemplate(name, value string) (*template.Template, error) {
 	templateFromMap := templateMap[name]
 	if templateFromMap != nil {
