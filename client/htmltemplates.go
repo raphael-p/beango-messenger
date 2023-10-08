@@ -1,6 +1,22 @@
 package client
 
-var LoginPage string = `<span class="logo"><span>> Beango Messenger </span></span>
+var Skeleton string = `<!DOCTYPE html>
+	<html>
+	<head>
+		<script src="/resources/htmx.js"></script>
+		<script src="/resources/json-enc.js"></script>
+		<script src="/resources/script.js"></script>
+		<link rel="stylesheet" type="text/css" href="/resources/style.css">
+		<title>Beango Messenger</title>
+	</head>
+	<body>
+		<div id="header">{{block "header" .}}{{end}}</div>
+		<div id="content">{{template "content" .}}</div>
+		<div id="footer">{{block "header" .}}{{end}}</div>
+	</body>
+	</html>`
+
+var LoginPage string = `{{define "content"}}<span class="logo"><span>> Beango Messenger </span></span>
 	<div id="login-form">
 		<form hx-ext="json-enc">
 			<div class="form-row">
@@ -17,9 +33,9 @@ var LoginPage string = `<span class="logo"><span>> Beango Messenger </span></spa
 			</div>
 			<div id="errors" class="error"></div>
 		</form>
-	</div>`
+	</div>{{end}}`
 
-var HomePage string = `<div id="chat-container">
+var HomePage string = `{{define "content"}}<div id="chat-container">
 	<div id="sidebar">
 		<span class="heading-1">Chats</span>
 		<div id=chat-list class="homepage-column">
@@ -37,7 +53,7 @@ var HomePage string = `<div id="chat-container">
 		</div>
 	</div>
 	<div id="chat"></div>
-	</div>`
+	</div>{{end}}`
 
 var MessagePane string = `<span class="heading-1">{{ .Name }}</span>
 	<table
