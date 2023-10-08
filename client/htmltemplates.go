@@ -88,7 +88,7 @@ var messageRows string = `{{ range .Messages }}
 	{{ end }}`
 
 var newMessageFetcher string = `<div 
-	hx-get="/home/chat/{{ .ID }}?from={{ .FromMessageID }}&refresh"
+	hx-get="/home/chat/{{ .ID }}/refresh?from={{ .FromMessageID }}"
 	hx-swap="outerHTML"
 	class="chat-selector list-item"
 	hx-trigger="chat-refresh from:document, every 5s"

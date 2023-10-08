@@ -1,8 +1,6 @@
 package resolvers
 
 import (
-	"bytes"
-	"html/template"
 	"math"
 	"net/http"
 	"strconv"
@@ -10,7 +8,6 @@ import (
 	"github.com/raphael-p/beango/client"
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/resolvers/resolverutils"
-	"github.com/raphael-p/beango/utils/logger"
 	"github.com/raphael-p/beango/utils/response"
 )
 
@@ -23,45 +20,41 @@ func Home(w *response.Writer, r *http.Request, conn database.Connection) {
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
-	home, err := template.New("home").Parse(client.HomePage)
-	if err != nil {
-		logger.Error(err.Error())
-		w.WriteString(http.StatusInternalServerError, err.Error())
-		return
-	}
-	homeWithChatlist := new(bytes.Buffer)
+
 	chatlist := map[string]any{"Chats": chats}
-	home.Execute(homeWithChatlist, chatlist)
-
-	if r.Header.Get("HX-Request") == "true" {
-		w.Write([]byte("<div id='content' hx-swap-oob='innerHTML'>" + homeWithChatlist.String() + "</div>"))
-		return
-	}
-
-	skeleton, err := client.GetSkeleton()
-	if err != nil {
-		logger.Error(err.Error())
-		w.WriteString(http.StatusInternalServerError, err.Error())
-		return
-	}
-	data := map[string]any{"content": template.HTML(homeWithChatlist.String())}
-	if err := skeleton.Execute(w, data); err != nil {
-		logger.Error(err.Error())
-		w.WriteString(http.StatusInternalServerError, err.Error())
-	}
+	client.ServeTemplate(w, "homePage", client.Skeleton+client.HomePage, chatlist)
 }
 
 // TODO: investigate adding message directly after sending (instead of triggering update event)
-// TODO: refactor into 2 separate endpoints
-// TODO: use hx-swap to automatically scroll to the bottom of messages on opening a chat (but not on refresh)
+// TODO: paging for messages
+// TODO: unit testing for home.go + login.go
 func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
 	user, params, httpError := resolverutils.GetRequestContext(r, resolverutils.CHAT_ID_KEY)
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
 
-	isRefresh := r.URL.Query().Has("refresh")
-	fromMessageIDParam, httpError := resolverutils.GetRequestQueryParam(r, "from", isRefresh)
+	messages, lastMessageID, httpError := getMessages(user.ID, params.ChatID, 0, conn)
+	if resolverutils.ProcessHTTPError(w, httpError) {
+		return
+	}
+
+	chatName, httpError := resolverutils.GetRequestQueryParam(r, "name", true)
+	if resolverutils.ProcessHTTPError(w, httpError) {
+		return
+	}
+
+	chatlist := map[string]any{"Name": chatName, "Messages": messages, "ID": params.ChatID, "FromMessageID": lastMessageID}
+	client.ServeTemplate(w, "messagePane", client.MessagePane, chatlist)
+}
+
+func RefreshChat(w *response.Writer, r *http.Request, conn database.Connection) {
+	user, params, httpError := resolverutils.GetRequestContext(r, resolverutils.CHAT_ID_KEY)
+	if resolverutils.ProcessHTTPError(w, httpError) {
+		return
+	}
+
+	fromMessageIDParam, httpError := resolverutils.GetRequestQueryParam(r, "from", true)
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
@@ -75,42 +68,31 @@ func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
 		}
 	}
 
-	messages, httpError := chatMessagesDatabase(user.ID, params.ChatID, fromMessageID, conn)
+	messages, lastMessageID, httpError := getMessages(user.ID, params.ChatID, fromMessageID, conn)
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
-	var lastMessageID int64
-	if len(messages) != 0 {
-		lastMessageIndex := int(math.Max(float64(len(messages)-1), 0))
-		lastMessageID = messages[lastMessageIndex].ID
-	} else if isRefresh {
+	if len(messages) == 0 {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
-	chatName, httpError := resolverutils.GetRequestQueryParam(r, "name", !isRefresh)
-	if resolverutils.ProcessHTTPError(w, httpError) {
-		return
+	chatlist := map[string]any{"Messages": messages, "ID": params.ChatID, "FromMessageID": lastMessageID}
+	client.ServeTemplate(w, "messagePaneRefresh", client.MessagePaneRefresh, chatlist)
+}
+
+func getMessages(userID, chatID, fromMessageID int64, conn database.Connection) ([]database.Message, int64, *resolverutils.HTTPError) {
+	messages, httpError := chatMessagesDatabase(userID, chatID, fromMessageID, conn)
+	if httpError != nil {
+		return nil, 0, httpError
 	}
 
-	var templateToParse string
-	if isRefresh {
-		templateToParse = client.MessagePaneRefresh
-	} else {
-		templateToParse = client.MessagePane
+	var lastMessageID int64
+	if len(messages) != 0 {
+		lastMessageIndex := int(math.Max(float64(len(messages)-1), 0))
+		lastMessageID = messages[lastMessageIndex].ID
 	}
-	chatTemplate, err := template.New("home").Parse(templateToParse)
-	if err != nil {
-		logger.Error(err.Error())
-		w.WriteString(http.StatusInternalServerError, err.Error())
-		return
-	}
-	chatlist := map[string]any{"Name": chatName, "Messages": messages, "ID": params.ChatID, "FromMessageID": lastMessageID}
-	if err := chatTemplate.Execute(w, chatlist); err != nil {
-		logger.Error(err.Error())
-		w.WriteString(http.StatusInternalServerError, err.Error())
-		return
-	}
+	return messages, lastMessageID, nil
 }
 
 func SendChatMessage(w *response.Writer, r *http.Request, conn database.Connection) {
