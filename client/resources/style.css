@@ -114,9 +114,17 @@ form > div {
 /* HOME PAGE */
 
 .homepage-column {
-	display: block;
 	height: 70vh;
 	overflow-y: auto;
+}
+
+.chat-list {
+	display: block;
+}
+
+.message-list {
+	display: flex;
+	flex-direction: column-reverse;
 }
 
 span.heading-1  {

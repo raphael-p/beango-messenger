@@ -38,7 +38,7 @@ var LoginPage string = `{{define "content"}}<span class="logo"><span>> Beango Me
 var HomePage string = `{{define "content"}}<div id="chat-container">
 	<div id="sidebar">
 		<span class="heading-1">Chats</span>
-		<div id=chat-list class="homepage-column">
+		<div id=chat-list class="homepage-column chat-list">
 			{{ range .Chats }}
 			{{ block "chat-list" .}}
 				<div 
@@ -58,8 +58,7 @@ var HomePage string = `{{define "content"}}<div id="chat-container">
 var MessagePane string = `<span class="heading-1">{{ .Name }}</span>
 	<table
 		id="message-table"
-		class="homepage-column"
-		hx-on="htmx:after-process-node: adjustScroll(event)"
+		class="homepage-column message-list"
 	>` + messageRows + `</table>
 	<div class="message-bar">
 		<span class="message-prompt">> </span>
@@ -76,7 +75,7 @@ var MessagePane string = `<span class="heading-1">{{ .Name }}</span>
 	</div>` + newMessageFetcher
 
 var MessagePaneRefresh string = newMessageFetcher + `
-	<table id="message-table" hx-swap-oob="beforeend">` + messageRows + `</table>`
+	<table id="message-table" hx-swap-oob="afterbegin">` + messageRows + `</table>`
 
 var messageRows string = `{{ range .Messages }}
 	{{ block "message-list" .}}
