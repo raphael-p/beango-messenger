@@ -1,8 +1,8 @@
 package resolvers
 
 import (
-	"math"
 	"net/http"
+	"slices"
 	"strconv"
 
 	"github.com/raphael-p/beango/client"
@@ -93,9 +93,10 @@ func getMessages(userID, chatID, fromMessageID int64, conn database.Connection) 
 
 	var lastMessageID int64
 	if len(messages) != 0 {
-		lastMessageIndex := int(math.Max(float64(len(messages)-1), 0))
-		lastMessageID = messages[lastMessageIndex].ID
+		lastMessageID = messages[0].ID
+		slices.Reverse(messages) // comes in sorted newest to oldest
 	}
+
 	return messages, lastMessageID, nil
 }
 
