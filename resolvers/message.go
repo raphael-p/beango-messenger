@@ -21,7 +21,7 @@ func chatMessagesDatabase(userID, chatID int64, fromMessageID int64, conn databa
 		}
 	}
 
-	messages, err := conn.GetMessagesByChatID(chatID, fromMessageID)
+	messages, err := conn.GetMessagesByChatID(chatID, fromMessageID, 0, 0)
 	if err != nil {
 		return nil, resolverutils.HandleDatabaseError(err)
 	}

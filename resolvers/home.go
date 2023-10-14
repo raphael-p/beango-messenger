@@ -25,8 +25,12 @@ func Home(w *response.Writer, r *http.Request, conn database.Connection) {
 	client.ServeTemplate(w, "homePage", client.Skeleton+client.HomePage, chatlist)
 }
 
-// TODO: investigate adding message directly after sending (instead of triggering update event)
 // TODO: paging for messages
+//
+//	 -> check that "from" param excludes last
+//		-> add "to" param. should exclude that value
+//		-> add "limit" param
+//
 // TODO: unit testing for home.go + login.go
 func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
 	user, params, httpError := resolverutils.GetRequestContext(r, resolverutils.CHAT_ID_KEY)
