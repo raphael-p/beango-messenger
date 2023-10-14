@@ -77,13 +77,27 @@ var MessagePane string = `<span class="heading-1">{{ .Name }}</span>
 var MessagePaneRefresh string = newMessageFetcher + `
 	<table id="message-table" hx-swap-oob="afterbegin">` + messageRows + `</table>`
 
-var messageRows string = `{{ range .Messages }}
-	{{ block "message-list" .}}
-		<tr class="list-item">
-			<td class="cue">{{ .UserDisplayName }}</td>
-			<td class="message">{{ .Content }}</td>
-		</tr>
-	{{ end }}
+var MessagePaneScroll string = `<table id="message-table" hx-swap-oob="beforeend">` +
+	messageRows + `</table>`
+
+var messageRows string = `
+	{{ range $i, $m := .Messages }}
+		{{ if $i }}
+			<tr class="list-item">
+				<td class="cue">{{ $m.UserDisplayName }}</td>
+				<td class="message">{{ $m.Content }}</td>
+			</tr>
+		{{ else }}
+			<tr
+				hx-get="/home/chat/{{ $.ID }}/scrollUp?to={{ $.ToMessageID }}"
+				hx-swap="none"
+				hx-trigger="intersect once"
+				class="list-item"
+			>
+				<td class="cue">{{ $m.UserDisplayName }}</td>
+				<td class="message">{{ $m.Content }}</td>
+			</tr>
+		{{ end }}
 	{{ end }}`
 
 var newMessageFetcher string = `<div 

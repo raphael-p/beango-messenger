@@ -52,6 +52,7 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 	router.POST("/login/:action", resolvers.SubmitLogin)
 	router.GET("/home", resolvers.Home, routing.AuthRedirect)
 	router.GET("/home/chat/:"+chatID, resolvers.OpenChat, routing.AuthRedirect)
+	router.GET("/home/chat/:"+chatID+"/scrollUp", resolvers.ScrollUp, routing.AuthRedirect)
 	router.GET("/home/chat/:"+chatID+"/refresh", resolvers.RefreshChat, routing.AuthRedirect)
 	router.POST("/home/chat/:"+chatID+"/sendMessage", resolvers.SendChatMessage, routing.AuthRedirect)
 	router.GET("/favicon.ico", func(w *response.Writer, r *http.Request, conn database.Connection) {

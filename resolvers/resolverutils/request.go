@@ -88,6 +88,7 @@ func GetRequestQueryParam(r *http.Request, key string, isRequired bool) (string,
 	return value, nil
 }
 
+// TODO: test
 func GetRequestQueryParamInt(r *http.Request, key string, isRequired bool) (int64, *HTTPError) {
 	value, httpError := GetRequestQueryParam(r, key, isRequired)
 	if httpError != nil {
