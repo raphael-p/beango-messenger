@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"strconv"
 
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/utils/context"
@@ -85,4 +86,21 @@ func GetRequestQueryParam(r *http.Request, key string, isRequired bool) (string,
 		return "", &HTTPError{http.StatusBadRequest, "query parameter cannot be empty: " + key}
 	}
 	return value, nil
+}
+
+func GetRequestQueryParamInt(r *http.Request, key string, isRequired bool) (int64, *HTTPError) {
+	value, httpError := GetRequestQueryParam(r, key, isRequired)
+	if httpError != nil {
+		return 0, httpError
+	}
+	var intValue int64
+	if value != "" {
+		var err error
+		intValue, err = strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			message := fmt.Sprintf("query parameter '%s' must be an integer", key)
+			return 0, &HTTPError{http.StatusBadRequest, message}
+		}
+	}
+	return intValue, nil
 }
