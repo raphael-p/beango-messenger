@@ -13,6 +13,7 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
+// Creates mock resolver arguments
 func CommonSetup(body string) (*response.Writer, *http.Request, database.Connection) {
 	req := httptest.NewRequest(http.MethodPost, "/test", bytes.NewBufferString(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -20,6 +21,7 @@ func CommonSetup(body string) (*response.Writer, *http.Request, database.Connect
 	return w, req, mocks.MakeMockConnection()
 }
 
+// Adds a user and/or parameters to a new request context
 func SetContext(
 	t *testing.T,
 	req *http.Request,
