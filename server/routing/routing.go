@@ -145,9 +145,9 @@ func (r *route) handler(w *response.Writer, req *http.Request, conn database.Con
 	logger.Info(fmt.Sprint("received ", requestString))
 
 	// Middleware
-	var next bool
+	var hasNext bool
 	for _, middleware := range r.middleware {
-		if req, next = middleware(w, req, conn); !next {
+		if req, hasNext = middleware(w, req, conn); !hasNext {
 			return
 		}
 	}

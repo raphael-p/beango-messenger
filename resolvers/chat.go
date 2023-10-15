@@ -89,13 +89,13 @@ func CreatePrivateChat(w *response.Writer, r *http.Request, conn database.Connec
 		return
 	}
 
-	// Check if chat already exists
-	exists, err := conn.CheckPrivateChatExists(userIDs)
+	// Check if chat already chatExists
+	chatExists, err := conn.CheckPrivateChatExists(userIDs)
 	if err != nil {
 		resolverutils.ProcessHTTPError(w, resolverutils.HandleDatabaseError(err))
 		return
 	}
-	if exists {
+	if chatExists {
 		w.WriteString(http.StatusConflict, "chat already exists")
 		return
 	}

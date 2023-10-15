@@ -122,8 +122,8 @@ func TestStructFromJSON(t *testing.T) {
 
 	t.Run("JSONFieldTags", func(t *testing.T) {
 		testCases := []struct {
-			set, null, zero bool
-			xMissingFields  []string
+			isSet, isNull, isZero bool
+			xMissingFields        []string
 		}{
 			{false, false, false, []string{"Nullable", "Zeroable", "Plain"}},
 			{false, false, true, []string{"Nullable", "Zeroable", "Plain"}},
@@ -135,21 +135,21 @@ func TestStructFromJSON(t *testing.T) {
 		}
 		for _, testCase := range testCases {
 			input := validStruct
-			if !testCase.set {
-				input.Optional.Set = false
-				input.OptionalNullable.Set = false
-				input.Nullable.Set = false
-				input.Zeroable.Set = false
-				input.Plain.Set = false
+			if !testCase.isSet {
+				input.Optional.IsSet = false
+				input.OptionalNullable.IsSet = false
+				input.Nullable.IsSet = false
+				input.Zeroable.IsSet = false
+				input.Plain.IsSet = false
 			}
-			if testCase.null {
-				input.Optional.Null = true
-				input.OptionalNullable.Null = true
-				input.Nullable.Null = true
-				input.Zeroable.Null = true
-				input.Plain.Null = true
+			if testCase.isNull {
+				input.Optional.IsNull = true
+				input.OptionalNullable.IsNull = true
+				input.Nullable.IsNull = true
+				input.Zeroable.IsNull = true
+				input.Plain.IsNull = true
 			}
-			if testCase.zero {
+			if testCase.isZero {
 				input.Optional.Value = 0
 				input.OptionalNullable.Value = nil
 				input.Nullable.Value = 0

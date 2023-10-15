@@ -73,25 +73,25 @@ func (mc *MockConnection) GetUsersByChatID(chatID int64) ([]database.User, error
 func (mc *MockConnection) CheckPrivateChatExists(userIDs [2]int64) (bool, error) {
 	for _, chat := range mc.chats {
 		if chat.Type == database.PRIVATE_CHAT {
-			match := [2]bool{false, false}
+			matchesUserID := [2]bool{false, false}
 			for _, chatUser := range mc.chatUsers {
 				if chatUser.ChatID == chat.ID {
 					if chatUser.UserID == userIDs[0] {
-						if match[0] {
+						if matchesUserID[0] {
 							break
 						}
-						match[0] = true
+						matchesUserID[0] = true
 					} else if chatUser.UserID == userIDs[1] {
-						if match[1] {
+						if matchesUserID[1] {
 							break
 						}
-						match[1] = true
+						matchesUserID[1] = true
 					} else {
 						break
 					}
 				}
 			}
-			if match[0] && match[1] {
+			if matchesUserID[0] && matchesUserID[1] {
 				return true, nil
 			}
 

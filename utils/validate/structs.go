@@ -88,17 +88,17 @@ func StructFromJSON(value any) ([]string, error) {
 //	`nullable:"true"` -> allows field to be set to null
 //	`zeroable:"true"` -> allows field to be set to zero-value
 type JSONField[T any] struct {
-	Value T
-	Null  bool
-	Set   bool
+	Value  T
+	IsNull bool
+	IsSet  bool
 }
 
 // this is called implicitly when unmarshalling into a struct containing JSONField
 func (i *JSONField[any]) UnmarshalJSON(data []byte) error {
-	i.Set = true
+	i.IsSet = true
 
 	if string(data) == "null" {
-		i.Null = true
+		i.IsNull = true
 		return nil
 	}
 
@@ -107,7 +107,7 @@ func (i *JSONField[any]) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	i.Value = temp
-	i.Null = false
+	i.IsNull = false
 	return nil
 }
 
