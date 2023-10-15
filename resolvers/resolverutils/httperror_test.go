@@ -40,8 +40,7 @@ func TestHandleDatabaseError(t *testing.T) {
 		errMessage := "this did not go well"
 
 		httpError := HandleDatabaseError(errors.New(errMessage))
-		assert.Equals(t, httpError.Status, http.StatusInternalServerError)
-		assert.Equals(t, httpError.Message, errPrefix)
+		AssertHTTPError(t, httpError, http.StatusInternalServerError, errPrefix)
 		assert.Contains(t, buf.String(), "[ERROR] "+errPrefix+": "+errMessage)
 	})
 

@@ -29,43 +29,39 @@ func TestBindRequestJSON(t *testing.T) {
 		age := 30
 		body := fmt.Sprintf(`{"name": "%s", "Age": %d}`, name, age)
 		var testStruct TestStruct
-		err := setup(body, &testStruct)
-		assert.IsNil(t, err)
+		httpError := setup(body, &testStruct)
+		assert.IsNil(t, httpError)
 		xTestStruct := TestStruct{name, age}
 		assert.DeepEquals(t, testStruct, xTestStruct)
 	})
 
 	t.Run("NonPointerBind", func(t *testing.T) {
 		var testStruct TestStruct
-		err := setup(`{"name": "John", "Age": 30}`, testStruct)
-		assert.IsNotNil(t, err)
-		assert.Equals(t, err.Status, http.StatusBadRequest)
+		httpError := setup(`{"name": "John", "Age": 30}`, testStruct)
 		xMessage := "expected `ptr` to be a pointer to a struct, got resolverutils.TestStruct"
-		assert.Equals(t, err.Message, xMessage)
+		AssertHTTPError(t, httpError, http.StatusBadRequest, xMessage)
 	})
 
 	t.Run("NonStructBind", func(t *testing.T) {
 		var testStruct *string
-		err := setup(`{"name": "John", "Age": 30}`, testStruct)
-		assert.IsNotNil(t, err)
-		assert.Equals(t, err.Status, http.StatusBadRequest)
-		assert.Equals(t, err.Message, "expected `ptr` to be a pointer to a struct, got *string")
+		httpError := setup(`{"name": "John", "Age": 30}`, testStruct)
+		xMessage := "expected `ptr` to be a pointer to a struct, got *string"
+		AssertHTTPError(t, httpError, http.StatusBadRequest, xMessage)
 	})
 
 	t.Run("MissingRequiredField", func(t *testing.T) {
 		var testStruct TestStruct
-		err := setup(`{"name": "John"}`, &testStruct)
-		assert.IsNotNil(t, err)
-		assert.Equals(t, err.Status, http.StatusBadRequest)
-		assert.Equals(t, err.Message, "missing required field(s): [age]")
+		httpError := setup(`{"name": "John"}`, &testStruct)
+		xMessage := "missing required field(s): [age]"
+		AssertHTTPError(t, httpError, http.StatusBadRequest, xMessage)
 	})
 
 	t.Run("MalformedJSON", func(t *testing.T) {
 		var testStruct TestStruct
-		err := setup(`{"name": "John",}`, &testStruct)
-		assert.IsNotNil(t, err)
-		assert.Equals(t, err.Status, http.StatusBadRequest)
-		assert.Contains(t, err.Message, "malformed request body: ")
+		httpError := setup(`{"name": "John",}`, &testStruct)
+		assert.IsNotNil(t, httpError)
+		assert.Equals(t, httpError.Status, http.StatusBadRequest)
+		assert.Contains(t, httpError.Message, "malformed request body: ")
 	})
 }
 
@@ -83,8 +79,8 @@ func TestGetRequestContext(t *testing.T) {
 		contextParams := map[string]string{key1: "value1", key2: "value2"}
 		req := setup(xUser, contextParams)
 
-		user, routeParams, err := GetRequestContext(req, key1, key2)
-		assert.IsNil(t, err)
+		user, routeParams, httpError := GetRequestContext(req, key1, key2)
+		assert.IsNil(t, httpError)
 		assert.DeepEquals(t, user, xUser)
 		assert.DeepEquals(t, routeParams, &RouteParams{"value1", 0, "value2"})
 	})
@@ -92,18 +88,17 @@ func TestGetRequestContext(t *testing.T) {
 	t.Run("ParamExtractionFails", func(t *testing.T) {
 		req := setup(mocks.MakeUser(), nil)
 
-		_, _, err := GetRequestContext(req, USERNAME_KEY)
-		assert.IsNotNil(t, err)
+		_, _, httpError := GetRequestContext(req, USERNAME_KEY)
+		assert.IsNotNil(t, httpError)
 	})
 
 	t.Run("NoUser", func(t *testing.T) {
 		req := setup(nil, nil)
 		buf := logger.MockFileLogger(t)
 
-		_, _, err := GetRequestContext(req)
-		assert.IsNotNil(t, err)
-		assert.Equals(t, err.Status, http.StatusInternalServerError)
-		assert.Equals(t, err.Message, "failed to fetch request user")
+		_, _, httpError := GetRequestContext(req)
+		xMessage := "failed to fetch request user"
+		AssertHTTPError(t, httpError, http.StatusInternalServerError, xMessage)
 		assert.Contains(t, buf.String(), "[ERROR]", "user not found in request context")
 	})
 }

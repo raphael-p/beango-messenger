@@ -44,7 +44,7 @@ func NotEquals[T comparable](t *testing.T, value T, expectedValue T) {
 func Contains(t *testing.T, value string, expectedValues ...string) {
 	for _, expectedValue := range expectedValues {
 		if !strings.Contains(value, expectedValue) {
-			t.Errorf("expected to find \"%v\" in \"%v\"", expectedValue, value)
+			t.Errorf("expected to find \"%s\" in \"%s\"", expectedValue, value)
 		}
 	}
 }
@@ -52,7 +52,7 @@ func Contains(t *testing.T, value string, expectedValues ...string) {
 func NotContains(t *testing.T, value string, expectedValues ...string) {
 	for _, expectedValue := range expectedValues {
 		if strings.Contains(value, expectedValue) {
-			t.Errorf("expected not to find \"%v\" in \"%v\"", expectedValue, value)
+			t.Errorf("expected not to find \"%s\" in \"%s\"", expectedValue, value)
 		}
 	}
 }
@@ -77,12 +77,12 @@ func ErrorHasMessage(t *testing.T, err error, expectedMessage string) {
 		return
 	}
 	if err.Error() != expectedMessage {
-		t.Errorf("expected error \"%v\", got \"%v\"", err.Error(), expectedMessage)
+		t.Errorf("expected error \"%s\", got \"%s\"", expectedMessage, err.Error())
 	}
 }
 
 func IsValidJSON(t *testing.T, value string, ptr any) {
 	if err := json.Unmarshal([]byte(value), ptr); err != nil {
-		t.Errorf(`failed to unmarshal "%v", got "%v"`, value, err.Error())
+		t.Errorf(`failed to unmarshal "%s", got "%s"`, value, err.Error())
 	}
 }

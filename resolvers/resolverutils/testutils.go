@@ -37,3 +37,16 @@ func SetContext(
 	}
 	return req
 }
+
+func AssertHTTPError(t *testing.T, err *HTTPError, expectedStatus int, expectedMessage string) {
+	if err == nil {
+		t.Error("expected HTTPError, got nil")
+		return
+	}
+	if err.Status != expectedStatus {
+		t.Errorf("expected HTTPError status \"%d\", got \"%d\"", expectedStatus, err.Status)
+	}
+	if err.Message != expectedMessage {
+		t.Errorf("expected HTTPError message \"%s\", got \"%s\"", expectedMessage, err.Message)
+	}
+}

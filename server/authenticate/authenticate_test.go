@@ -46,10 +46,8 @@ func TestAuth(t *testing.T) {
 		reqCopy := *req
 
 		req, httpError := Auth(w, req, conn)
-		assert.IsNotNil(t, httpError)
+		resolverutils.AssertHTTPError(t, httpError, http.StatusUnauthorized, "")
 		assert.DeepEquals(t, *req, reqCopy)
-		assert.Equals(t, httpError.Status, http.StatusUnauthorized)
-		assert.Equals(t, httpError.Message, "")
 	})
 
 	t.Run("UserNotFound", func(t *testing.T) {
@@ -60,10 +58,9 @@ func TestAuth(t *testing.T) {
 		conn.SetSession(sesh)
 
 		req, httpError := Auth(w, req, conn)
-		assert.IsNotNil(t, httpError)
+		xMessage := "user not found during authentication"
+		resolverutils.AssertHTTPError(t, httpError, http.StatusNotFound, xMessage)
 		assert.DeepEquals(t, *req, reqCopy)
-		assert.Equals(t, httpError.Status, http.StatusNotFound)
-		assert.Equals(t, httpError.Message, "user not found during authentication")
 	})
 
 	t.Run("CannotSetNewContext", func(t *testing.T) {
@@ -74,11 +71,9 @@ func TestAuth(t *testing.T) {
 		reqCopy := *req
 		assert.IsNil(t, httpError)
 		req, httpError = Auth(w, req, conn) // request context already has user
-		assert.IsNotNil(t, httpError)
 		assert.DeepEquals(t, *req, reqCopy)
-		assert.Equals(t, httpError.Status, http.StatusInternalServerError)
 		xMessage := "user already in request context"
-		assert.Equals(t, httpError.Message, xMessage)
+		resolverutils.AssertHTTPError(t, httpError, http.StatusInternalServerError, xMessage)
 		assert.Contains(t, buf.String(), fmt.Sprint("[ERROR] ", xMessage))
 	})
 }

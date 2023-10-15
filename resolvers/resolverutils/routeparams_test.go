@@ -24,8 +24,8 @@ func TestExtractRouteParams(t *testing.T) {
 		contextParams := map[string]string{key1: "value1", key2: "value2", key3: "29"}
 		req := setup(contextParams)
 
-		routeParams, err := extractRouteParams(req, key1, key2)
-		assert.IsNil(t, err)
+		routeParams, httpError := extractRouteParams(req, key1, key2)
+		assert.IsNil(t, httpError)
 		assert.DeepEquals(t, routeParams, &RouteParams{"value1", 0, "value2"})
 	})
 
@@ -35,16 +35,16 @@ func TestExtractRouteParams(t *testing.T) {
 		contextParams := map[string]string{key: "value1", extraKey: "value2"}
 		req := setup(contextParams)
 
-		params, err := extractRouteParams(req, key)
-		assert.IsNil(t, err)
+		params, httpError := extractRouteParams(req, key)
+		assert.IsNil(t, httpError)
 		assert.DeepEquals(t, params, &RouteParams{"value1", 0, ""})
 	})
 
 	t.Run("NoParamKeysPassed", func(t *testing.T) {
 		req := setup(map[string]string{"param1": "value1"})
 
-		params, err := extractRouteParams(req)
-		assert.IsNil(t, err)
+		params, httpError := extractRouteParams(req)
+		assert.IsNil(t, httpError)
 		assert.DeepEquals(t, params, &RouteParams{})
 	})
 
@@ -54,10 +54,9 @@ func TestExtractRouteParams(t *testing.T) {
 		req := setup(map[string]string{key1: "some-value"})
 		buf := logger.MockFileLogger(t)
 
-		_, err := extractRouteParams(req, key1, key2)
-		assert.IsNotNil(t, err)
-		assert.Equals(t, err.Status, http.StatusInternalServerError)
-		assert.Equals(t, err.Message, fmt.Sprint("failed to fetch path parameter: ", key2))
+		_, httpError := extractRouteParams(req, key1, key2)
+		xMessage := fmt.Sprint("failed to fetch path parameter: ", key2)
+		AssertHTTPError(t, httpError, http.StatusInternalServerError, xMessage)
 		assert.Contains(t, buf.String(), "[ERROR]", fmt.Sprintf("path parameter %s not found", key2))
 	})
 
@@ -65,9 +64,8 @@ func TestExtractRouteParams(t *testing.T) {
 		key := CHAT_ID_KEY
 		req := setup(map[string]string{key: "some-value"})
 
-		_, err := extractRouteParams(req, key)
-		assert.IsNotNil(t, err)
-		assert.Equals(t, err.Status, http.StatusBadRequest)
-		assert.Equals(t, err.Message, "chat ID must be an integer")
+		_, httpError := extractRouteParams(req, key)
+		xMessage := "chat ID must be an integer"
+		AssertHTTPError(t, httpError, http.StatusBadRequest, xMessage)
 	})
 }

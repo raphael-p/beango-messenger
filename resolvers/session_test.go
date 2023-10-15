@@ -27,18 +27,16 @@ func TestCheckCredentials(t *testing.T) {
 		conn := mocks.MakeMockConnection()
 		userID, httpError := checkCredentials(mocks.ADMIN_USERNAME+" ", mocks.PASSWORD, conn)
 		assert.Equals(t, userID, 0)
-		assert.IsNotNil(t, httpError)
-		assert.Equals(t, httpError.Status, http.StatusUnauthorized)
-		assert.Equals(t, httpError.Message, "login credentials are incorrect")
+		xMessage := "login credentials are incorrect"
+		resolverutils.AssertHTTPError(t, httpError, http.StatusUnauthorized, xMessage)
 	})
 
 	t.Run("WrongPassword", func(t *testing.T) {
 		conn := mocks.MakeMockConnection()
 		userID, httpError := checkCredentials(mocks.ADMIN_USERNAME, mocks.PASSWORD+" ", conn)
 		assert.Equals(t, userID, 0)
-		assert.IsNotNil(t, httpError)
-		assert.Equals(t, httpError.Status, http.StatusUnauthorized)
-		assert.Equals(t, httpError.Message, "login credentials are incorrect")
+		xMessage := "login credentials are incorrect"
+		resolverutils.AssertHTTPError(t, httpError, http.StatusUnauthorized, xMessage)
 	})
 }
 
@@ -69,9 +67,8 @@ func TestSetSession(t *testing.T) {
 		buf := logger.MockFileLogger(t)
 
 		httpError := setSession(w, &database.Session{}, conn)
-		assert.IsNotNil(t, httpError)
-		assert.Equals(t, httpError.Status, http.StatusInternalServerError)
-		assert.Equals(t, httpError.Message, "failed to create session cookie")
+		xMessage := "failed to create session cookie"
+		resolverutils.AssertHTTPError(t, httpError, http.StatusInternalServerError, xMessage)
 		xError := fmt.Sprint(
 			"failed to create session cookie: response header already ",
 			"sets a cookie with the name ",

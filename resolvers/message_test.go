@@ -59,18 +59,14 @@ func TestChatMessagesDatabase(t *testing.T) {
 
 		messages, httpError := chatMessagesDatabase(mocks.ADMIN_ID, chatID, 0, 0, 0, conn)
 		assert.IsNil(t, messages)
-		assert.IsNotNil(t, httpError)
-		assert.Equals(t, httpError.Status, http.StatusNotFound)
-		assert.Equals(t, httpError.Message, "chat not found")
+		resolverutils.AssertHTTPError(t, httpError, http.StatusNotFound, "chat not found")
 	})
 
 	t.Run("NotChatUser", func(t *testing.T) {
 		conn, chatID := setupMessageTests(11, 12)
 		messages, httpError := chatMessagesDatabase(mocks.ADMIN_ID, chatID, 0, 0, 0, conn)
 		assert.IsNil(t, messages)
-		assert.IsNotNil(t, httpError)
-		assert.Equals(t, httpError.Status, http.StatusNotFound)
-		assert.Equals(t, httpError.Message, "chat not found")
+		resolverutils.AssertHTTPError(t, httpError, http.StatusNotFound, "chat not found")
 	})
 }
 
@@ -127,9 +123,7 @@ func TestSendMessageDatabase(t *testing.T) {
 
 		message, httpError := sendMessageDatabase(mocks.ADMIN_ID, chatID, content, conn)
 		assert.IsNil(t, message)
-		assert.IsNotNil(t, httpError)
-		assert.Equals(t, httpError.Status, http.StatusNotFound)
-		assert.Equals(t, httpError.Message, "chat not found")
+		resolverutils.AssertHTTPError(t, httpError, http.StatusNotFound, "chat not found")
 	})
 
 	t.Run("NotChatUser", func(t *testing.T) {
@@ -137,9 +131,7 @@ func TestSendMessageDatabase(t *testing.T) {
 
 		message, httpError := sendMessageDatabase(mocks.ADMIN_ID, chatID, content, conn)
 		assert.IsNil(t, message)
-		assert.IsNotNil(t, httpError)
-		assert.Equals(t, httpError.Status, http.StatusNotFound)
-		assert.Equals(t, httpError.Message, "chat not found")
+		resolverutils.AssertHTTPError(t, httpError, http.StatusNotFound, "chat not found")
 	})
 
 	t.Run("TrimsSpace", func(t *testing.T) {
