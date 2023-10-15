@@ -27,8 +27,8 @@ func traverseStructFields(
 			isOptional := tags.Get("optional") == "true"
 			isNullable := tags.Get("nullable") == "true"
 			isZeroable := isOptional || isNullable || tags.Get("zeroable") == "true"
-			isSet := jsonField.FieldByName("Set").Bool()
-			isNull := jsonField.FieldByName("Null").Bool()
+			isSet := jsonField.FieldByName("IsSet").Bool()
+			isNull := jsonField.FieldByName("IsNull").Bool()
 			value := jsonField.FieldByName("Value")
 			isZero := value.IsZero()
 			isStruct := value.Type().Kind() == reflect.Struct

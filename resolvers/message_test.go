@@ -41,7 +41,7 @@ func TestChatMessagesDatabase(t *testing.T) {
 		conn.SetMessage(mocks.MakeMessage(userID1, chatID))
 		conn.SetMessage(mocks.MakeMessage(userID2, chatID))
 
-		messages, httpError := chatMessagesDatabase(mocks.ADMIN_ID, chatID, 0, conn)
+		messages, httpError := chatMessagesDatabase(mocks.ADMIN_ID, chatID, 0, 0, 0, conn)
 		assert.IsNil(t, httpError)
 		assert.HasLength(t, messages, 2)
 	})
@@ -49,7 +49,7 @@ func TestChatMessagesDatabase(t *testing.T) {
 	t.Run("NoMessages", func(t *testing.T) {
 		conn, chatID := setupMessageTests(mocks.ADMIN_ID, 11)
 
-		messages, httpError := chatMessagesDatabase(mocks.ADMIN_ID, chatID, 0, conn)
+		messages, httpError := chatMessagesDatabase(mocks.ADMIN_ID, chatID, 0, 0, 0, conn)
 		assert.IsNil(t, httpError)
 		assert.HasLength(t, messages, 0)
 	})
@@ -57,7 +57,7 @@ func TestChatMessagesDatabase(t *testing.T) {
 	t.Run("NoChat", func(t *testing.T) {
 		conn, chatID := setupMessageTests(0, 0)
 
-		messages, httpError := chatMessagesDatabase(mocks.ADMIN_ID, chatID, 0, conn)
+		messages, httpError := chatMessagesDatabase(mocks.ADMIN_ID, chatID, 0, 0, 0, conn)
 		assert.IsNil(t, messages)
 		assert.IsNotNil(t, httpError)
 		assert.Equals(t, httpError.Status, http.StatusNotFound)
@@ -66,7 +66,7 @@ func TestChatMessagesDatabase(t *testing.T) {
 
 	t.Run("NotChatUser", func(t *testing.T) {
 		conn, chatID := setupMessageTests(11, 12)
-		messages, httpError := chatMessagesDatabase(mocks.ADMIN_ID, chatID, 0, conn)
+		messages, httpError := chatMessagesDatabase(mocks.ADMIN_ID, chatID, 0, 0, 0, conn)
 		assert.IsNil(t, messages)
 		assert.IsNotNil(t, httpError)
 		assert.Equals(t, httpError.Status, http.StatusNotFound)
