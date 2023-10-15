@@ -71,6 +71,9 @@ func GetRequestBodyAndContext(
 	return GetRequestContext(r, paramKeys...)
 }
 
+// Extracts query parameter from request
+// errors if missing when isRequired is true
+// errors if the parameter value is an empty string
 func GetRequestQueryParam(r *http.Request, key string, isRequired bool) (string, *HTTPError) {
 	query := r.URL.Query()
 	if !query.Has(key) {
@@ -88,20 +91,18 @@ func GetRequestQueryParam(r *http.Request, key string, isRequired bool) (string,
 	return value, nil
 }
 
-// TODO: test
+// Calls GetRequestQueryParam, then casts the result to an integer
 func GetRequestQueryParamInt(r *http.Request, key string, isRequired bool) (int64, *HTTPError) {
 	value, httpError := GetRequestQueryParam(r, key, isRequired)
 	if httpError != nil {
 		return 0, httpError
 	}
 	var intValue int64
-	if value != "" {
-		var err error
-		intValue, err = strconv.ParseInt(value, 10, 64)
-		if err != nil {
-			message := fmt.Sprintf("query parameter '%s' must be an integer", key)
-			return 0, &HTTPError{http.StatusBadRequest, message}
-		}
+	var err error
+	intValue, err = strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		message := fmt.Sprintf("query parameter '%s' must be an integer", key)
+		return 0, &HTTPError{http.StatusBadRequest, message}
 	}
 	return intValue, nil
 }

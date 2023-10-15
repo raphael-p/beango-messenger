@@ -162,3 +162,29 @@ func TestGetRequestQueryParam(t *testing.T) {
 		}
 	})
 }
+
+func TestGetRequestQueryParamInt(t *testing.T) {
+	path := func(key, value string) string {
+		return fmt.Sprintf("/path?%s=%s", key, value)
+	}
+
+	t.Run("Normal", func(t *testing.T) {
+		key := "someKey"
+		req := httptest.NewRequest(http.MethodGet, path(key, "62"), nil)
+		intValue, httpError := GetRequestQueryParamInt(req, key, false)
+
+		assert.IsNil(t, httpError)
+		assert.Equals(t, intValue, 62)
+	})
+
+	t.Run("NonInteger", func(t *testing.T) {
+		key := "keyForNonIntParam"
+		req := httptest.NewRequest(http.MethodGet, path(key, "1.1"), nil)
+		intValue, httpError := GetRequestQueryParamInt(req, key, false)
+
+		assert.Equals(t, intValue, 0)
+		assert.Equals(t, httpError.Status, http.StatusBadRequest)
+		xMessage := fmt.Sprintf("query parameter '%s' must be an integer", key)
+		assert.Equals(t, httpError.Message, xMessage)
+	})
+}

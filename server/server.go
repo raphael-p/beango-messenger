@@ -16,7 +16,6 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-// TODO: rename bool variables with more intuitive names (like "isX" instead of just "X")
 func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 	ok = true
 	defer func() {
