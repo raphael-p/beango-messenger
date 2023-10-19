@@ -17,7 +17,6 @@ import (
 func TestLogin(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		w, req, conn := resolverutils.CommonSetup("")
-		req = resolverutils.SetContext(t, req, mocks.Admin, nil)
 
 		Login(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusOK)
@@ -61,19 +60,19 @@ func TestSubmitLogin(t *testing.T) {
 	}
 
 	t.Run("NormalWithLogin", func(t *testing.T) {
-		mockUser := mocks.MakeUser()
-		w, req, conn := resolverutils.CommonSetup(body(mockUser.Username, mocks.PASSWORD))
-		conn.SetUser(mockUser)
-		param := map[string]string{"action": "login"}
-		req = resolverutils.SetContext(t, req, mocks.Admin, param)
+		user := mocks.MakeUser()
+		w, req, conn := resolverutils.CommonSetup(body(user.Username, mocks.PASSWORD))
+		conn.SetUser(user)
+		params := map[string]string{"action": "login"}
+		req = resolverutils.SetContext(t, req, nil, params)
 
 		checkSuccessfulLogin(w, req, conn)
 	})
 
 	t.Run("NormalWithSignup", func(t *testing.T) {
 		w, req, conn := resolverutils.CommonSetup(body("someNewUser", "123"))
-		param := map[string]string{"action": "signup"}
-		req = resolverutils.SetContext(t, req, mocks.Admin, param)
+		params := map[string]string{resolverutils.ACTION_KEY: "signup"}
+		req = resolverutils.SetContext(t, req, nil, params)
 
 		checkSuccessfulLogin(w, req, conn)
 	})
