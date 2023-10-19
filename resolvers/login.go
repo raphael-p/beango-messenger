@@ -24,7 +24,9 @@ func Login(w *response.Writer, r *http.Request, conn database.Connection) {
 }
 
 func SubmitLogin(w *response.Writer, r *http.Request, conn database.Connection) {
-	action, _ := context.GetParam(r, "action")
+	// getting route param directly instead of using GetRequestContext()
+	// because it would error since no user is in the context
+	action, _ := context.GetParam(r, resolverutils.ACTION_KEY)
 	var input CreateUserInput
 	if resolverutils.DisplayHTTPError(w, resolverutils.GetRequestBody(r, &input)) {
 		return

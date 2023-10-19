@@ -18,6 +18,7 @@ func Home(w *response.Writer, r *http.Request, conn database.Connection) {
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
+
 	chats, httpError := chatsDatabase(user.ID, conn)
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return

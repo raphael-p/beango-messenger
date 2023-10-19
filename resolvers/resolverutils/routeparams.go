@@ -13,6 +13,7 @@ const (
 	USERNAME_KEY  = "username"
 	CHAT_ID_KEY   = "chatID"
 	CHAT_NAME_KEY = "chatName"
+	ACTION_KEY    = "action"
 )
 
 type RouteParams struct {
