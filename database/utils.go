@@ -11,15 +11,9 @@ type databaseEntity interface {
 
 // Maps a SQL row onto a struct of a database entity
 func scanRow[T databaseEntity](row *sql.Row) (*T, error) {
-	if err := row.Err(); err != nil {
-		return nil, err
-	}
 	target, scanArgs := prepForScan[T]()
 	err := row.Scan(scanArgs...)
-	if err != nil {
-		return nil, err
-	}
-	return target, nil
+	return target, err
 }
 
 // Maps SQL rows onto a slice of structs of a database entity
@@ -27,6 +21,7 @@ func scanRows[T databaseEntity](rows *sql.Rows, err error) ([]T, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	results := []T{}
 	for rows.Next() {
@@ -38,10 +33,7 @@ func scanRows[T databaseEntity](rows *sql.Rows, err error) ([]T, error) {
 		results = append(results, *target)
 	}
 
-	if rows.Err() != nil {
-		return nil, err
-	}
-	return results, nil
+	return results, rows.Err()
 }
 
 // Creates a pointer to a database entity and generates a slice of scan arguments from it

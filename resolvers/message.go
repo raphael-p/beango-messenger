@@ -22,10 +22,7 @@ func chatMessagesDatabase(userID, chatID, fromMessageID, toMessageID int64, limi
 	}
 
 	messages, err := conn.GetMessagesByChatID(chatID, fromMessageID, toMessageID, limit)
-	if err != nil {
-		return nil, resolverutils.HandleDatabaseError(err)
-	}
-	return messages, nil
+	return messages, resolverutils.HandleDatabaseError(err)
 }
 
 func GetChatMessages(w *response.Writer, r *http.Request, conn database.Connection) {
