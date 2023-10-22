@@ -1,6 +1,8 @@
 package mocks
 
 import (
+	"slices"
+
 	"github.com/raphael-p/beango/database"
 )
 
@@ -129,6 +131,7 @@ func (mc *MockConnection) GetMessagesByChatID(chatID, fromMessageID, toMessageID
 			})
 		}
 	}
+	slices.Reverse(messages) // reflects ordering from database
 	return messages, nil
 }
 
