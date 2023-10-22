@@ -8,6 +8,7 @@ import (
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/resolvers/resolverutils"
 	"github.com/raphael-p/beango/utils/response"
+	"github.com/raphael-p/beango/utils/validate"
 )
 
 const MESSAGE_BATCH_SIZE int = 20
@@ -152,7 +153,7 @@ func getMessages(userID, chatID, fromMessageID, toMessageID int64, limit int, co
 }
 
 type sendChatMessageInput struct {
-	Content string `json:"content"`
+	Content validate.JSONField[string] `json:"content" zeroable:"true"`
 }
 
 func SendChatMessage(w *response.Writer, r *http.Request, conn database.Connection) {
@@ -161,12 +162,12 @@ func SendChatMessage(w *response.Writer, r *http.Request, conn database.Connecti
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
-	if input.Content == "" {
+	if input.Content.Value == "" {
 		w.WriteString(http.StatusBadRequest, "cannot send an empty message")
 		return
 	}
 
-	_, httpError = sendMessageDatabase(user.ID, params.ChatID, input.Content, conn)
+	_, httpError = sendMessageDatabase(user.ID, params.ChatID, input.Content.Value, conn)
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
