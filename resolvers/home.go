@@ -150,18 +150,22 @@ func getMessages(userID, chatID, fromMessageID, toMessageID int64, limit int, co
 	return messages, firstMessageID, lastMessageID, nil
 }
 
+type sendChatMessageInput struct {
+	Content string `json:"content"`
+}
+
 func SendChatMessage(w *response.Writer, r *http.Request, conn database.Connection) {
-	content := r.PostFormValue("content")
-	if content == "" {
-		w.WriteString(http.StatusBadRequest, "cannot send an empty message")
-		return
-	}
-	user, params, httpError := resolverutils.GetRequestContext(r, resolverutils.CHAT_ID_KEY)
+	input := new(sendChatMessageInput)
+	user, params, httpError := resolverutils.GetRequestBodyAndContext(r, input, resolverutils.CHAT_ID_KEY)
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
+	if input.Content == "" {
+		w.WriteString(http.StatusBadRequest, "cannot send an empty message")
+		return
+	}
 
-	_, httpError = sendMessageDatabase(user.ID, params.ChatID, content, conn)
+	_, httpError = sendMessageDatabase(user.ID, params.ChatID, input.Content, conn)
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}

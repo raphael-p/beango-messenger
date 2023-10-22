@@ -71,6 +71,7 @@ var MessagePane string = `<span class="heading-1">{{ .Name }}</span>
 			hx-trigger="send-message"
 			hx-swap="none"
 			hx-on::after-request="if(event.detail.successful) this.value = '';"
+			hx-ext="json-enc"
 		></textarea>
 	</div>` + newMessageFetcher
 
