@@ -11,9 +11,9 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-type GetChatsOutput struct {
+type getChatsOutput struct {
 	database.Chat
-	Users []UserOutput `json:"users"`
+	Users []userOutput `json:"users"`
 }
 
 func generateChatName(userID int64, users []database.User) string {
@@ -28,20 +28,20 @@ func generateChatName(userID int64, users []database.User) string {
 	return strings.Join(displayNames, ", ")
 }
 
-func chatsDatabase(userID int64, conn database.Connection) ([]GetChatsOutput, *resolverutils.HTTPError) {
+func chatsDatabase(userID int64, conn database.Connection) ([]getChatsOutput, *resolverutils.HTTPError) {
 	chats, err := conn.GetChatsByUserID(userID)
 	if err != nil {
 		return nil, resolverutils.HandleDatabaseError(err)
 	}
 
-	chatOutput := make([]GetChatsOutput, len(chats))
+	chatOutput := make([]getChatsOutput, len(chats))
 	for i, chat := range chats {
 		users, err := conn.GetUsersByChatID(chat.ID)
 		if err != nil {
 			return nil, resolverutils.HandleDatabaseError(err)
 		}
 
-		outputUsers := make([]UserOutput, len(users))
+		outputUsers := make([]userOutput, len(users))
 		for j, user := range users {
 			outputUsers[j] = *stripFields(&user)
 		}
@@ -49,7 +49,7 @@ func chatsDatabase(userID int64, conn database.Connection) ([]GetChatsOutput, *r
 		if chat.Name == "" {
 			chat.Name = generateChatName(userID, users)
 		}
-		chatOutput[i] = GetChatsOutput{chat, outputUsers}
+		chatOutput[i] = getChatsOutput{chat, outputUsers}
 	}
 	return chatOutput, nil
 }
@@ -66,12 +66,12 @@ func GetChats(w *response.Writer, r *http.Request, conn database.Connection) {
 	w.WriteJSON(http.StatusOK, chats)
 }
 
-type CreateChatInput struct {
+type createChatInput struct {
 	UserID int64 `json:"userID"`
 }
 
 func CreatePrivateChat(w *response.Writer, r *http.Request, conn database.Connection) {
-	var input CreateChatInput
+	var input createChatInput
 	user, _, httpError := resolverutils.GetRequestBodyAndContext(r, &input)
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return

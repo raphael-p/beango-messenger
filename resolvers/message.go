@@ -37,7 +37,7 @@ func GetChatMessages(w *response.Writer, r *http.Request, conn database.Connecti
 	w.WriteJSON(http.StatusOK, messages)
 }
 
-type SendMessageInput struct {
+type sendMessageInput struct {
 	Content string `json:"content"`
 }
 
@@ -59,7 +59,7 @@ func sendMessageDatabase(userID, chatID int64, content string, conn database.Con
 }
 
 func SendMessage(w *response.Writer, r *http.Request, conn database.Connection) {
-	var input SendMessageInput
+	var input sendMessageInput
 	user, params, httpError := resolverutils.GetRequestBodyAndContext(r, &input, resolverutils.CHAT_ID_KEY)
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return

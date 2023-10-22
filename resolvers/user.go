@@ -10,23 +10,23 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserOutput struct {
+type userOutput struct {
 	ID          int64  `json:"id"`
 	Username    string `json:"username"`
 	DisplayName string `json:"displayName"`
 }
 
-func stripFields(user *database.User) *UserOutput {
-	return &UserOutput{user.ID, user.Username, user.DisplayName}
+func stripFields(user *database.User) *userOutput {
+	return &userOutput{user.ID, user.Username, user.DisplayName}
 }
 
-type CreateUserInput struct {
+type createUserInput struct {
 	Username    string                     `json:"username"`
 	DisplayName validate.JSONField[string] `json:"displayName" optional:"true"`
 	Password    string                     `json:"password"`
 }
 
-func createUserDatabase(username, displayName, password string, conn database.Connection) (*UserOutput, *resolverutils.HTTPError) {
+func createUserDatabase(username, displayName, password string, conn database.Connection) (*userOutput, *resolverutils.HTTPError) {
 	if user, _ := conn.GetUserByUsername(username); user != nil {
 		return nil, &resolverutils.HTTPError{Status: http.StatusConflict, Message: "username is taken"}
 	}
@@ -53,7 +53,7 @@ func createUserDatabase(username, displayName, password string, conn database.Co
 }
 
 func CreateUser(w *response.Writer, r *http.Request, conn database.Connection) {
-	var input CreateUserInput
+	var input createUserInput
 	if resolverutils.ProcessHTTPError(w, resolverutils.GetRequestBody(r, &input)) {
 		return
 	}

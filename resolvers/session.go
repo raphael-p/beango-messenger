@@ -15,7 +15,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type SessionInput struct {
+type sessionInput struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
@@ -70,7 +70,7 @@ func CreateSession(w *response.Writer, r *http.Request, conn database.Connection
 		}
 	}
 
-	var input SessionInput
+	var input sessionInput
 	if resolverutils.ProcessHTTPError(w, resolverutils.GetRequestBody(r, &input)) {
 		return
 	}
