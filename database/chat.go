@@ -66,7 +66,7 @@ func (conn *MongoConnection) GetChatsByUserID(userID int64) ([]Chat, error) {
 }
 
 func (conn *MongoConnection) CheckPrivateChatExists(userIDs [2]int64) (bool, error) {
-	rows, err := conn.Query(
+	result, err := conn.Exec(
 		`SELECT 1
 		FROM chat c
 		JOIN chat_users cu1 ON cu1.chat_id = c.id AND cu1.user_id = $1
@@ -77,7 +77,8 @@ func (conn *MongoConnection) CheckPrivateChatExists(userIDs [2]int64) (bool, err
 	if err != nil {
 		return false, err
 	}
-	return rows.Next(), rows.Close()
+	chatCount, err := result.RowsAffected()
+	return chatCount > 0, err
 }
 
 func (conn *MongoConnection) SetChat(chat *Chat, userIDs ...int64) (*Chat, error) {
