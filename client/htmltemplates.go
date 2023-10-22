@@ -83,18 +83,18 @@ var MessagePaneScroll string = `<table id="message-table" hx-swap-oob="beforeend
 
 var messageRows string = `
 	{{ range $i, $m := .Messages }}
-		{{ if $i }}
-			<tr class="list-item">
-				<td class="cue">{{ $m.UserDisplayName }}</td>
-				<td class="message">{{ $m.Content }}</td>
-			</tr>
-		{{ else }}
+		{{ if and (eq $i 0) (not (or $.IsRefresh false)) }}
 			<tr
 				hx-get="/home/chat/{{ $.ID }}/scrollUp?to={{ $.ToMessageID }}"
 				hx-swap="none"
 				hx-trigger="intersect once"
 				class="list-item"
 			>
+				<td class="cue">{{ $m.UserDisplayName }}</td>
+				<td class="message">{{ $m.Content }}</td>
+			</tr>
+		{{ else }}
+			<tr class="list-item">
 				<td class="cue">{{ $m.UserDisplayName }}</td>
 				<td class="message">{{ $m.Content }}</td>
 			</tr>

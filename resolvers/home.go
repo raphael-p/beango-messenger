@@ -94,6 +94,7 @@ func RefreshChat(w *response.Writer, r *http.Request, conn database.Connection) 
 		"ID":            params.ChatID,
 		"FromMessageID": lastMessageID,
 		"ToMessageID":   firstMessageID,
+		"IsRefresh":     true,
 	}
 	client.ServeTemplate(w, "messagePaneRefresh", client.MessagePaneRefresh, chatlist)
 }
