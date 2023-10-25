@@ -152,5 +152,3 @@ func TestSendChatMessage(t *testing.T) {
 		assert.Equals(t, string(w.Body), "cannot send an empty message")
 	})
 }
-
-// TODO: solve bug where adding message triggers scrollUp

@@ -9,7 +9,7 @@ var Skeleton string = `<!DOCTYPE html>
 		<link rel="stylesheet" type="text/css" href="/resources/style.css">
 		<title>Beango Messenger</title>
 	</head>
-	<body>
+	<body hx-on::before-request="clearErrorNodes();">
 		<div id="header">{{block "header" .}}{{end}}</div>
 		<div id="content">{{template "content" .}}</div>
 		<div id="footer">{{block "header" .}}{{end}}</div>
@@ -35,24 +35,26 @@ var LoginPage string = `{{define "content"}}<span class="logo"><span>> Beango Me
 		</form>
 	</div>{{end}}`
 
-var HomePage string = `{{define "content"}}<div id="chat-container">
-	<div id="sidebar">
-		<span class="heading-1">Chats</span>
-		<div id=chat-list class="homepage-column chat-list">
-			{{ range .Chats }}
-			{{ block "chat-list" .}}
-				<div 
-					class="chat-selector list-item"
-					hx-get="/home/chat/{{ .ID }}?name={{ .Name }}" 
-					hx-target="#chat"
-				>
-					[{{ .Type}}] <b>{{ .Name }}</b>
-				</div>
-			{{ end }}
-			{{ end }}
+var HomePage string = `{{define "content"}}
+	<div id="errors" class="error"></div>
+	<div id="chat-container">
+		<div id="sidebar">
+			<span class="heading-1">Chats</span>
+			<div id=chat-list class="homepage-column chat-list">
+				{{ range .Chats }}
+				{{ block "chat-list" .}}
+					<div 
+						class="chat-selector list-item"
+						hx-get="/home/chat/{{ .ID }}?name={{ .Name }}" 
+						hx-target="#chat"
+					>
+						[{{ .Type}}] <b>{{ .Name }}</b>
+					</div>
+				{{ end }}
+				{{ end }}
+			</div>
 		</div>
-	</div>
-	<div id="chat"></div>
+		<div id="chat"></div>
 	</div>{{end}}`
 
 var MessagePane string = `<span class="heading-1">{{ .Name }}</span>

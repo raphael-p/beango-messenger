@@ -16,12 +16,12 @@ const MESSAGE_SCROLL_BATCH_SIZE int = 50
 
 func Home(w *response.Writer, r *http.Request, conn database.Connection) {
 	user, _, httpError := resolverutils.GetRequestContext(r)
-	if resolverutils.ProcessHTTPError(w, httpError) {
+	if resolverutils.DisplayHTTPError(w, httpError) {
 		return
 	}
 
 	chats, httpError := chatsDatabase(user.ID, conn)
-	if resolverutils.ProcessHTTPError(w, httpError) {
+	if resolverutils.DisplayHTTPError(w, httpError) {
 		return
 	}
 
@@ -29,10 +29,9 @@ func Home(w *response.Writer, r *http.Request, conn database.Connection) {
 	client.ServeTemplate(w, "homePage", client.Skeleton+client.HomePage, chatlist)
 }
 
-// TODO: unit testing for home.go + login.go
 func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
 	user, params, httpError := resolverutils.GetRequestContext(r, resolverutils.CHAT_ID_KEY)
-	if resolverutils.ProcessHTTPError(w, httpError) {
+	if resolverutils.DisplayHTTPError(w, httpError) {
 		return
 	}
 
@@ -44,12 +43,12 @@ func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
 		MESSAGE_BATCH_SIZE,
 		conn,
 	)
-	if resolverutils.ProcessHTTPError(w, httpError) {
+	if resolverutils.DisplayHTTPError(w, httpError) {
 		return
 	}
 
 	chatName, httpError := resolverutils.GetRequestQueryParam(r, "name", true)
-	if resolverutils.ProcessHTTPError(w, httpError) {
+	if resolverutils.DisplayHTTPError(w, httpError) {
 		return
 	}
 
@@ -65,12 +64,12 @@ func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
 
 func RefreshChat(w *response.Writer, r *http.Request, conn database.Connection) {
 	user, params, httpError := resolverutils.GetRequestContext(r, resolverutils.CHAT_ID_KEY)
-	if resolverutils.ProcessHTTPError(w, httpError) {
+	if resolverutils.DisplayHTTPError(w, httpError) {
 		return
 	}
 
 	fromMessageID, httpError := resolverutils.GetRequestQueryParamInt(r, "from", true)
-	if resolverutils.ProcessHTTPError(w, httpError) {
+	if resolverutils.DisplayHTTPError(w, httpError) {
 		return
 	}
 
@@ -82,7 +81,7 @@ func RefreshChat(w *response.Writer, r *http.Request, conn database.Connection) 
 		0,
 		conn,
 	)
-	if resolverutils.ProcessHTTPError(w, httpError) {
+	if resolverutils.DisplayHTTPError(w, httpError) {
 		return
 	}
 	if len(messages) == 0 {
@@ -168,7 +167,7 @@ func SendChatMessage(w *response.Writer, r *http.Request, conn database.Connecti
 	}
 
 	_, httpError = sendMessageDatabase(user.ID, params.ChatID, input.Content.Value, conn)
-	if resolverutils.ProcessHTTPError(w, httpError) {
+	if resolverutils.DisplayHTTPError(w, httpError) {
 		return
 	}
 	w.Header().Set("HX-Trigger", "chat-refresh")

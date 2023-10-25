@@ -17,6 +17,21 @@ body {
 	margin: 0;
 }
 
+div.error {
+	background-color: transparent;
+	min-height: 1.2em;
+	line-height: 1.2em;
+	font-weight: bold;
+	font-size: small;
+	text-align: center;
+	margin: 10px 0;
+	padding: 2px 0;
+}
+
+div.error:not(:empty) {
+	background-color: red;
+}
+
 /* LOGIN PAGE */
 
 span.logo  {
@@ -73,13 +88,6 @@ div.form-row input {
 div.button-row {
 	display: flex;
 	justify-content: center;
-}
-
-div.error {
-	color: red;
-	font-weight: bold;
-	font-size: small;
-	margin: 10px 0;
 }
 
 button[type="submit"] {
@@ -140,7 +148,7 @@ span.heading-1  {
 
 #sidebar {
 	width: 20%;
-	padding: 40px 30px;
+	padding: 0 30px;
 	box-sizing: border-box;
 }
 
@@ -153,11 +161,12 @@ span.heading-1  {
 	display: flex;
 	width: 100%;
 	height: 100%;
+	margin: 30px 0;
 }
 
 #chat {
 	width: 100%;
-	padding: 40px 30px;
+	padding: 0 30px;
 	box-sizing: border-box;
 }
 

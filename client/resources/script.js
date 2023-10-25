@@ -5,3 +5,8 @@ const sendMessageOnEnter = (event) => {
         htmx.trigger(event.target, "send-message");
     }
 };
+
+const clearErrorNodes = () => {
+    const errorNodes = document.querySelectorAll('#errors');
+    for (const errorNode of errorNodes) errorNode.innerHTML = "";
+};

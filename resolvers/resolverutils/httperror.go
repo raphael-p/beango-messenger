@@ -38,7 +38,7 @@ func DisplayHTTPError(w *response.Writer, httpError *HTTPError) bool {
 	if httpError == nil {
 		return false
 	}
-	htmlStr := fmt.Sprintf("<div id='errors' class='error' hx-swap-oob='innerHTML'>%s</div>", httpError.Message)
+	htmlStr := fmt.Sprintf("<div id='errors' hx-swap-oob='innerHTML'>%s</div>", httpError.Message)
 	w.WriteString(http.StatusOK, htmlStr)
 	return true
 }
