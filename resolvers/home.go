@@ -11,8 +11,7 @@ import (
 	"github.com/raphael-p/beango/utils/validate"
 )
 
-const MESSAGE_BATCH_SIZE int = 20
-const MESSAGE_SCROLL_BATCH_SIZE int = 50
+const MESSAGE_BATCH_SIZE int = 50
 
 func Home(w *response.Writer, r *http.Request, conn database.Connection) {
 	user, _, httpError := resolverutils.GetRequestContext(r)
@@ -115,7 +114,7 @@ func ScrollUp(w *response.Writer, r *http.Request, conn database.Connection) {
 		params.ChatID,
 		0,
 		toMessageID,
-		MESSAGE_SCROLL_BATCH_SIZE,
+		MESSAGE_BATCH_SIZE,
 		conn,
 	)
 	if resolverutils.ProcessHTTPError(w, httpError) {
