@@ -10,6 +10,7 @@ import (
 	"github.com/raphael-p/beango/test/assert"
 	"github.com/raphael-p/beango/test/mocks"
 	"github.com/raphael-p/beango/utils/response"
+	"github.com/raphael-p/beango/utils/validate"
 )
 
 func TestCreateUser(t *testing.T) {
@@ -128,5 +129,80 @@ func TestGetUserByName(t *testing.T) {
 		GetUserByName(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusNotFound)
 		assert.Equals(t, string(w.Body), "user not found")
+	})
+}
+
+func TestCreateUserInputValidation(t *testing.T) {
+	makeInput := func(username, displayName, password string) createUserInput {
+		return createUserInput{
+			username,
+			validate.JSONField[string]{Value: displayName},
+			password,
+		}
+	}
+
+	validateInput := func(t *testing.T, input createUserInput, xUsername, xDisplayName, xPassword string) {
+		assert.Equals(t, input.Username, xUsername)
+		assert.Equals(t, input.DisplayName.Value, xDisplayName)
+		assert.Equals(t, input.Password, xPassword)
+
+	}
+
+	t.Run("Normal", func(t *testing.T) {
+		xUsername := "gouser123"
+		xDisplayName := "James Jameson"
+		xPassword := "secretpass 123"
+		input := makeInput(xUsername, xDisplayName, xPassword)
+
+		err := createUserInputValidation(&input)
+		assert.IsNil(t, err)
+		validateInput(t, input, xUsername, xDisplayName, xPassword)
+	})
+
+	t.Run("TrimsSpaces", func(t *testing.T) {
+		xUsername := "gouser123"
+		xDisplayName := "James Jameson"
+		xPassword := "secretpass 123"
+		input := makeInput(" \t"+xUsername+"\r", " "+xDisplayName+"\n", xPassword)
+
+		err := createUserInputValidation(&input)
+		assert.IsNil(t, err)
+		validateInput(t, input, xUsername, xDisplayName, xPassword)
+	})
+
+	t.Run("UsernameMaxLength", func(t *testing.T) {
+		username := "abcdefghijklmnopqrstuvwxyz1"
+		input := makeInput(username, "", "")
+
+		err := createUserInputValidation(&input)
+		xMessage := "username must be shorter than 26 characters"
+		resolverutils.AssertHTTPError(t, err, http.StatusBadRequest, xMessage)
+	})
+
+	t.Run("UsernameHasSpace", func(t *testing.T) {
+		username := "iam auser"
+		input := makeInput(username, "", "")
+
+		err := createUserInputValidation(&input)
+		xMessage := "username may not contain any spaces, tabs, or new lines"
+		resolverutils.AssertHTTPError(t, err, http.StatusBadRequest, xMessage)
+	})
+
+	t.Run("DisplayNameMaxLength", func(t *testing.T) {
+		displayName := "abcdefghijklmnopqrstuvwxyz1"
+		input := makeInput("", displayName, "")
+
+		err := createUserInputValidation(&input)
+		xMessage := "display name must be shorter than 26 characters"
+		resolverutils.AssertHTTPError(t, err, http.StatusBadRequest, xMessage)
+	})
+
+	t.Run("DisplayNameHasWhitespace", func(t *testing.T) {
+		displayName := "abcdefghij\rklmnopqrs"
+		input := makeInput("", displayName, "")
+
+		err := createUserInputValidation(&input)
+		xMessage := "display name may not contain any tabs or newlines"
+		resolverutils.AssertHTTPError(t, err, http.StatusBadRequest, xMessage)
 	})
 }
