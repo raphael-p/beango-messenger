@@ -31,6 +31,9 @@ func SubmitLogin(w *response.Writer, r *http.Request, conn database.Connection) 
 	if resolverutils.DisplayHTTPError(w, resolverutils.GetRequestBody(r, &input)) {
 		return
 	}
+	if resolverutils.DisplayHTTPError(w, createUserInputValidation(&input)) {
+		return
+	}
 
 	if action == "signup" {
 		_, httpError := createUserDatabase(input.Username, input.DisplayName.Value, input.Password, conn)
