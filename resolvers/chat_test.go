@@ -182,7 +182,6 @@ func TestCreatePrivateChat(t *testing.T) {
 
 		CreatePrivateChat(w, r, conn)
 		assert.Equals(t, w.Status, http.StatusCreated)
-		chat := &database.Chat{}
-		assert.IsValidJSON(t, string(w.Body), chat)
+		assert.IsValidJSON(t, string(w.Body), &database.Chat{})
 	})
 }
