@@ -23,6 +23,8 @@ func Login(w *response.Writer, r *http.Request, conn database.Connection) {
 	client.ServeTemplate(w, "loginPage", client.Skeleton+client.LoginPage, nil)
 }
 
+// TODO: enable user to set display name
+// TODO: enable user to edit display name
 func SubmitLogin(w *response.Writer, r *http.Request, conn database.Connection) {
 	// getting route param directly instead of using GetRequestContext()
 	// because it would error since no user is in the context
@@ -31,7 +33,7 @@ func SubmitLogin(w *response.Writer, r *http.Request, conn database.Connection) 
 	if resolverutils.DisplayHTTPError(w, resolverutils.GetRequestBody(r, &input)) {
 		return
 	}
-	if resolverutils.DisplayHTTPError(w, createUserInputValidation(&input)) {
+	if resolverutils.DisplayHTTPError(w, validateCreateUserInput(&input)) {
 		return
 	}
 

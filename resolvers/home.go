@@ -19,7 +19,7 @@ func Home(w *response.Writer, r *http.Request, conn database.Connection) {
 		return
 	}
 
-	chats, httpError := chatsDatabase(user.ID, conn)
+	chats, httpError := getChatsDatabase(user.ID, conn)
 	if resolverutils.DisplayHTTPError(w, httpError) {
 		return
 	}

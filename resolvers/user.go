@@ -27,7 +27,7 @@ type createUserInput struct {
 	Password    string                     `json:"password"`
 }
 
-func createUserInputValidation(input *createUserInput) *resolverutils.HTTPError {
+func validateCreateUserInput(input *createUserInput) *resolverutils.HTTPError {
 	input.Username = strings.TrimSpace(input.Username)
 	input.DisplayName.Value = strings.TrimSpace(input.DisplayName.Value)
 
@@ -90,7 +90,7 @@ func CreateUser(w *response.Writer, r *http.Request, conn database.Connection) {
 	if resolverutils.ProcessHTTPError(w, resolverutils.GetRequestBody(r, &input)) {
 		return
 	}
-	if resolverutils.ProcessHTTPError(w, createUserInputValidation(&input)) {
+	if resolverutils.ProcessHTTPError(w, validateCreateUserInput(&input)) {
 		return
 	}
 
