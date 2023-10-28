@@ -10,7 +10,6 @@ import (
 	"github.com/raphael-p/beango/resolvers/resolverutils"
 	"github.com/raphael-p/beango/test/assert"
 	"github.com/raphael-p/beango/test/mocks"
-	"github.com/raphael-p/beango/utils/response"
 )
 
 func TestGenerateChatName(t *testing.T) {
@@ -67,7 +66,7 @@ func TestGenerateChatName(t *testing.T) {
 	})
 }
 
-func TestChatsDatabase(t *testing.T) {
+func TestGetChatsDatabase(t *testing.T) {
 	adminID := mocks.ADMIN_ID
 	testCases := []struct {
 		name          string
@@ -98,7 +97,7 @@ func TestChatsDatabase(t *testing.T) {
 				conn.SetChat(mocks.MakePrivateChat(), pair...)
 			}
 
-			chats, httpError := chatsDatabase(adminID, conn)
+			chats, httpError := getChatsDatabase(adminID, conn)
 			assert.IsNil(t, httpError)
 			assert.HasLength(t, chats, testCase.expectedCount)
 		})
@@ -109,11 +108,11 @@ func TestGetChats(t *testing.T) {
 	adminID := mocks.ADMIN_ID
 
 	t.Run("Normal", func(t *testing.T) {
-		w, req, conn := resolverutils.CommonSetup("")
-		req = resolverutils.SetContext(t, req, mocks.Admin, nil)
+		w, r, conn := resolverutils.CommonSetup("")
+		r = resolverutils.SetContext(t, r, mocks.Admin, nil)
 		conn.SetChat(mocks.MakePrivateChat(), adminID, 13)
 
-		GetChats(w, req, conn)
+		GetChats(w, r, conn)
 		assert.Equals(t, w.Status, http.StatusOK)
 		chats := &[]database.Chat{}
 		err := json.Unmarshal(w.Body, chats)
@@ -122,63 +121,68 @@ func TestGetChats(t *testing.T) {
 	})
 }
 
-func TestCreatePrivateChat(t *testing.T) {
-	setup := func(t *testing.T, userID int64) (*response.Writer, *http.Request) {
-		w, req, _ := resolverutils.CommonSetup(fmt.Sprintf(`{"userID": %d}`, userID))
-		req = resolverutils.SetContext(t, req, mocks.Admin, nil)
-		return w, req
-	}
-
-	createAndCheck := func(
-		w *response.Writer,
-		req *http.Request,
-		conn database.Connection,
-	) {
-		CreatePrivateChat(w, req, conn)
-		assert.Equals(t, w.Status, http.StatusCreated)
-		chat := &database.Chat{}
-		err := json.Unmarshal(w.Body, chat)
-		assert.IsNil(t, err)
-		assert.Equals(t, chat.Name, "")
-		assert.Equals(t, chat.Type, database.PRIVATE_CHAT)
-	}
-
+func TestValidateCreatePrivateChatInput(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
-		conn := mocks.MakeMockConnection()
-		user, _ := conn.SetUser(mocks.MakeUser())
-		w, req := setup(t, user.ID)
-		createAndCheck(w, req, conn)
+		input := createPrivateChatInput{123}
+
+		httpError := validateCreatePrivateChatInput(&input, 1234)
+		assert.IsNil(t, httpError)
 	})
 
 	t.Run("SelfChat", func(t *testing.T) {
-		conn := mocks.MakeMockConnection()
-		w, req := setup(t, mocks.Admin.ID)
+		input := createPrivateChatInput{123}
 
-		CreatePrivateChat(w, req, conn)
-		assert.Equals(t, w.Status, http.StatusBadRequest)
-		assert.Equals(t, string(w.Body), "cannot create a chat with yourself")
+		httpError := validateCreatePrivateChatInput(&input, 123)
+		assert.Equals(t, httpError.Status, http.StatusBadRequest)
+		assert.Equals(t, httpError.Message, "cannot create a chat with yourself")
+	})
+}
+
+func TestCreatePrivateChatDatabase(t *testing.T) {
+	t.Run("Normal", func(t *testing.T) {
+		conn := mocks.MakeMockConnection()
+		user, _ := conn.SetUser(mocks.MakeUser())
+
+		chat, httpError := createPrivateChatDatabase(mocks.ADMIN_ID, user.ID, conn)
+		assert.IsNil(t, httpError)
+		assert.Equals(t, chat.Name, "")
+		assert.Equals(t, chat.Type, database.PRIVATE_CHAT)
 	})
 
 	t.Run("UserDoesNotExist", func(t *testing.T) {
 		var fakeUserID int64 = 451
 		conn := mocks.MakeMockConnection()
-		w, req := setup(t, fakeUserID)
 
-		CreatePrivateChat(w, req, conn)
-		assert.Equals(t, w.Status, http.StatusBadRequest)
+		chat, httpError := createPrivateChatDatabase(mocks.ADMIN_ID, fakeUserID, conn)
+		assert.IsNil(t, chat)
+		assert.Equals(t, httpError.Status, http.StatusBadRequest)
 		xError := fmt.Sprintf("userID %d is invalid", fakeUserID)
-		assert.Equals(t, string(w.Body), xError)
+		assert.Equals(t, httpError.Message, xError)
 	})
 
 	t.Run("ChatAlreadyExists", func(t *testing.T) {
 		conn := mocks.MakeMockConnection()
 		user, _ := conn.SetUser(mocks.MakeUser())
-		w, req := setup(t, user.ID)
 		chat := mocks.MakePrivateChat()
 		conn.SetChat(chat, mocks.ADMIN_ID, user.ID)
 
-		CreatePrivateChat(w, req, conn)
-		assert.Equals(t, w.Status, http.StatusConflict)
-		assert.Equals(t, string(w.Body), "chat already exists")
+		chat, httpError := createPrivateChatDatabase(mocks.ADMIN_ID, user.ID, conn)
+		assert.IsNil(t, chat)
+		assert.Equals(t, httpError.Status, http.StatusConflict)
+		assert.Equals(t, httpError.Message, "chat already exists")
+	})
+}
+
+func TestCreatePrivateChat(t *testing.T) {
+	t.Run("Normal", func(t *testing.T) {
+		conn := mocks.MakeMockConnection()
+		user, _ := conn.SetUser(mocks.MakeUser())
+		w, r, _ := resolverutils.CommonSetup(fmt.Sprintf(`{"userID": %d}`, user.ID))
+		r = resolverutils.SetContext(t, r, mocks.Admin, nil)
+
+		CreatePrivateChat(w, r, conn)
+		assert.Equals(t, w.Status, http.StatusCreated)
+		chat := &database.Chat{}
+		assert.IsValidJSON(t, string(w.Body), chat)
 	})
 }
