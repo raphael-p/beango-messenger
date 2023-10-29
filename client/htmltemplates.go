@@ -28,8 +28,8 @@ var LoginPage string = `{{define "content"}}<span class="logo"><span>> Beango Me
 				<input type="password" name="password" maxlength="25">
 			</div>
 			<div class="form-row button-row">
-				<button hx-post="/login/login" type="submit" hx-swap="none">Log In</button>
-				<button hx-post="/login/signup" type="submit" hx-swap="none">Sign Up</button>
+				<button hx-post="/login/login" type="submit" hx-swap="none" class="form-button">Log In</button>
+				<button hx-post="/login/signup" type="submit" hx-swap="none" class="form-button">Sign Up</button>
 			</div>
 			<div id="errors" class="error"></div>
 		</form>
@@ -39,10 +39,10 @@ var HomePage string = `{{define "content"}}
 	<div id="errors" class="error"></div>
 	<div class="chat-container">
 		<div class="sidebar">
-			<span class="heading-1">Chats</span>
-			<div>
-				<button type="submit" hx-get="/home/newChat" hx-target="#main-pane">
-					New
+			<div class="heading-1">
+				<span>Chats</span>
+				<button type="submit" class="new-button" hx-get="/home/newChat" hx-target="#main-pane">
+					Create
 				</button>
 			</div>
 			<div id=chat-list class="homepage-column chat-list">
@@ -110,10 +110,10 @@ var messageRows string = `
 	{{ end }}`
 
 var newMessageFetcher string = `<div 
-	hx-get="/home/chat/{{ .ID }}/refresh?from={{ .FromMessageID }}"
-	hx-swap="outerHTML"
-	class="chat-selector list-item"
-	hx-trigger="chat-refresh from:document, every 5s"
+		hx-get="/home/chat/{{ .ID }}/refresh?from={{ .FromMessageID }}"
+		hx-swap="outerHTML"
+		class="chat-selector list-item"
+		hx-trigger="chat-refresh from:document, every 5s"
 	/>`
 
 var NewChatPane string = `<span class="heading-1">Create a new chat</span>
@@ -129,7 +129,7 @@ var NewChatPane string = `<span class="heading-1">Create a new chat</span>
 			hx-target="#search-results"
 			hx-ext="json-enc"
 		></textarea>
-		<div id="search-results"><div/>
+		<div id="search-results"/>
 	</div>`
 
 var UserSearchResults string = `
@@ -139,6 +139,10 @@ var UserSearchResults string = `
 		{{ range .Users }}
 			<div 
 				class="chat-selector list-item"
+				hx-post="/home/newChat/create"
+				hx-target="#main-pane"
+				hx-vals='{"userID": {{ .ID }}}'
+				hx-ext="json-enc" 
 			>
 				<b>{{ .Username }}</b> {{ .DisplayName }}
 			</div>

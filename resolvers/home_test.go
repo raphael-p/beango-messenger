@@ -125,7 +125,7 @@ func TestGetMessages(t *testing.T) {
 	})
 }
 
-func TestSendChatMessage(t *testing.T) {
+func TestSendMessageHTML(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		body := fmt.Sprintf(`{"content": "%s"}`, "This is a sample message!")
 		w, r, conn := resolverutils.CommonSetup(body)
@@ -134,7 +134,7 @@ func TestSendChatMessage(t *testing.T) {
 		params := map[string]string{resolverutils.CHAT_ID_KEY: fmt.Sprint(chat.ID)}
 		r = resolverutils.SetContext(t, r, mocks.Admin, params)
 
-		SendChatMessage(w, r, conn)
+		SendMessageHTML(w, r, conn)
 		assert.Equals(t, w.Status, http.StatusNoContent)
 		assert.Equals(t, string(w.Body), "")
 		assert.Equals(t, w.Header().Get("HX-Trigger"), "chat-refresh")
@@ -147,7 +147,7 @@ func TestSendChatMessage(t *testing.T) {
 		params := map[string]string{resolverutils.CHAT_ID_KEY: fmt.Sprint(chat.ID)}
 		r = resolverutils.SetContext(t, r, mocks.Admin, params)
 
-		SendChatMessage(w, r, conn)
+		SendMessageHTML(w, r, conn)
 		assert.Equals(t, w.Status, http.StatusBadRequest)
 		assert.Equals(t, string(w.Body), "cannot send an empty message")
 	})

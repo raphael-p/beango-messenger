@@ -167,7 +167,7 @@ func TestCreatePrivateChatDatabase(t *testing.T) {
 		conn.SetChat(chat, mocks.ADMIN_ID, user.ID)
 
 		chat, httpError := createPrivateChatDatabase(mocks.ADMIN_ID, user.ID, conn)
-		assert.IsNil(t, chat)
+		assert.IsNotNil(t, chat)
 		assert.Equals(t, httpError.Status, http.StatusConflict)
 		assert.Equals(t, httpError.Message, "chat already exists")
 	})

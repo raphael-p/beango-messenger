@@ -65,6 +65,7 @@ func (conn *MongoConnection) GetChatsByUserID(userID int64) ([]Chat, error) {
 	))
 }
 
+// TODO: remove?
 func (conn *MongoConnection) CheckPrivateChatExists(userIDs [2]int64) (bool, error) {
 	result, err := conn.Exec(
 		`SELECT 1

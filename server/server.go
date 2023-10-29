@@ -55,7 +55,8 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 	router.GET("/home/chat/:"+chatID+"/refresh", resolvers.RefreshChat, routing.AuthRedirect)
 	router.GET("/home/newChat", resolvers.OpenChatCreator, routing.AuthRedirect)
 	router.POST("/home/newChat/search", resolvers.UserSearch, routing.AuthRedirect)
-	router.POST("/home/chat/:"+chatID+"/sendMessage", resolvers.SendChatMessage, routing.AuthRedirect)
+	router.POST("/home/newChat/create", resolvers.CreatePrivateChatHTML, routing.AuthRedirect)
+	router.POST("/home/chat/:"+chatID+"/sendMessage", resolvers.SendMessageHTML, routing.AuthRedirect)
 	router.GET("/favicon.ico", func(w *response.Writer, r *http.Request, conn database.Connection) {
 		http.FileServer(http.Dir(path)).ServeHTTP(w, r)
 	})

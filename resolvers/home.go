@@ -34,33 +34,43 @@ func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
 		return
 	}
 
-	messages, firstMessageID, lastMessageID, httpError := getMessages(
-		user.ID,
-		params.ChatID,
-		0,
-		0,
-		MESSAGE_BATCH_SIZE,
-		conn,
-	)
-	if resolverutils.DisplayHTTPError(w, httpError) {
-		return
-	}
-
 	chatName, httpError := resolverutils.GetRequestQueryParam(r, "name", true)
 	if resolverutils.DisplayHTTPError(w, httpError) {
 		return
 	}
 
-	chatlist := map[string]any{
+	chatList, httpError := openChatData(user.ID, params.ChatID, chatName, conn)
+	if resolverutils.DisplayHTTPError(w, httpError) {
+		return
+	}
+	client.ServeTemplate(w, "messagePane", client.MessagePane, chatList)
+}
+
+// TODO: amend tests
+func openChatData(userID, chatID int64, chatName string, conn database.Connection) (map[string]any, *resolverutils.HTTPError) {
+	messages, firstMessageID, lastMessageID, httpError := getMessages(
+		userID,
+		chatID,
+		0,
+		0,
+		MESSAGE_BATCH_SIZE,
+		conn,
+	)
+	if httpError != nil {
+		return nil, httpError
+	}
+
+	data := map[string]any{
 		"Name":          chatName,
 		"Messages":      messages,
-		"ID":            params.ChatID,
+		"ID":            chatID,
 		"FromMessageID": lastMessageID,
 		"ToMessageID":   firstMessageID,
 	}
-	client.ServeTemplate(w, "messagePane", client.MessagePane, chatlist)
+	return data, nil
 }
 
+// TODO: also refresh chat list
 func RefreshChat(w *response.Writer, r *http.Request, conn database.Connection) {
 	user, params, httpError := resolverutils.GetRequestContext(r, resolverutils.CHAT_ID_KEY)
 	if resolverutils.DisplayHTTPError(w, httpError) {
@@ -150,12 +160,12 @@ func getMessages(userID, chatID, fromMessageID, toMessageID int64, limit int, co
 	return messages, firstMessageID, lastMessageID, nil
 }
 
-type sendChatMessageInput struct {
+type sendMessageHTMLInput struct {
 	Content validate.JSONField[string] `json:"content" zeroable:"true"`
 }
 
-func SendChatMessage(w *response.Writer, r *http.Request, conn database.Connection) {
-	input := new(sendChatMessageInput)
+func SendMessageHTML(w *response.Writer, r *http.Request, conn database.Connection) {
+	input := new(sendMessageHTMLInput)
 	user, params, httpError := resolverutils.GetRequestBodyAndContext(r, input, resolverutils.CHAT_ID_KEY)
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
@@ -173,6 +183,7 @@ func SendChatMessage(w *response.Writer, r *http.Request, conn database.Connecti
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// TODO: test
 func OpenChatCreator(w *response.Writer, r *http.Request, conn database.Connection) {
 	w.WriteString(http.StatusOK, client.NewChatPane)
 }
@@ -194,10 +205,39 @@ func UserSearch(w *response.Writer, r *http.Request, conn database.Connection) {
 	}
 
 	users, err := conn.SearchUsers(input.Query.Value, user.ID)
-	if resolverutils.ProcessHTTPError(w, resolverutils.HandleDatabaseError(err)) {
+	if resolverutils.DisplayHTTPError(w, resolverutils.HandleDatabaseError(err)) {
 		return
 	}
 
 	data := map[string]any{"Users": stripUserFields(users...)}
 	client.ServeTemplate(w, "userSearchResults", client.UserSearchResults, data)
+}
+
+func CreatePrivateChatHTML(w *response.Writer, r *http.Request, conn database.Connection) {
+	var input createPrivateChatInput
+	user, _, httpError := resolverutils.GetRequestBodyAndContext(r, &input)
+	if resolverutils.DisplayHTTPError(w, httpError) ||
+		resolverutils.DisplayHTTPError(w, validateCreatePrivateChatInput(&input, user.ID)) {
+		return
+	}
+
+	newChat, httpError := createPrivateChatDatabase(user.ID, input.UserID, conn)
+	if newChat == nil && resolverutils.DisplayHTTPError(w, httpError) {
+		return
+	}
+
+	chatName := newChat.Name
+	if chatName == "" {
+		inputUser, err := conn.GetUser(input.UserID)
+		if resolverutils.DisplayHTTPError(w, resolverutils.HandleDatabaseError(err)) {
+			return
+		}
+		chatName = generateChatName(user.ID, []database.User{*user, *inputUser})
+	}
+
+	chatList, httpError := openChatData(user.ID, newChat.ID, chatName, conn)
+	if resolverutils.DisplayHTTPError(w, httpError) {
+		return
+	}
+	client.ServeTemplate(w, "messagePane", client.MessagePane, chatList)
 }

@@ -84,22 +84,20 @@ func createPrivateChatDatabase(sessionUserID, inputUserID int64, conn database.C
 		}
 	}
 
-	userIDs := [2]int64{sessionUserID, inputUserID}
-
 	// Check if chat already chatExists
-	chatExists, err := conn.CheckPrivateChatExists(userIDs)
+	chat, err := conn.GetChat(sessionUserID, inputUserID)
 	if err != nil {
 		return nil, resolverutils.HandleDatabaseError(err)
 	}
-	if chatExists {
-		return nil, &resolverutils.HTTPError{
+	if chat != nil {
+		return chat, &resolverutils.HTTPError{
 			Status:  http.StatusConflict,
 			Message: "chat already exists",
 		}
 	}
 
 	newChat := &database.Chat{Type: database.PRIVATE_CHAT}
-	newChat, err = conn.SetChat(newChat, userIDs[:]...)
+	newChat, err = conn.SetChat(newChat, sessionUserID, inputUserID)
 	if err != nil {
 		return nil, resolverutils.HandleDatabaseError(err)
 	}

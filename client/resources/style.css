@@ -98,7 +98,7 @@ div.button-row {
 	justify-content: center;
 }
 
-button[type="submit"] {
+.form-button {
 	font-family: var(--hacker-font);
 	font-size: medium;
 	background-color: transparent;
@@ -111,7 +111,7 @@ button[type="submit"] {
 	text-transform: uppercase;
 }
 
-button[type="submit"]:hover {
+.form-button:hover {
 	border-bottom: 2px solid var(--hacker-green);
 }
 
@@ -143,15 +143,16 @@ form > div {
 	flex-direction: column-reverse;
 }
 
-span.heading-1  {
+.heading-1  {
 	display: flex;
-	flex-direction: column;
+	justify-content: space-between;
 	width: 100%;
 	margin: 10px 0;
 	user-select: none;
 	font-family: 'Megrim';
 	color: var(--hacker-green);
 	font-size: larger;
+	align-items: center;
 }
 
 .sidebar {
@@ -226,4 +227,14 @@ td.message {
 
 .message-input {
 	height: 10vh;
+}
+
+.new-button {
+	font-family: var(--hacker-font);
+	font-size: medium;
+	background-color: var(--hacker-green);
+	border: none;
+	cursor: pointer;
+	text-transform: uppercase;
+	padding: 3px;
 }
