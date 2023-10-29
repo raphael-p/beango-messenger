@@ -41,15 +41,10 @@ func getChatsDatabase(userID int64, conn database.Connection) ([]getChatsOutput,
 			return nil, resolverutils.HandleDatabaseError(err)
 		}
 
-		outputUsers := make([]userOutput, len(users))
-		for j, user := range users {
-			outputUsers[j] = *stripFields(&user)
-		}
-
 		if chat.Name == "" {
 			chat.Name = generateChatName(userID, users)
 		}
-		chatOutput[i] = getChatsOutput{chat, outputUsers}
+		chatOutput[i] = getChatsOutput{chat, stripUserFields(users...)}
 	}
 	return chatOutput, nil
 }

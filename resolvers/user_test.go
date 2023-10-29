@@ -64,12 +64,21 @@ func TestValidateCreateUserInput(t *testing.T) {
 		input := makeInput(username, "", "")
 
 		err := validateCreateUserInput(&input)
-		xMessage := "username may not contain any spaces, tabs, or new lines"
+		xMessage := "username may only contain alphanumeric characters and '_.'"
+		resolverutils.AssertHTTPError(t, err, http.StatusBadRequest, xMessage)
+	})
+
+	t.Run("UsernameHasSpecialCharacter", func(t *testing.T) {
+		username := "iam%auser"
+		input := makeInput(username, "", "")
+
+		err := validateCreateUserInput(&input)
+		xMessage := "username may only contain alphanumeric characters and '_.'"
 		resolverutils.AssertHTTPError(t, err, http.StatusBadRequest, xMessage)
 	})
 
 	t.Run("DisplayNameMaxLength", func(t *testing.T) {
-		displayName := "abcdefghijklmnopqrstuvwxyz1"
+		displayName := "abcdefghijklmnopqrstuvwxyz"
 		input := makeInput("", displayName, "")
 
 		err := validateCreateUserInput(&input)
@@ -168,7 +177,7 @@ func TestGetUserByName(t *testing.T) {
 
 		GetUserByName(w, r, conn)
 		assert.Equals(t, w.Status, http.StatusOK)
-		xOutput := *stripFields(mocks.Admin)
+		xOutput := stripUserFields(*mocks.Admin)[0]
 		var output userOutput
 		assert.IsValidJSON(t, string(w.Body), &output)
 		assert.Equals(t, output, xOutput)

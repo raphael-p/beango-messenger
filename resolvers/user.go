@@ -2,6 +2,7 @@ package resolvers
 
 import (
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/raphael-p/beango/database"
@@ -17,8 +18,13 @@ type userOutput struct {
 	DisplayName string `json:"displayName"`
 }
 
-func stripFields(user *database.User) *userOutput {
-	return &userOutput{user.ID, user.Username, user.DisplayName}
+// TODO: test
+func stripUserFields(users ...database.User) []userOutput {
+	output := make([]userOutput, len(users))
+	for idx, user := range users {
+		output[idx] = userOutput{user.ID, user.Username, user.DisplayName}
+	}
+	return output
 }
 
 type createUserInput struct {
@@ -37,10 +43,10 @@ func validateCreateUserInput(input *createUserInput) *resolverutils.HTTPError {
 			Message: "username must be shorter than 26 characters",
 		}
 	}
-	if strings.ContainsAny(input.Username, " \t\n\r") {
+	if !regexp.MustCompile("^[a-zA-Z0-9_.]*$").MatchString(input.Username) {
 		return &resolverutils.HTTPError{
 			Status:  http.StatusBadRequest,
-			Message: "username may not contain any spaces, tabs, or new lines",
+			Message: "username may only contain alphanumeric characters and '_.'",
 		}
 	}
 
@@ -82,7 +88,7 @@ func createUserDatabase(username, displayName, password string, conn database.Co
 		return nil, resolverutils.HandleDatabaseError(err)
 	}
 
-	return stripFields(newUser), nil
+	return &stripUserFields(*newUser)[0], nil
 }
 
 func CreateUser(w *response.Writer, r *http.Request, conn database.Connection) {
@@ -113,5 +119,5 @@ func GetUserByName(w *response.Writer, r *http.Request, conn database.Connection
 		w.WriteString(http.StatusNotFound, "user not found")
 		return
 	}
-	w.WriteJSON(http.StatusOK, stripFields(user))
+	w.WriteJSON(http.StatusOK, stripUserFields(*user)[0])
 }
