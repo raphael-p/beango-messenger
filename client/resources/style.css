@@ -17,7 +17,7 @@ body {
 	margin: 0;
 }
 
-div.error {
+.error {
 	background-color: transparent;
 	min-height: 1.2em;
 	line-height: 1.2em;
@@ -28,8 +28,16 @@ div.error {
 	padding: 2px 0;
 }
 
-div.error:not(:empty) {
+.error:not(:empty) {
 	background-color: red;
+}
+
+.info {
+	color: black;
+	font-weight: bold;
+	font-size: small;
+	background-color: var(--hacker-grey);
+  	padding: 2px;
 }
 
 /* LOGIN PAGE */
@@ -146,7 +154,7 @@ span.heading-1  {
 	font-size: larger;
 }
 
-#sidebar {
+.sidebar {
 	width: 20%;
 	padding: 0 30px;
 	box-sizing: border-box;
@@ -157,14 +165,14 @@ span.heading-1  {
 	cursor: pointer;
 }
 
-#chat-container {
+.chat-container {
 	display: flex;
 	width: 100%;
 	height: 100%;
 	margin: 30px 0;
 }
 
-#chat {
+.main-pane {
 	width: 100%;
 	padding: 0 30px;
 	box-sizing: border-box;
@@ -192,18 +200,18 @@ td.message {
 	vertical-align: top;
 }
 
-.message-bar {
+.input-bar {
 	margin-top: 20px;
 }
 
-.message-prompt {
+.input-prompt {
 	color: var(--hacker-green);
 	margin-right: 10px;
 	vertical-align: top;
 	line-height: 1.5;
 }
 
-.message-input {
+.input-value {
 	font-family: var(--text-font);
 	font-size: small;
 	border: none;
@@ -212,7 +220,10 @@ td.message {
 	caret-color: var(--hacker-green);	
 	color: white;
 	line-height: 1.5;
-	height: 10vh;
 	resize: none;
 	width: 60%;
+}
+
+.message-input {
+	height: 10vh;
 }

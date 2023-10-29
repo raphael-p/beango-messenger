@@ -4,6 +4,7 @@ import (
 	"slices"
 
 	"github.com/raphael-p/beango/database"
+	"github.com/raphael-p/beango/utils/collections"
 )
 
 var Admin *database.User
@@ -162,6 +163,11 @@ func (mc *MockConnection) SetUser(user *database.User) (*database.User, error) {
 	user.ID = int64(len(mc.users) + 1)
 	mc.users[user.ID] = *user
 	return user, nil
+}
+
+func (mc *MockConnection) SearchUsers(username string, searchUserID int64) ([]database.User, error) {
+	_, users := collections.MapEntries(mc.users)
+	return users, nil
 }
 
 func (mc *MockConnection) GetSession(id string) *database.Session {

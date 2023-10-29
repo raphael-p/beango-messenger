@@ -21,11 +21,11 @@ var LoginPage string = `{{define "content"}}<span class="logo"><span>> Beango Me
 		<form hx-ext="json-enc">
 			<div class="form-row">
 				<label for="username">Username:</label>
-				<input type="text" name="username">
+				<input type="text" name="username" maxlength="25">
 			</div>
 			<div class="form-row">
 				<label for="password">Password:</label>
-				<input type="password" name="password">
+				<input type="password" name="password" maxlength="25">
 			</div>
 			<div class="form-row button-row">
 				<button hx-post="/login/login" type="submit" hx-swap="none">Log In</button>
@@ -37,16 +37,21 @@ var LoginPage string = `{{define "content"}}<span class="logo"><span>> Beango Me
 
 var HomePage string = `{{define "content"}}
 	<div id="errors" class="error"></div>
-	<div id="chat-container">
-		<div id="sidebar">
+	<div class="chat-container">
+		<div class="sidebar">
 			<span class="heading-1">Chats</span>
+			<div>
+				<button type="submit" hx-get="/home/newChat" hx-target="#main-pane">
+					New
+				</button>
+			</div>
 			<div id=chat-list class="homepage-column chat-list">
 				{{ range .Chats }}
 				{{ block "chat-list" .}}
 					<div 
 						class="chat-selector list-item"
 						hx-get="/home/chat/{{ .ID }}?name={{ .Name }}" 
-						hx-target="#chat"
+						hx-target="#main-pane"
 					>
 						[{{ .Type}}] <b>{{ .Name }}</b>
 					</div>
@@ -54,7 +59,7 @@ var HomePage string = `{{define "content"}}
 				{{ end }}
 			</div>
 		</div>
-		<div id="chat"></div>
+		<div id="main-pane" class="main-pane"></div>
 	</div>{{end}}`
 
 var MessagePane string = `<span class="heading-1">{{ .Name }}</span>
@@ -62,15 +67,16 @@ var MessagePane string = `<span class="heading-1">{{ .Name }}</span>
 		id="message-table"
 		class="homepage-column message-list"
 	>` + messageRows + `</table>
-	<div class="message-bar">
-		<span class="message-prompt">> </span>
+	<div class="input-bar">
+		<span class="input-prompt">> </span>
 		<textarea
-			class="message-input"
+			class="input-value message-input"
 			placeholder="Type your message"
 			hx-on:keypress="sendMessageOnEnter(event)"
 			name="content"
+			maxlength="5000"
 			hx-post="/home/chat/{{ .ID }}/sendMessage"
-			hx-trigger="send-message"
+			hx-trigger="send-message consume"
 			hx-swap="none"
 			hx-on::after-request="if(event.detail.successful) this.value = '';"
 			hx-ext="json-enc"
@@ -109,3 +115,33 @@ var newMessageFetcher string = `<div
 	class="chat-selector list-item"
 	hx-trigger="chat-refresh from:document, every 5s"
 	/>`
+
+var NewChatPane string = `<span class="heading-1">Create a new chat</span>
+	<div class="input-bar">
+		<span class="input-prompt">> </span>
+		<textarea
+			class="input-value"
+			placeholder="Search for a user to chat with"
+			name="query"
+			maxlength="25"
+			hx-post="/home/newChat/search"
+			hx-trigger="keyup changed delay:500ms"
+			hx-target="#search-results"
+			hx-ext="json-enc"
+		></textarea>
+		<div id="search-results"><div/>
+	</div>`
+
+var UserSearchResults string = `
+	{{ if not .Users }}
+		<span class="info">No results.</span>
+	{{ else }}
+		{{ range .Users }}
+			<div 
+				class="chat-selector list-item"
+			>
+				<b>{{ .Username }}</b> {{ .DisplayName }}
+			</div>
+		{{ end }}
+	{{ end }}
+`

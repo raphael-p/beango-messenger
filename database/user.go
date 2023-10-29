@@ -58,3 +58,12 @@ func (conn *MongoConnection) SetUser(user *User) (*User, error) {
 		user.Username, user.DisplayName, user.Key,
 	))
 }
+
+func (conn *MongoConnection) SearchUsers(username string, searchUserID int64) ([]User, error) {
+	return scanRows[User](conn.Query(
+		`SELECT * FROM "user" 
+		WHERE username LIKE $1 AND id != $2
+		LIMIT 10`,
+		username+"%", searchUserID,
+	))
+}

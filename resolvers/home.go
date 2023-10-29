@@ -172,3 +172,32 @@ func SendChatMessage(w *response.Writer, r *http.Request, conn database.Connecti
 	w.Header().Set("HX-Trigger", "chat-refresh")
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func OpenChatCreator(w *response.Writer, r *http.Request, conn database.Connection) {
+	w.WriteString(http.StatusOK, client.NewChatPane)
+}
+
+type userSearchInput struct {
+	Query validate.JSONField[string] `json:"query" zeroable:"true"`
+}
+
+func UserSearch(w *response.Writer, r *http.Request, conn database.Connection) {
+	input := new(userSearchInput)
+	user, _, httpError := resolverutils.GetRequestBodyAndContext(r, input)
+	if resolverutils.DisplayHTTPError(w, httpError) {
+		return
+	}
+
+	if input.Query.Value == "" {
+		w.WriteString(http.StatusOK, "")
+		return
+	}
+
+	users, err := conn.SearchUsers(input.Query.Value, user.ID)
+	if resolverutils.ProcessHTTPError(w, resolverutils.HandleDatabaseError(err)) {
+		return
+	}
+
+	data := map[string]any{"Users": stripUserFields(users...)}
+	client.ServeTemplate(w, "userSearchResults", client.UserSearchResults, data)
+}

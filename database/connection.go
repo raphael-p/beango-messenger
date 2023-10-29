@@ -25,6 +25,7 @@ type Connection interface {
 	GetUserByUsername(username string) (*User, error)
 	GetUsersByChatID(chatID int64) ([]User, error)
 	SetUser(user *User) (*User, error)
+	SearchUsers(username string, searchUserID int64) ([]User, error)
 	GetSession(id string) *Session
 	GetSessionByUserID(userID int64) (*Session, error)
 	SetSession(session Session)
