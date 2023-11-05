@@ -73,18 +73,18 @@ func (mc *MockConnection) GetUsersByChatID(chatID int64) ([]database.User, error
 	return users, nil
 }
 
-func (mc *MockConnection) CheckPrivateChatExists(userIDs [2]int64) (bool, error) {
+func (mc *MockConnection) GetPrivateChatByUserIDs(userID1, userID2 int64) (*database.Chat, error) {
 	for _, chat := range mc.chats {
 		if chat.Type == database.PRIVATE_CHAT {
 			matchesUserID := [2]bool{false, false}
 			for _, chatUser := range mc.chatUsers {
 				if chatUser.ChatID == chat.ID {
-					if chatUser.UserID == userIDs[0] {
+					if chatUser.UserID == userID1 {
 						if matchesUserID[0] {
 							break
 						}
 						matchesUserID[0] = true
-					} else if chatUser.UserID == userIDs[1] {
+					} else if chatUser.UserID == userID2 {
 						if matchesUserID[1] {
 							break
 						}
@@ -95,12 +95,12 @@ func (mc *MockConnection) CheckPrivateChatExists(userIDs [2]int64) (bool, error)
 				}
 			}
 			if matchesUserID[0] && matchesUserID[1] {
-				return true, nil
+				return &chat, nil
 			}
 
 		}
 	}
-	return false, nil
+	return nil, nil
 }
 
 func (mc *MockConnection) SetChat(chat *database.Chat, userIDs ...int64) (*database.Chat, error) {

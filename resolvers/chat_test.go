@@ -163,6 +163,7 @@ func TestCreatePrivateChatDatabase(t *testing.T) {
 	t.Run("ChatAlreadyExists", func(t *testing.T) {
 		conn := mocks.MakeMockConnection()
 		user, _ := conn.SetUser(mocks.MakeUser())
+		conn.SetChat(mocks.MakePrivateChat(), 53, 54)
 		chat := mocks.MakePrivateChat()
 		conn.SetChat(chat, mocks.ADMIN_ID, user.ID)
 

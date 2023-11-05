@@ -33,7 +33,7 @@ type ChatUser struct {
 }
 
 func (conn *MongoConnection) GetChat(id, userID int64) (*Chat, error) {
-	row := conn.QueryRow(
+	chat, err := scanRow[Chat](conn.QueryRow(
 		`SELECT * FROM chat
 		WHERE id = $1 
 		AND EXISTS (
@@ -41,8 +41,7 @@ func (conn *MongoConnection) GetChat(id, userID int64) (*Chat, error) {
 			WHERE chat_id = $1 AND user_id = $2
 		);`,
 		id, userID,
-	)
-	chat, err := scanRow[Chat](row)
+	))
 	if err != nil && err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -65,21 +64,19 @@ func (conn *MongoConnection) GetChatsByUserID(userID int64) ([]Chat, error) {
 	))
 }
 
-// TODO: remove?
-func (conn *MongoConnection) CheckPrivateChatExists(userIDs [2]int64) (bool, error) {
-	result, err := conn.Exec(
-		`SELECT 1
+func (conn *MongoConnection) GetPrivateChatByUserIDs(userID1, userID2 int64) (*Chat, error) {
+	chat, err := scanRow[Chat](conn.QueryRow(
+		`SELECT c.*
 		FROM chat c
 		JOIN chat_users cu1 ON cu1.chat_id = c.id AND cu1.user_id = $1
 		JOIN chat_users cu2 ON cu2.chat_id = c.id AND cu2.user_id = $2
 		WHERE c.type = $3`,
-		userIDs[0], userIDs[1], PRIVATE_CHAT,
-	)
-	if err != nil {
-		return false, err
+		userID1, userID2, PRIVATE_CHAT,
+	))
+	if err != nil && err == sql.ErrNoRows {
+		return nil, nil
 	}
-	chatCount, err := result.RowsAffected()
-	return chatCount > 0, err
+	return chat, err
 }
 
 func (conn *MongoConnection) SetChat(chat *Chat, userIDs ...int64) (*Chat, error) {

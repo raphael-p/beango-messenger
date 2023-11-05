@@ -17,7 +17,7 @@ var Sessions = make(map[string]Session)
 type Connection interface {
 	GetChat(id, userID int64) (*Chat, error)
 	GetChatsByUserID(userID int64) ([]Chat, error)
-	CheckPrivateChatExists(userIDs [2]int64) (bool, error)
+	GetPrivateChatByUserIDs(userID1, userID2 int64) (*Chat, error)
 	SetChat(chat *Chat, userIDs ...int64) (*Chat, error)
 	GetMessagesByChatID(chatID, fromMessageID, toMessageID int64, limit int) ([]Message, error)
 	SetMessage(message *MessageDatabase) (*MessageDatabase, error)
