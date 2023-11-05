@@ -46,7 +46,6 @@ func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
 	client.ServeTemplate(w, "messagePane", client.MessagePane, chatData)
 }
 
-// TODO: amend tests
 func openChatData(userID, chatID int64, chatName string, conn database.Connection) (map[string]any, *resolverutils.HTTPError) {
 	messages, firstMessageID, lastMessageID, httpError := getMessages(
 		userID,
@@ -70,7 +69,6 @@ func openChatData(userID, chatID int64, chatName string, conn database.Connectio
 	return data, nil
 }
 
-// TODO: also refresh chat list
 func RefreshMessages(w *response.Writer, r *http.Request, conn database.Connection) {
 	user, params, httpError := resolverutils.GetRequestContext(r, resolverutils.CHAT_ID_KEY)
 	if resolverutils.DisplayHTTPError(w, httpError) {
@@ -183,7 +181,6 @@ func SendMessageHTML(w *response.Writer, r *http.Request, conn database.Connecti
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// TODO: test
 func OpenChatCreator(w *response.Writer, r *http.Request, conn database.Connection) {
 	w.WriteString(http.StatusOK, client.NewChatPane)
 }

@@ -18,7 +18,6 @@ type userOutput struct {
 	DisplayName string `json:"displayName"`
 }
 
-// TODO: test
 func stripUserFields(users ...database.User) []userOutput {
 	output := make([]userOutput, len(users))
 	for idx, user := range users {

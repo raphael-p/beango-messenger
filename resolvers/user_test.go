@@ -12,6 +12,30 @@ import (
 	"github.com/raphael-p/beango/utils/validate"
 )
 
+func TestStripUserFields(t *testing.T) {
+	t.Run("Normal", func(t *testing.T) {
+		user1 := mocks.MakeUser()
+		user1.ID = 46
+		user2 := mocks.MakeUser2()
+		user2.ID = 910
+		output := stripUserFields(*user1, *user2)
+
+		xOutput := []userOutput{
+			{
+				ID:          user1.ID,
+				Username:    user1.Username,
+				DisplayName: user1.DisplayName,
+			},
+			{
+				ID:          user2.ID,
+				Username:    user2.Username,
+				DisplayName: user2.DisplayName,
+			},
+		}
+		assert.DeepEquals(t, output, xOutput)
+	})
+}
+
 func TestValidateCreateUserInput(t *testing.T) {
 	makeInput := func(username, displayName, password string) createUserInput {
 		return createUserInput{
