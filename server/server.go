@@ -52,7 +52,7 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 	router.GET("/home", resolvers.Home, routing.AuthRedirect)
 	router.GET("/home/chat/:"+chatID, resolvers.OpenChat, routing.AuthRedirect)
 	router.GET("/home/chat/:"+chatID+"/scrollUp", resolvers.ScrollUp, routing.AuthRedirect)
-	router.GET("/home/chat/:"+chatID+"/refresh", resolvers.RefreshChat, routing.AuthRedirect)
+	router.GET("/home/chat/:"+chatID+"/refresh", resolvers.RefreshMessages, routing.AuthRedirect)
 	router.GET("/home/newChat", resolvers.OpenChatCreator, routing.AuthRedirect)
 	router.POST("/home/newChat/search", resolvers.UserSearch, routing.AuthRedirect)
 	router.POST("/home/newChat/create", resolvers.CreatePrivateChatHTML, routing.AuthRedirect)

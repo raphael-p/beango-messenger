@@ -38,7 +38,7 @@ func TestOpenChat(t *testing.T) {
 	})
 }
 
-func TestRefreshChat(t *testing.T) {
+func TestRefreshMessages(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		w, r, conn := resolverutils.CommonSetup("")
 		user, _ := conn.SetUser(mocks.MakeUser())
@@ -50,7 +50,7 @@ func TestRefreshChat(t *testing.T) {
 		query.Add("from", "0")
 		r.URL.RawQuery = query.Encode()
 
-		RefreshChat(w, r, conn)
+		RefreshMessages(w, r, conn)
 		assert.Equals(t, w.Status, http.StatusOK)
 		assert.Contains(t, string(w.Body), message.Content, "<table", "</table>")
 	})
@@ -65,7 +65,7 @@ func TestRefreshChat(t *testing.T) {
 		query.Add("from", "0")
 		r.URL.RawQuery = query.Encode()
 
-		RefreshChat(w, r, conn)
+		RefreshMessages(w, r, conn)
 		assert.Equals(t, w.Status, http.StatusNoContent)
 		assert.Equals(t, string(w.Body), "")
 	})
@@ -137,7 +137,7 @@ func TestSendMessageHTML(t *testing.T) {
 		SendMessageHTML(w, r, conn)
 		assert.Equals(t, w.Status, http.StatusNoContent)
 		assert.Equals(t, string(w.Body), "")
-		assert.Equals(t, w.Header().Get("HX-Trigger"), "chat-refresh")
+		assert.Equals(t, w.Header().Get("HX-Trigger"), "refresh-messages")
 	})
 
 	t.Run("EmptyMessage", func(t *testing.T) {

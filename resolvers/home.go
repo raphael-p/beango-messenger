@@ -24,8 +24,8 @@ func Home(w *response.Writer, r *http.Request, conn database.Connection) {
 		return
 	}
 
-	chatlist := map[string]any{"Chats": chats}
-	client.ServeTemplate(w, "homePage", client.Skeleton+client.HomePage, chatlist)
+	chatList := map[string]any{"Chats": chats}
+	client.ServeTemplate(w, "homePage", client.Skeleton+client.HomePage, chatList)
 }
 
 func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
@@ -39,11 +39,11 @@ func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {
 		return
 	}
 
-	chatList, httpError := openChatData(user.ID, params.ChatID, chatName, conn)
+	chatData, httpError := openChatData(user.ID, params.ChatID, chatName, conn)
 	if resolverutils.DisplayHTTPError(w, httpError) {
 		return
 	}
-	client.ServeTemplate(w, "messagePane", client.MessagePane, chatList)
+	client.ServeTemplate(w, "messagePane", client.MessagePane, chatData)
 }
 
 // TODO: amend tests
@@ -71,7 +71,7 @@ func openChatData(userID, chatID int64, chatName string, conn database.Connectio
 }
 
 // TODO: also refresh chat list
-func RefreshChat(w *response.Writer, r *http.Request, conn database.Connection) {
+func RefreshMessages(w *response.Writer, r *http.Request, conn database.Connection) {
 	user, params, httpError := resolverutils.GetRequestContext(r, resolverutils.CHAT_ID_KEY)
 	if resolverutils.DisplayHTTPError(w, httpError) {
 		return
@@ -98,14 +98,14 @@ func RefreshChat(w *response.Writer, r *http.Request, conn database.Connection) 
 		return
 	}
 
-	chatlist := map[string]any{
+	chatData := map[string]any{
 		"Messages":      messages,
 		"ID":            params.ChatID,
 		"FromMessageID": lastMessageID,
 		"ToMessageID":   firstMessageID,
 		"IsRefresh":     true,
 	}
-	client.ServeTemplate(w, "messagePaneRefresh", client.MessagePaneRefresh, chatlist)
+	client.ServeTemplate(w, "messagePaneRefresh", client.MessagePaneRefresh, chatData)
 }
 
 func ScrollUp(w *response.Writer, r *http.Request, conn database.Connection) {
@@ -135,12 +135,12 @@ func ScrollUp(w *response.Writer, r *http.Request, conn database.Connection) {
 		return
 	}
 
-	chatlist := map[string]any{
+	olderMessages := map[string]any{
 		"Messages":    messages,
 		"ID":          params.ChatID,
 		"ToMessageID": firstMessageID,
 	}
-	client.ServeTemplate(w, "messagePaneScroll", client.MessagePaneScroll, chatlist)
+	client.ServeTemplate(w, "messagePaneScroll", client.MessagePaneScroll, olderMessages)
 }
 
 func getMessages(userID, chatID, fromMessageID, toMessageID int64, limit int, conn database.Connection) ([]database.Message, int64, int64, *resolverutils.HTTPError) {
@@ -179,7 +179,7 @@ func SendMessageHTML(w *response.Writer, r *http.Request, conn database.Connecti
 	if resolverutils.DisplayHTTPError(w, httpError) {
 		return
 	}
-	w.Header().Set("HX-Trigger", "chat-refresh")
+	w.Header().Set("HX-Trigger", "refresh-messages")
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -226,6 +226,7 @@ func CreatePrivateChatHTML(w *response.Writer, r *http.Request, conn database.Co
 		return
 	}
 
+	// Resolve chat display name
 	chatName := newChat.Name
 	if chatName == "" {
 		inputUser, err := conn.GetUser(input.UserID)
@@ -235,9 +236,17 @@ func CreatePrivateChatHTML(w *response.Writer, r *http.Request, conn database.Co
 		chatName = generateChatName(user.ID, []database.User{*user, *inputUser})
 	}
 
-	chatList, httpError := openChatData(user.ID, newChat.ID, chatName, conn)
+	chatData, httpError := openChatData(user.ID, newChat.ID, chatName, conn)
 	if resolverutils.DisplayHTTPError(w, httpError) {
 		return
 	}
-	client.ServeTemplate(w, "messagePane", client.MessagePane, chatList)
+
+	// Get chat list with new chat
+	chats, httpError := getChatsDatabase(user.ID, conn)
+	if resolverutils.DisplayHTTPError(w, httpError) {
+		return
+	}
+	chatData["Chats"] = chats
+
+	client.ServeTemplate(w, "messagePaneWithChatRefresh", client.MessagePane+client.ChatListRefresh, chatData)
 }

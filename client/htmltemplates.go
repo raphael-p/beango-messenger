@@ -45,22 +45,22 @@ var HomePage string = `{{define "content"}}
 					Create
 				</button>
 			</div>
-			<div id=chat-list class="homepage-column chat-list">
-				{{ range .Chats }}
-				{{ block "chat-list" .}}
-					<div 
-						class="chat-selector list-item"
-						hx-get="/home/chat/{{ .ID }}?name={{ .Name }}" 
-						hx-target="#main-pane"
-					>
-						[{{ .Type}}] <b>{{ .Name }}</b>
-					</div>
-				{{ end }}
-				{{ end }}
-			</div>
+			<div id=chat-list class="homepage-column chat-list">` + chatList + `</div>
 		</div>
 		<div id="main-pane" class="main-pane"></div>
 	</div>{{end}}`
+
+var ChatListRefresh string = `<div id=chat-list hx-swap-oob="innerHTML">` + chatList + `</div>`
+
+var chatList string = `{{ range .Chats }}
+	<div 
+		class="chat-selector list-item"
+		hx-get="/home/chat/{{ .ID }}?name={{ .Name }}" 
+		hx-target="#main-pane"
+	>
+		[{{ .Type}}] <b>{{ .Name }}</b>
+	</div>
+	{{ end }}`
 
 var MessagePane string = `<span class="heading-1">{{ .Name }}</span>
 	<table
@@ -113,7 +113,7 @@ var newMessageFetcher string = `<div
 		hx-get="/home/chat/{{ .ID }}/refresh?from={{ .FromMessageID }}"
 		hx-swap="outerHTML"
 		class="chat-selector list-item"
-		hx-trigger="chat-refresh from:document, every 5s"
+		hx-trigger="refresh-messages from:document, every 5s"
 	/>`
 
 var NewChatPane string = `<span class="heading-1">Create a new chat</span>
