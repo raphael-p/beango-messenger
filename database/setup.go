@@ -1,10 +1,16 @@
 package database
 
-import "database/sql"
+import (
+	"database/sql"
+)
+
+func makeErrorMessage(err error) string {
+	return "failed to setup database: " + err.Error()
+}
 
 func handleError(tx *sql.Tx, err error) {
 	if err != nil {
-		message := "failed to setup database: " + err.Error()
+		message := makeErrorMessage(err)
 		if err := tx.Rollback(); err != nil {
 			message += " (transaction rollback failed: " + err.Error() + ")"
 		} else {
@@ -16,7 +22,9 @@ func handleError(tx *sql.Tx, err error) {
 
 func Setup(conn *MongoConnection) {
 	tx, err := conn.Begin()
-	handleError(tx, err)
+	if err != nil {
+		panic(makeErrorMessage(err))
+	}
 
 	_, err = tx.Exec(`SET TIME ZONE 'UTC';`)
 	handleError(tx, err)
