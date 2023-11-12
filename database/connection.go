@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"os"
 
 	_ "github.com/lib/pq"
 	"github.com/raphael-p/beango/config"
@@ -43,12 +44,26 @@ func GetConnection() (*MongoConnection, error) {
 	if conn != nil {
 		return conn, nil
 	}
-	connectionString := fmt.Sprintf(
-		"postgres://%s:%s/%s?sslmode=disable",
-		config.Values.Database.Host,
-		config.Values.Database.Port,
-		config.Values.Database.Name,
-	)
+
+	// check for db envars
+	host := os.Getenv(config.Envars.DatabaseHost)
+	if host == "" {
+		return nil, fmt.Errorf("$%s must be set", config.Envars.DatabaseHost)
+	}
+	name := os.Getenv(config.Envars.DatabaseName)
+	if name == "" {
+		return nil, fmt.Errorf("$%s must be set", config.Envars.DatabaseName)
+	}
+
+	// generate credentials substring
+	credentials := ""
+	username := os.Getenv(config.Envars.DatabaseUsername)
+	password := os.Getenv(config.Envars.DatabasePassword)
+	if username != "" && password != "" {
+		credentials = username + ":" + password + "@"
+	}
+
+	connectionString := fmt.Sprintf("postgres://%s%s/%s?sslmode=disable", credentials, host, name)
 	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
 		return nil, err

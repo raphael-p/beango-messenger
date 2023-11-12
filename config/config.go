@@ -12,9 +12,9 @@ import (
 var Values *config
 
 func CreateConfig() {
-	filePath := os.Getenv(envars.configFilepath)
+	filePath := os.Getenv(Envars.configFilepath)
 	if filePath == "" {
-		fmt.Printf("$%s not set, using default config\n", envars.configFilepath)
+		fmt.Printf("$%s not set, using default config\n", Envars.configFilepath)
 		path, ok := path.RelativeJoin("default.json")
 		if !ok {
 			panic("could not get absolute path for config directory")
