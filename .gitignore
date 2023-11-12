@@ -5,6 +5,7 @@ config/*
 !config/default.json
 !config/envars.go
 !config/schema.go
+!config/default.docker.env
 
 beango
 

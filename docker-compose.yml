@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    env_file:
+      - ./config/docker.env
+    environment:
+      - POSTGRES_PASSWORD=changethis
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-db:/var/lib/postgresql/data
+      - ./database/init_db.sh:/docker-entrypoint-initdb.d/init-db.sh
+  web:
+    depends_on:
+      - postgres
+    build: .
+    env_file:
+      - ./config/docker.env 
+    ports:
+      - "8081:8081"
+    volumes:
+      - .:/usr/src/app
+    command: go run main.go -b 0.0.0.0
+
+volumes:
+  postgres-db:
