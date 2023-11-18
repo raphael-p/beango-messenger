@@ -3,7 +3,7 @@ package client
 var Skeleton string = `<!DOCTYPE html>
 	<html>
 	<head>
-		<script src="/resources/htmx.js"></script>
+		<script src="/resources/htmx.min.js"></script>
 		<script src="/resources/json-enc.js"></script>
 		<script src="/resources/script.js"></script>
 		<link rel="stylesheet" type="text/css" href="/resources/style.css">
