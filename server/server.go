@@ -47,6 +47,9 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 	username := resolverutils.USERNAME_KEY
 
 	// frontend endpoints
+	router.GET("/", func(w *response.Writer, r *http.Request, conn database.Connection) {
+		http.Redirect(w, r, "/home", http.StatusSeeOther)
+	})
 	router.GET("/login", resolvers.Login)
 	router.POST("/login/:action", resolvers.SubmitLogin)
 	router.GET("/home", resolvers.Home, routing.AuthRedirect)
