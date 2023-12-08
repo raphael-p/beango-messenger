@@ -7,6 +7,19 @@ var Skeleton string = `<!DOCTYPE html>
 		<script src="/resources/json-enc.js"></script>
 		<script src="/resources/script.js"></script>
 		<link rel="stylesheet" type="text/css" href="/resources/style.css">
+
+		<link rel="icon" type="image/png" sizes="192x192" href="/resources/favicons/android-chrome-192x192.png">
+		<link rel="icon" type="image/png" sizes="512x512" href="/resources/favicons/android-chrome-512x512.png">
+		<link rel="apple-touch-icon" href="/resources/favicons/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/resources/favicons/favicon-16x16.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="/resources/favicons/favicon-32x32.png">
+		<link rel="icon" type="image/x-icon" href="/resources/favicons/favicon.ico">
+
+		<script>
+			/*to prevent Firefox FOUC, this must be here*/
+			let FF_FOUC_FIX;
+		</script>
+		
 		<title>Beango Messenger</title>
 	</head>
 	<body hx-on::before-request="clearErrorNodes();">
