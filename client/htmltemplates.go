@@ -21,11 +21,11 @@ var LoginPage string = `{{define "content"}}<span class="logo"><span>> Beango Me
 		<form hx-ext="json-enc">
 			<div class="form-row">
 				<label for="username">Username:</label>
-				<input type="text" name="username" maxlength="25">
+				<input type="text" name="username" maxlength="25" placeholder="Type your username">
 			</div>
 			<div class="form-row">
 				<label for="password">Password:</label>
-				<input type="password" name="password" maxlength="25">
+				<input type="password" name="password" maxlength="25" placeholder="Type your password">
 			</div>
 			<div class="form-row button-row">
 				<button hx-post="/login/login" type="submit" hx-swap="none" class="form-button">Log In</button>
