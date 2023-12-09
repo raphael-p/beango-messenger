@@ -19,13 +19,13 @@ var Skeleton string = `<!DOCTYPE html>
 			/*to prevent Firefox FOUC, this must be here*/
 			let FF_FOUC_FIX;
 		</script>
-		
+
 		<title>Beango Messenger</title>
 	</head>
 	<body hx-on::before-request="clearErrorNodes();">
 		<div id="header">{{block "header" .}}{{end}}</div>
 		<div id="content">{{template "content" .}}</div>
-		<div id="footer">{{block "header" .}}{{end}}</div>
+		<div id="footer">{{block "footer" .}}{{end}}</div>
 	</body>
 	</html>`
 
@@ -41,27 +41,37 @@ var LoginPage string = `{{define "content"}}<span class="logo"><span>> Beango Me
 				<input type="password" name="password" maxlength="25" placeholder="Type your password">
 			</div>
 			<div class="form-row button-row">
-				<button hx-post="/login/login" type="submit" hx-swap="none" class="form-button">Log In</button>
-				<button hx-post="/login/signup" type="submit" hx-swap="none" class="form-button">Sign Up</button>
+				<button hx-post="/login/login" type="submit" hx-swap="none" class="underline-button">Log In</button>
+				<button hx-post="/login/signup" type="submit" hx-swap="none" class="underline-button">Sign Up</button>
 			</div>
 			<div id="errors" class="error"></div>
 		</form>
 	</div>{{end}}`
 
+var Header string = `{{define "header"}}
+	<div class="header-bar">
+		<span class="heading-1">> Beango Messenger</span>
+		<button type="submit" class="underline-button" hx-get="/logout" hx-swap="none">
+			Logout
+		</button>
+	</div>
+	{{end}}`
+
 var HomePage string = `{{define "content"}}
-	<div id="errors" class="error"></div>
-	<div class="chat-container">
-		<div class="sidebar">
-			<div class="heading-1">
-				<span>Chats</span>
-				<button type="submit" class="new-button" hx-get="/home/newChat" hx-target="#main-pane">
-					Create
-				</button>
+		<div id="errors" class="error"></div>
+		<div class="chat-container">
+			<div class="sidebar">
+				<div class="column-header">
+					<span class="heading-1">Chats</span>
+					<button type="submit" class="fill-button" hx-get="/home/newChat" hx-target="#main-pane">
+						Create
+					</button>
+				</div>
+				<div id=chat-list class="homepage-column chat-list">` + chatList + `</div>
 			</div>
-			<div id=chat-list class="homepage-column chat-list">` + chatList + `</div>
+			<div id="main-pane" class="main-pane"></div>
 		</div>
-		<div id="main-pane" class="main-pane"></div>
-	</div>{{end}}`
+	{{end}}`
 
 var ChatListRefresh string = `<div id=chat-list hx-swap-oob="innerHTML">` + chatList + `</div>`
 
@@ -75,7 +85,9 @@ var chatList string = `{{ range .Chats }}
 	</div>
 	{{ end }}`
 
-var MessagePane string = `<span class="heading-1">{{ .Name }}</span>
+var MessagePane string = `<div class="column-header">
+		<span class="heading-1">{{ .Name }}</span>
+	</div>
 	<table
 		id="message-table"
 		class="homepage-column message-list"
@@ -129,7 +141,9 @@ var newMessageFetcher string = `<div
 		hx-trigger="refresh-messages from:document, every 5s"
 	/>`
 
-var NewChatPane string = `<span class="heading-1">Create a new chat</span>
+var NewChatPane string = `<div class="column-header">
+		<span class="heading-1">Create a new chat</span>
+	</div>
 	<div class="input-bar">
 		<span class="input-prompt">> </span>
 		<textarea

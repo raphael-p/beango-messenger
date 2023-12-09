@@ -25,7 +25,7 @@ func Home(w *response.Writer, r *http.Request, conn database.Connection) {
 	}
 
 	chatList := map[string]any{"Chats": chats}
-	client.ServeTemplate(w, "homePage", client.Skeleton+client.HomePage, chatList)
+	client.ServeTemplate(w, "homePage", client.Skeleton+client.Header+client.HomePage, chatList)
 }
 
 func OpenChat(w *response.Writer, r *http.Request, conn database.Connection) {

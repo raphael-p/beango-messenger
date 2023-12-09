@@ -52,6 +52,7 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 	})
 	router.GET("/login", resolvers.Login)
 	router.POST("/login/:action", resolvers.SubmitLogin)
+	router.GET("/logout", resolvers.Logout)
 	router.GET("/home", resolvers.Home, routing.AuthRedirect)
 	router.GET("/home/chat/:"+chatID, resolvers.OpenChat, routing.AuthRedirect)
 	router.GET("/home/chat/:"+chatID+"/scrollUp", resolvers.ScrollUp, routing.AuthRedirect)
