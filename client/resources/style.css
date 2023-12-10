@@ -152,6 +152,23 @@ form > div {
 	justify-content: space-between;
 }
 
+.welcome-message {
+	display: inline-block;
+	color: var(--hacker-green);
+	white-space: nowrap;
+	overflow: hidden;
+	animation: welcome-message 2s steps(20, end);
+}
+  
+@keyframes welcome-message {
+	from {
+		width: 5%;
+	}
+	to {
+		width: 100%;
+	}
+}
+
 /* HOME PAGE */
 
 .homepage-column {

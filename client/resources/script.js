@@ -10,3 +10,8 @@ const clearErrorNodes = () => {
     const errorNodes = document.querySelectorAll('#errors');
     for (const errorNode of errorNodes) errorNode.innerHTML = "";
 };
+
+const clearAfterTimeout = (event, timeout) => setTimeout(() => { 
+    const elt = event.detail.elt; 
+    elt.parentElement.removeChild(elt); 
+}, timeout);

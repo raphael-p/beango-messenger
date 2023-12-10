@@ -51,6 +51,9 @@ var LoginPage string = `{{define "content"}}<span class="logo"><span>> Beango Me
 var Header string = `{{define "header"}}
 	<div class="header-bar">
 		<span class="heading-1">> Beango Messenger</span>
+		<div hx-on="htmx:after-process-node: clearAfterTimeout(event, 5000)">
+			<span class="welcome-message">> Welcome to beango!</span>
+		</div>
 		<button type="submit" class="underline-button" hx-get="/logout" hx-swap="none">
 			Logout
 		</button>
