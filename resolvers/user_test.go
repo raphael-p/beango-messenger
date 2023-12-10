@@ -79,7 +79,7 @@ func TestValidateCreateUserInput(t *testing.T) {
 		input := makeInput(username, "", "")
 
 		err := validateCreateUserInput(&input)
-		xMessage := "username must be shorter than 26 characters"
+		xMessage := "username must be shorter than 16 characters"
 		resolverutils.AssertHTTPError(t, err, http.StatusBadRequest, xMessage)
 	})
 
@@ -106,12 +106,12 @@ func TestValidateCreateUserInput(t *testing.T) {
 		input := makeInput("", displayName, "")
 
 		err := validateCreateUserInput(&input)
-		xMessage := "display name must be shorter than 26 characters"
+		xMessage := "display name must be shorter than 16 characters"
 		resolverutils.AssertHTTPError(t, err, http.StatusBadRequest, xMessage)
 	})
 
 	t.Run("DisplayNameHasWhitespace", func(t *testing.T) {
-		displayName := "abcdefghij\rklmnopqrs"
+		displayName := "abcdefghij\rklmn"
 		input := makeInput("", displayName, "")
 
 		err := validateCreateUserInput(&input)

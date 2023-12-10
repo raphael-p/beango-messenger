@@ -34,7 +34,7 @@ var LoginPage string = `{{define "content"}}<span class="logo"><span>> Beango Me
 		<form id="login-form" hx-ext="json-enc">
 			<div id="username" class="form-row">
 				<label for="username">Username:</label>
-				<input type="text" name="username" maxlength="25" placeholder="Type your username">
+				<input type="text" name="username" maxlength="15" placeholder="Type your username">
 			</div>
 			<div class="form-row">
 				<label for="password">Password:</label>
@@ -72,7 +72,7 @@ var SignUpButton = `<button
 
 var DisplayNameRow = `<div class="form-row" >
 		<label for="displayName">Display Name:</label>
-		<input type="displayName" name="displayName" maxlength="25" placeholder="Type your display name">
+		<input type="displayName" name="displayName" maxlength="15" placeholder="Type your display name">
 	</div>`
 
 var Header string = `{{define "header"}}
@@ -187,7 +187,7 @@ var NewChatPane string = `<div class="column-header">
 			class="input-value"
 			placeholder="Search for a user to chat with"
 			name="query"
-			maxlength="25"
+			maxlength="15"
 			hx-post="/home/newChat/search"
 			hx-trigger="keyup changed delay:500ms"
 			hx-target="#search-results"
@@ -205,7 +205,7 @@ var ChangeNamePane string = `<div class="column-header">
 			class="input-value"
 			placeholder="Enter your new display name"
 			name="newName"
-			maxlength="25"
+			maxlength="15"
 			hx-post="/home/rename"
 			hx-on:keypress="sendMessageOnEnter(event)"
 			hx-trigger="send-message consume"

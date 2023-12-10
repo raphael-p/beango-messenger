@@ -234,6 +234,9 @@ table {
 .list-item {
 	font-size: small;
 	line-height: 2;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 td.cue {
@@ -241,6 +244,10 @@ td.cue {
 	font-weight: bold;
 	padding-right: 10px;
 	vertical-align: top;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 150px;
 }
 
 td.message {

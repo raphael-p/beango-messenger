@@ -36,10 +36,10 @@ func validateCreateUserInput(input *createUserInput) *resolverutils.HTTPError {
 	input.Username = strings.TrimSpace(input.Username)
 	input.DisplayName.Value = strings.TrimSpace(input.DisplayName.Value)
 
-	if len([]rune(input.Username)) > 25 {
+	if len([]rune(input.Username)) > 15 {
 		return &resolverutils.HTTPError{
 			Status:  http.StatusBadRequest,
-			Message: "username must be shorter than 26 characters",
+			Message: "username must be shorter than 16 characters",
 		}
 	}
 	if !regexp.MustCompile("^[a-zA-Z0-9_.]*$").MatchString(input.Username) {
@@ -49,10 +49,10 @@ func validateCreateUserInput(input *createUserInput) *resolverutils.HTTPError {
 		}
 	}
 
-	if len([]rune(input.DisplayName.Value)) > 25 {
+	if len([]rune(input.DisplayName.Value)) > 15 {
 		return &resolverutils.HTTPError{
 			Status:  http.StatusBadRequest,
-			Message: "display name must be shorter than 26 characters",
+			Message: "display name must be shorter than 16 characters",
 		}
 	}
 	if strings.ContainsAny(input.DisplayName.Value, "\t\n\r") {
