@@ -108,12 +108,15 @@ div.form-row {
 	margin-top: 20px;
 	margin-bottom: 20px;
 	letter-spacing: 2px;
+	display: flex;
 }
 
 div.form-row label {
 	font-family: var(--hacker-font);
 	font-size: medium;
 	text-transform: uppercase;
+	display: inline-block;
+	width: 110px
   }
   
 div.form-row input {
