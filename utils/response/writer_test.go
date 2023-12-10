@@ -61,6 +61,20 @@ func TestWriteJSON(t *testing.T) {
 	})
 }
 
+func TestWriteHTML(t *testing.T) {
+	t.Run("Normal", func(t *testing.T) {
+		recorder := httptest.NewRecorder()
+		writer := NewWriter(recorder)
+
+		xStatus := http.StatusAccepted
+		xBody := "<div class: >just some text, doesn't have to be valid HTML"
+		writer.WriteHTML(xStatus, xBody)
+		assert.Equals(t, recorder.Header().Get("Content-Type"), "text/html")
+		assert.Equals(t, writer.Status, xStatus)
+		assert.Equals(t, string(writer.Body), xBody)
+	})
+}
+
 func TestString(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		recorder := httptest.NewRecorder()
