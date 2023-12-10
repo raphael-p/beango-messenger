@@ -69,5 +69,5 @@ func SendMessage(w *response.Writer, r *http.Request, conn database.Connection) 
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
-	w.WriteJSON(http.StatusAccepted, newMessage)
+	w.WriteJSON(http.StatusCreated, newMessage)
 }

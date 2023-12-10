@@ -96,7 +96,7 @@ func TestSendMessage(t *testing.T) {
 		w, req := makeMessageRequest(t, body, chatID)
 
 		SendMessage(w, req, conn)
-		assert.Equals(t, w.Status, http.StatusAccepted)
+		assert.Equals(t, w.Status, http.StatusCreated)
 		message := &database.MessageDatabase{}
 		err := json.Unmarshal(w.Body, message)
 		assert.IsNil(t, err)

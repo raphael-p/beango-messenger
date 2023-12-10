@@ -70,7 +70,7 @@ var SignUpButton = `<button
 		Sign Up
 	</button>`
 
-var DisplayNameRow = `<div class="form-row" >
+var DisplayNameRow = `<div class="form-row">
 		<label for="displayName">Display Name:</label>
 		<input type="displayName" name="displayName" maxlength="15" placeholder="Type your display name">
 	</div>`

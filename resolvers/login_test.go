@@ -69,6 +69,16 @@ func TestSubmitLogin(t *testing.T) {
 		checkSuccessfulLogin(w, req, conn)
 	})
 
+	t.Run("NormalWithPreSignup", func(t *testing.T) {
+		w, req, conn := resolverutils.CommonSetup("")
+		params := map[string]string{resolverutils.ACTION_KEY: "presignup"}
+		req = resolverutils.SetContext(t, req, nil, params)
+
+		SubmitLogin(w, req, conn)
+		assert.Equals(t, w.Status, http.StatusOK)
+		assert.Contains(t, string(w.Body), "<button", `<div class="form-row">`)
+	})
+
 	t.Run("NormalWithSignup", func(t *testing.T) {
 		w, req, conn := resolverutils.CommonSetup(body("someNewUser", "123"))
 		params := map[string]string{resolverutils.ACTION_KEY: "signup"}

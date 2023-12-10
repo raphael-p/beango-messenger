@@ -257,7 +257,6 @@ type renameUserInput struct {
 	NewName validate.JSONField[string] `json:"newName"`
 }
 
-// TODO: test
 func RenameUser(w *response.Writer, r *http.Request, conn database.Connection) {
 	input := new(renameUserInput)
 	user, _, httpError := resolverutils.GetRequestBodyAndContext(r, input)
@@ -279,5 +278,5 @@ func RenameUser(w *response.Writer, r *http.Request, conn database.Connection) {
 		</span>`,
 		displayName,
 	)
-	w.WriteHTML(http.StatusAccepted, message)
+	w.WriteHTML(http.StatusOK, message)
 }
