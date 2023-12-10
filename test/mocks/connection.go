@@ -185,7 +185,12 @@ func (mc *MockConnection) GetSession(id string) *database.Session {
 	return &session
 }
 
-func (*MockConnection) GetSessionByUserID(userID int64) (*database.Session, error) {
+func (mc *MockConnection) GetSessionByUserID(userID int64) (*database.Session, error) {
+	for _, session := range mc.sessions {
+		if session.UserID == userID {
+			return &session, nil
+		}
+	}
 	return nil, nil
 }
 

@@ -20,7 +20,7 @@ func TestLogin(t *testing.T) {
 
 		Login(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusOK)
-		assert.Contains(t, string(w.Body), "<html>", "</html")
+		assert.Contains(t, string(w.Body), "<html>", "</html>")
 	})
 
 	t.Run("ValidSessionCookie", func(t *testing.T) {
@@ -41,7 +41,7 @@ func TestLogin(t *testing.T) {
 
 		Login(w, req, conn)
 		assert.Equals(t, w.Status, http.StatusOK)
-		assert.Contains(t, string(w.Body), "<html>", "</html")
+		assert.Contains(t, string(w.Body), "<html>", "</html>")
 	})
 }
 
