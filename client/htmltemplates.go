@@ -30,9 +30,9 @@ var Skeleton string = `<!DOCTYPE html>
 	</html>`
 
 var LoginPage string = `{{define "content"}}<span class="logo"><span>> Beango Messenger </span></span>
-	<div id="login-form">
-		<form hx-ext="json-enc">
-			<div class="form-row">
+	<div>
+		<form id="login-form" hx-ext="json-enc">
+			<div id="username" class="form-row">
 				<label for="username">Username:</label>
 				<input type="text" name="username" maxlength="25" placeholder="Type your username">
 			</div>
@@ -41,12 +41,39 @@ var LoginPage string = `{{define "content"}}<span class="logo"><span>> Beango Me
 				<input type="password" name="password" maxlength="25" placeholder="Type your password">
 			</div>
 			<div class="form-row button-row">
-				<button hx-post="/login/login" type="submit" hx-swap="none" class="underline-button">Log In</button>
-				<button hx-post="/login/signup" type="submit" hx-swap="none" class="underline-button">Sign Up</button>
+				<button 
+					hx-post="/login/login" 
+					type="submit" hx-swap="none" 
+					class="underline-button"
+				>
+					Log In
+				</button>
+				<button 
+					hx-post="/login/presignup" 
+					type="submit" 
+					hx-target="closest div"
+					class="underline-button"
+				>
+					Sign Up
+				</button>
 			</div>
 			<div id="errors" class="error"></div>
 		</form>
 	</div>{{end}}`
+
+var SignUpButton = `<button 
+		hx-post="/login/signup" 
+		type="submit" 
+		hx-swap="none" 
+		class="underline-button"
+	>
+		Sign Up
+	</button>`
+
+var DisplayNameRow = `<div class="form-row" >
+		<label for="displayName">Display Name:</label>
+		<input type="displayName" name="displayName" maxlength="25" placeholder="Type your display name">
+	</div>`
 
 var Header string = `{{define "header"}}
 	<div class="header-bar">

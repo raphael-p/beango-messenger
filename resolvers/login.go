@@ -23,10 +23,22 @@ func Login(w *response.Writer, r *http.Request, conn database.Connection) {
 	client.ServeTemplate(w, "loginPage", client.Skeleton+client.LoginPage, nil)
 }
 
+// TODO: test
 func SubmitLogin(w *response.Writer, r *http.Request, conn database.Connection) {
 	// getting route param directly instead of using GetRequestContext()
 	// because it would error since no user is in the context
 	action, _ := context.GetParam(r, resolverutils.ACTION_KEY)
+
+	if action == "presignup" {
+		w.WriteString(
+			http.StatusOK,
+			client.SignUpButton+
+				`<div hx-swap-oob="afterend:#username">`+
+				client.DisplayNameRow+`</div>`,
+		)
+		return
+	}
+
 	var input createUserInput
 	if resolverutils.DisplayHTTPError(w, resolverutils.GetRequestBody(r, &input)) {
 		return
