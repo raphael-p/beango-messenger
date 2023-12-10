@@ -245,7 +245,7 @@ table {
 td.cue {
 	color: var(--hacker-grey);
 	font-weight: bold;
-	padding-right: 10px;
+	padding: 0 10px 0 0;
 	vertical-align: top;
 	white-space: nowrap;
 	overflow: hidden;
