@@ -81,9 +81,11 @@ var Header string = `{{define "header"}}
 		<div hx-on="htmx:after-process-node: clearAfterTimeout(event, 5000)">
 			<span class="welcome-message">> Welcome to beango!</span>
 		</div>
-		<button type="submit" class="underline-button" hx-get="/logout" hx-swap="none">
-			Log Out
-		</button>
+		<div>
+			<button type="submit" class="underline-button" hx-get="/logout" hx-swap="none">
+				Log Out
+			</button>
+		</div>
 	</div>
 	{{end}}`
 
@@ -93,9 +95,14 @@ var HomePage string = `{{define "content"}}
 			<div class="sidebar">
 				<div class="column-header">
 					<span class="heading-1">Chats</span>
-					<button type="submit" class="fill-button" hx-get="/home/newChat" hx-target="#main-pane">
-						Create
-					</button>
+					<div>
+						<button type="submit" class="fill-button" hx-get="/home/rename" hx-target="#main-pane">
+							Rename
+						</button>
+						<button type="submit" class="fill-button" hx-get="/home/newChat" hx-target="#main-pane">
+							Create
+						</button>
+					</div>
 				</div>
 				<div id=chat-list class="homepage-column chat-list">` + chatList + `</div>
 			</div>
@@ -183,6 +190,26 @@ var NewChatPane string = `<div class="column-header">
 			maxlength="25"
 			hx-post="/home/newChat/search"
 			hx-trigger="keyup changed delay:500ms"
+			hx-target="#search-results"
+			hx-ext="json-enc"
+		></textarea>
+		<div id="search-results"/>
+	</div>`
+
+var ChangeNamePane string = `<div class="column-header">
+		<span class="heading-1">Change your display name</span>
+	</div>
+	<div class="input-bar">
+		<span class="input-prompt">> </span>
+		<textarea
+			class="input-value"
+			placeholder="Enter your new display name"
+			name="newName"
+			maxlength="25"
+			hx-post="/home/rename"
+			hx-on:keypress="sendMessageOnEnter(event)"
+			hx-trigger="send-message consume"
+			hx-on::after-request="if(event.detail.successful) this.value = '';"
 			hx-target="#search-results"
 			hx-ext="json-enc"
 		></textarea>

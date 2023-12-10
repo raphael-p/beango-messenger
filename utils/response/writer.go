@@ -56,6 +56,12 @@ func (w *Writer) WriteJSON(code int, responseObject any) {
 	w.writeBody(response)
 }
 
+// TODO: test
+func (w *Writer) WriteHTML(code int, response string) {
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteString(code, response)
+}
+
 func (w *Writer) String() string {
 	out := fmt.Sprintf("status %d (took %dms)", w.Status, w.Time)
 	if len(w.Body) > 0 && !w.HideResponse {

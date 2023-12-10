@@ -170,6 +170,13 @@ func (mc *MockConnection) SearchUsers(username string, searchUserID int64) ([]da
 	return users, nil
 }
 
+func (mc *MockConnection) RenameUser(id int64, displayName string) error {
+	user := mc.users[id]
+	user.DisplayName = displayName
+	mc.users[id] = user
+	return nil
+}
+
 func (mc *MockConnection) GetSession(id string) *database.Session {
 	session, ok := mc.sessions[id]
 	if !ok {

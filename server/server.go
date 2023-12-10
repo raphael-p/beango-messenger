@@ -60,6 +60,8 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 	router.GET("/home/newChat", resolvers.OpenChatCreator, routing.AuthRedirect)
 	router.POST("/home/newChat/search", resolvers.UserSearch, routing.AuthRedirect)
 	router.POST("/home/newChat/create", resolvers.CreatePrivateChatHTML, routing.AuthRedirect)
+	router.GET("/home/rename", resolvers.OpenRenamer, routing.AuthRedirect)
+	router.POST("/home/rename", resolvers.RenameUser, routing.AuthRedirect)
 	router.POST("/home/chat/:"+chatID+"/sendMessage", resolvers.SendMessageHTML, routing.AuthRedirect)
 	router.GET("/resources/.*", func(w *response.Writer, r *http.Request, conn database.Connection) {
 		http.StripPrefix("/resources/", http.FileServer(http.Dir(path))).ServeHTTP(w, r)

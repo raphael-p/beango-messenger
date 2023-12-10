@@ -72,6 +72,10 @@ body {
 	border-bottom: 2px solid var(--hacker-green);
 }
 
+.accent {
+	color: var(--hacker-green-accent);
+}
+
 /* LOGIN PAGE */
 
 span.logo  {

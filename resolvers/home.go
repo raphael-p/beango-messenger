@@ -1,6 +1,7 @@
 package resolvers
 
 import (
+	"fmt"
 	"net/http"
 	"slices"
 
@@ -185,6 +186,10 @@ func OpenChatCreator(w *response.Writer, r *http.Request, conn database.Connecti
 	w.WriteString(http.StatusOK, client.NewChatPane)
 }
 
+func OpenRenamer(w *response.Writer, r *http.Request, conn database.Connection) {
+	w.WriteString(http.StatusOK, client.ChangeNamePane)
+}
+
 type userSearchInput struct {
 	Query validate.JSONField[string] `json:"query" zeroable:"true"`
 }
@@ -246,4 +251,33 @@ func CreatePrivateChatHTML(w *response.Writer, r *http.Request, conn database.Co
 	chatData["Chats"] = chats
 
 	client.ServeTemplate(w, "messagePaneWithChatRefresh", client.MessagePane+client.ChatListRefresh, chatData)
+}
+
+type renameUserInput struct {
+	NewName validate.JSONField[string] `json:"newName"`
+}
+
+// TODO: test
+func RenameUser(w *response.Writer, r *http.Request, conn database.Connection) {
+	input := new(renameUserInput)
+	user, _, httpError := resolverutils.GetRequestBodyAndContext(r, input)
+	if resolverutils.DisplayHTTPError(w, httpError) {
+		return
+	}
+	displayName := input.NewName.Value
+
+	err := conn.RenameUser(user.ID, displayName)
+	if resolverutils.DisplayHTTPError(w, resolverutils.HandleDatabaseError(err)) {
+		return
+	}
+
+	message := fmt.Sprintf(
+		`<span class="info">
+			Your display name has been changed to 
+			<span class="accent">%s</span>.
+			Your username is unchanged.
+		</span>`,
+		displayName,
+	)
+	w.WriteHTML(http.StatusAccepted, message)
 }

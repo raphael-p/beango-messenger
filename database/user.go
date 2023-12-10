@@ -67,3 +67,13 @@ func (conn *MongoConnection) SearchUsers(username string, searchUserID int64) ([
 		username+"%", searchUserID,
 	))
 }
+
+func (conn *MongoConnection) RenameUser(id int64, displayName string) error {
+	_, err := conn.Exec(
+		`UPDATE "user"
+		SET display_name = $1
+		WHERE id = $2`,
+		displayName, id,
+	)
+	return err
+}
