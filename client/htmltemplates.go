@@ -55,7 +55,7 @@ var Header string = `{{define "header"}}
 			<span class="welcome-message">> Welcome to beango!</span>
 		</div>
 		<button type="submit" class="underline-button" hx-get="/logout" hx-swap="none">
-			Logout
+			Log Out
 		</button>
 	</div>
 	{{end}}`
