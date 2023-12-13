@@ -23,7 +23,6 @@ func Login(w *response.Writer, r *http.Request, conn database.Connection) {
 	client.ServeTemplate(w, "loginPage", client.Skeleton+client.LoginPage, nil)
 }
 
-// TODO: test
 func SubmitLogin(w *response.Writer, r *http.Request, conn database.Connection) {
 	// getting route param directly instead of using GetRequestContext()
 	// because it would error since no user is in the context

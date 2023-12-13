@@ -8,7 +8,6 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-// TODO: test
 func Logout(w *response.Writer, r *http.Request, conn database.Connection) {
 	sessionID, _ := cookies.Get(r, cookies.SESSION)
 	if sessionID != "" {

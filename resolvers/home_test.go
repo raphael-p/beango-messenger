@@ -152,3 +152,57 @@ func TestSendMessageHTML(t *testing.T) {
 		assert.Equals(t, string(w.Body), "cannot send an empty message")
 	})
 }
+
+func TestUserSearch(t *testing.T) {
+	t.Run("Normal", func(t *testing.T) {
+		body := fmt.Sprintf(`{"query": "%s"}`, "partial_username")
+		w, r, conn := resolverutils.CommonSetup(body)
+		r = resolverutils.SetContext(t, r, mocks.Admin, nil)
+
+		UserSearch(w, r, conn)
+		assert.Equals(t, w.Status, http.StatusOK)
+		assert.Contains(t, string(w.Body), "<b>the_admin</b> Administrator")
+	})
+}
+
+func TestCreatePrivateChatHTML(t *testing.T) {
+	t.Run("Normal", func(t *testing.T) {
+		body := fmt.Sprintf(`{"userID": %d}`, mocks.ADMIN_ID)
+		w, r, conn := resolverutils.CommonSetup(body)
+		user, _ := conn.SetUser(mocks.MakeUser())
+		r = resolverutils.SetContext(t, r, user, nil)
+
+		CreatePrivateChatHTML(w, r, conn)
+		assert.Equals(t, w.Status, http.StatusOK)
+		assert.Contains(
+			t,
+			string(w.Body),
+			`<span class="heading-1">Administrator</span>`,
+			`<div id=chat-list hx-swap-oob="innerHTML">`,
+			`[private] <b>Administrator</b>`,
+		)
+	})
+}
+
+func TestRenameUser(t *testing.T) {
+	t.Run("Normal", func(t *testing.T) {
+		xName := "Bukayo Saka"
+		body := fmt.Sprintf(`{"newName": "%s"}`, xName)
+		w, r, conn := resolverutils.CommonSetup(body)
+		user, _ := conn.SetUser(mocks.MakeUser())
+		r = resolverutils.SetContext(t, r, user, nil)
+
+		RenameUser(w, r, conn)
+		// formatting is weird to match spacing in original
+		message := fmt.Sprintf(
+			`<span class="info">
+			Your display name has been changed to 
+			<span class="accent">%s</span>.
+			Your username is unchanged.
+		</span>`,
+			xName,
+		)
+		assert.Equals(t, w.Status, http.StatusOK)
+		assert.Equals(t, string(w.Body), message)
+	})
+}
