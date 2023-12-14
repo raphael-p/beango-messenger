@@ -16,19 +16,20 @@ HTMX was chosen to build to web front end for this app in order to try a differe
 
 ## How to run
 
-1. Clone `config/default.docker.env` and rename the copy to `docker.env`.
-2. Set BG_DB_PASSWORD to a value of your choice. This will be the password used for postgres users.
-
 ### With Docker (recommended)
 
 Prequisite: Docker must be installed on your machine
 
+1. Clone `config/default.docker.env` and rename the copy to `docker.env`.
+2. Set BG_DB_PASSWORD to a value of your choice. This will be the password used for postgres users.
 3. Run `docker-compose up`.
 
 ### Without Docker
 
 Prerequisites: Golang, Postgres
 
-3. Run `set -a; source config/docker.env; set +a;` to make the envars available to the current shell.
-4. Create a postgres database, along with a username+password with full priviledges on it. Make sure to use the same values as the BG_DB_NAME, BG_DB_USERNAME, and BG_DB_PASSWORD envars.
+1. Create and run your postgres database, set up roles and priviledges as necessary.
+2. Clone `config/default.docker.env` and rename the copy to `dev.env`.
+3. Change the `BG_DB_USERNAME` and `BG_DB_PASSWORD` envars to match your postgres user. You can also just remove these if you want to use the default postgres user with no password.
+4. Run `set -a; source config/dev.env; set +a;` to make the envars available to the current shell.
 5. Run `go run main.go`
