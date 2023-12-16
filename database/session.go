@@ -26,6 +26,10 @@ func (conn *MongoConnection) SetSession(session Session) {
 	}
 
 	Sessions[session.ID] = session
+	fmt.Println("Active Sessions:")
+	for key := range Sessions {
+		fmt.Println("\t" + key)
+	}
 }
 
 func (conn *MongoConnection) DeleteSession(id string) {

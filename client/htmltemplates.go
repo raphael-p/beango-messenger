@@ -4,7 +4,8 @@ var Skeleton string = `<!DOCTYPE html>
 	<html>
 	<head>
 		<script src="/resources/htmx.min.js"></script>
-		<script src="/resources/json-enc.js"></script>
+		<script src="/resources/json-enc.min.js"></script>
+		<script src="/resources/sse.min.js"></script>
 		<script src="/resources/script.js"></script>
 		<link rel="stylesheet" type="text/css" href="/resources/style.css">
 
@@ -92,6 +93,10 @@ var Header string = `{{define "header"}}
 var HomePage string = `{{define "content"}}
 		<div id="errors" class="error"></div>
 		<div class="chat-container">
+			<div hx-ext="sse" sse-connect="/registerSSE">
+				<div hx-get="/" hx-trigger="sse:redirect"></div>
+				<div sse-swap="message"></div>
+			</div>
 			<div class="sidebar">
 				<div class="column-header">
 					<span class="heading-1">Chats</span>

@@ -15,11 +15,5 @@ func Logout(w *response.Writer, r *http.Request, conn database.Connection) {
 	}
 
 	cookies.Invalidate(w, cookies.SESSION)
-	if r.Header.Get("HX-Request") == "true" {
-		w.Header().Set("HX-Redirect", "/login")
-		w.WriteHeader(http.StatusOK)
-	} else {
-		w.Header().Set("Location", "/login")
-		w.WriteHeader(http.StatusSeeOther)
-	}
+	w.Redirect("/login", r)
 }

@@ -48,11 +48,12 @@ func setup() (conn *database.MongoConnection, router *routing.Router, ok bool) {
 
 	// frontend endpoints
 	router.GET("/", func(w *response.Writer, r *http.Request, conn database.Connection) {
-		http.Redirect(w, r, "/home", http.StatusSeeOther)
-	})
+		w.Redirect("/home", r)
+	}, routing.AuthRedirect)
 	router.GET("/login", resolvers.Login)
 	router.POST("/login/:action", resolvers.SubmitLogin)
 	router.GET("/logout", resolvers.Logout)
+	router.GET("/registerSSE", resolvers.RegisterSSE, routing.AuthWeak)
 	router.GET("/home", resolvers.Home, routing.AuthRedirect)
 	router.GET("/home/chat/:"+chatID, resolvers.OpenChat, routing.AuthRedirect)
 	router.GET("/home/chat/:"+chatID+"/scrollUp", resolvers.ScrollUp, routing.AuthRedirect)

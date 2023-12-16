@@ -2,6 +2,7 @@ package response
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -59,6 +60,35 @@ func (w *Writer) WriteJSON(code int, responseObject any) {
 func (w *Writer) WriteHTML(code int, response string) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteString(code, response)
+}
+
+// TODO test
+func (w *Writer) WriteSSE(event, data string) error {
+	if event == "" {
+		fmt.Fprint(w, "event: message\n") // default sse event
+	} else {
+		fmt.Fprintf(w, "event: %s\n", event)
+	}
+	fmt.Fprintf(w, "data: %s\n\n", data)
+
+	flusher, ok := w.ResponseWriter.(http.Flusher)
+	if !ok || flusher == nil {
+		return errors.New("response writer does not have a flusher")
+	}
+
+	flusher.Flush()
+	return nil
+}
+
+// TODO: test
+func (w *Writer) Redirect(location string, r *http.Request) {
+	if r != nil && r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("HX-Redirect", location)
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.Header().Set("Location", location)
+		w.WriteHeader(http.StatusSeeOther)
+	}
 }
 
 func (w *Writer) String() string {

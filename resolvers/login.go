@@ -14,8 +14,7 @@ import (
 func Login(w *response.Writer, r *http.Request, conn database.Connection) {
 	if sessionID, err := cookies.Get(r, cookies.SESSION); err == nil {
 		if _, ok := conn.CheckSession(sessionID); ok {
-			w.Header().Set("Location", "/home")
-			w.WriteHeader(http.StatusSeeOther)
+			w.Redirect("/home", r)
 			return
 		}
 	}
