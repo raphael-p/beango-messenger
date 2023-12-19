@@ -9,105 +9,112 @@ import (
 	"github.com/google/uuid"
 	"github.com/raphael-p/beango/database"
 	"github.com/raphael-p/beango/resolvers/resolverutils"
-	"github.com/raphael-p/beango/utils/cookies"
 	"github.com/raphael-p/beango/utils/logger"
 	"github.com/raphael-p/beango/utils/response"
 )
 
-var sseConnections = map[int64]map[string]response.Writer{}
+type connectionMap = map[string]response.Writer
+type connectionIndex = map[int64]connectionMap
 
-func RegisterSSE(w *response.Writer, r *http.Request, conn database.Connection) {
+var chatConnectionIndex = connectionIndex{}
+
+// TODO: test this file
+func RegisterChatSSE(w *response.Writer, r *http.Request, conn database.Connection) {
+	newWriter := upgradeConnection(w)
+
+	_, params, httpError := resolverutils.GetRequestContext(r, resolverutils.CHAT_ID_KEY)
+	if httpError != nil {
+		w.WriteSSE("redirect", "")
+		return
+	}
+	chatID := params.ChatID
+
+	chatConnectionIndex, connectionID := registerConnection(newWriter, chatConnectionIndex, chatID)
+	trapConnection(r, chatConnectionIndex, chatID, connectionID)
+}
+
+func SendChatEvent(chatID int64, event, data string) {
+	chatConnections, ok := chatConnectionIndex[chatID]
+	if ok {
+		sendEvent(chatConnections, event, data)
+	}
+}
+
+// Upgrades an HTTP connection to an SSE connection
+func upgradeConnection(w *response.Writer) response.Writer {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	// NOTE: uncomment next 2 lines if doesn't work in production
 	// w.Header().Set("Access-Control-Allow-Origin", "*")
 	// w.Header().Set("Access-Control-Expose-Headers", "Content-Type")
-	w.Status = 200 // avoids WriteHeader calls
-	newWriter := *w
+	w.Status = 200 // having this set avoids unnecessary WriteHeader calls
+	return *w
+}
 
-	user, _, httpError := resolverutils.GetRequestContext(r)
-	if httpError != nil {
-		w.WriteSSE("redirect", "connection expired")
-		return
-	}
-
+// Add connection to the index.
+func registerConnection(
+	w response.Writer,
+	index connectionIndex,
+	key int64,
+) (connectionIndex, string) {
 	sseConnectionID := uuid.NewString()
-	connectionForUser := sseConnections[user.ID]
-	if connectionForUser == nil {
-		connectionForUser = map[string]response.Writer{sseConnectionID: newWriter}
+	connectionForKey := index[key]
+	if connectionForKey == nil {
+		connectionForKey = connectionMap{sseConnectionID: w}
 	} else {
-		connectionForUser[sseConnectionID] = newWriter
+		connectionForKey[sseConnectionID] = w
 	}
-	sseConnections[user.ID] = connectionForUser
+	index[key] = connectionForKey
+	return index, sseConnectionID
+}
 
-	dataCh := make(chan string) // DEBUG
-
-	// Cleanup
+// Makes sure connection is kept alive until terminated by client, or
+// removed from the index.
+func trapConnection(r *http.Request, index connectionIndex, key int64, connectionID string) {
 	_, cancel := context.WithCancel(r.Context())
 	defer func() {
 		cancel()
-		close(dataCh) // DEBUG
-		dataCh = nil  // DEBUG
-		closeSSEConnection(user.ID, sseConnectionID)
-		message := fmt.Sprintf("SSE connection %s closed for user %d", sseConnectionID, user.ID)
+		closeSSEConnection(index, key, connectionID)
+		message := fmt.Sprintf("[SSE connection %s] closed", connectionID)
 		logger.Info(message)
 	}()
 
-	// DEBUG
-	go func() {
-		for data := range dataCh {
-			div := fmt.Sprintf(`<div id="errors" hx-swap-oob="innerHTML">%s</div>`, data)
-			SendEvent(user.ID, "message", div)
-		}
-	}()
-
-	message := fmt.Sprintf("SSE connection %s opened for user %d", sseConnectionID, user.ID)
+	message := fmt.Sprintf("[SSE connection %s] opened", connectionID)
 	logger.Info(message)
 	for {
 		select {
 		case <-r.Context().Done():
 			return
 		default:
-			// check for reasons to break the connection
-			if _, ok := sseConnections[user.ID][sseConnectionID]; !ok {
+			// break the loop if the connection was removed
+			if _, ok := index[key][connectionID]; !ok {
 				return
 			}
-			sessionID, err := cookies.Get(r, cookies.SESSION)
-			if err != nil {
-				SendEvent(user.ID, "redirect", "")
-				return
-			}
-			if _, ok := conn.CheckSession(sessionID); !ok {
-				SendEvent(user.ID, "redirect", "")
-				return
-			}
-
-			dataCh <- time.Now().Format(time.TimeOnly) // DEBUG
 		}
 		time.Sleep(time.Millisecond * 2000)
 	}
 }
 
-func closeSSEConnection(userID int64, connectionID string) {
-	delete(sseConnections[userID], connectionID)
-	if len(sseConnections[userID]) == 0 {
-		delete(sseConnections, userID)
+// Removes an SSE connection from the index. Will remove an index entry if there
+// are no more connections against it.
+func closeSSEConnection(index connectionIndex, key int64, connectionID string) {
+	delete(index[key], connectionID)
+	if len(index[key]) == 0 {
+		delete(index, key)
 	}
 }
 
-// Writes to all SSE connections for a given user.
-// A user will have multiple connections open if they
-// open multiple tabs, for instance.
-func SendEvent(userID int64, event, data string) {
-	connections := sseConnections[userID]
+// Writes to all SSE connections for a given user. A user will
+// have multiple connections open if they open multiple tabs,
+// for instance.
+func sendEvent(connections connectionMap, event, data string) {
 	for connectionID, w := range connections {
 		w.WriteSSE(event, data)
 		message := fmt.Sprintf(
-			"sent '%s' event to user %d on connection %s",
-			event,
-			userID,
+			"[SSE connection %s] sent '%s' event",
 			connectionID,
+			event,
 		)
 		logger.Info(message)
 	}

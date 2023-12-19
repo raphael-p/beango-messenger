@@ -93,10 +93,6 @@ var Header string = `{{define "header"}}
 var HomePage string = `{{define "content"}}
 		<div id="errors" class="error"></div>
 		<div class="chat-container">
-			<div hx-ext="sse" sse-connect="/registerSSE">
-				<div hx-get="/" hx-trigger="sse:redirect"></div>
-				<div sse-swap="message"></div>
-			</div>
 			<div class="sidebar">
 				<div class="column-header">
 					<span class="heading-1">Chats</span>
@@ -127,7 +123,9 @@ var chatList string = `{{ range .Chats }}
 	</div>
 	{{ end }}`
 
-var MessagePane string = `<div class="column-header">
+var MessagePane string = `<div hx-ext="sse" sse-connect="/registerSSE/messages/{{ .ID }}">
+	<div hx-get="/" hx-trigger="sse:redirect"></div>
+	<div class="column-header">
 		<span class="heading-1">{{ .Name }}</span>
 	</div>
 	<table
@@ -148,7 +146,8 @@ var MessagePane string = `<div class="column-header">
 			hx-on::after-request="if(event.detail.successful) this.value = '';"
 			hx-ext="json-enc"
 		></textarea>
-	</div>` + newMessageFetcher
+	</div>` + newMessageFetcher +
+	`</div>`
 
 var MessagePaneRefresh string = newMessageFetcher + `
 	<table id="message-table" hx-swap-oob="afterbegin">` + messageRows + `</table>`
@@ -180,7 +179,7 @@ var newMessageFetcher string = `<div
 		hx-get="/home/chat/{{ .ID }}/refresh?from={{ .FromMessageID }}"
 		hx-swap="outerHTML"
 		class="chat-selector list-item"
-		hx-trigger="refresh-messages from:document, every 5s"
+		hx-trigger="sse:new-messages throttle:10s"
 	/>`
 
 var NewChatPane string = `<div class="column-header">

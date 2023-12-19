@@ -166,6 +166,7 @@ type sendMessageHTMLInput struct {
 func SendMessageHTML(w *response.Writer, r *http.Request, conn database.Connection) {
 	input := new(sendMessageHTMLInput)
 	user, params, httpError := resolverutils.GetRequestBodyAndContext(r, input, resolverutils.CHAT_ID_KEY)
+	chatID := params.ChatID
 	if resolverutils.ProcessHTTPError(w, httpError) {
 		return
 	}
@@ -174,11 +175,11 @@ func SendMessageHTML(w *response.Writer, r *http.Request, conn database.Connecti
 		return
 	}
 
-	_, httpError = sendMessageDatabase(user.ID, params.ChatID, input.Content.Value, conn)
+	_, httpError = sendMessageDatabase(user.ID, chatID, input.Content.Value, conn)
 	if resolverutils.DisplayHTTPError(w, httpError) {
 		return
 	}
-	w.Header().Set("HX-Trigger", "refresh-messages")
+	SendChatEvent(chatID, "new-messages", "")
 	w.WriteHeader(http.StatusNoContent)
 }
 
