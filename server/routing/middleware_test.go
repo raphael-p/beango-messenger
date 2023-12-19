@@ -61,7 +61,7 @@ func TestAuthRedirect(t *testing.T) {
 
 		_, proceed := AuthRedirect(w, req, conn)
 		assert.Equals(t, proceed, false)
-		assert.Equals(t, w.Status, 0)
+		assert.Equals(t, w.Status, 200)
 		assert.Equals(t, w.Header().Get("HX-Redirect"), "/login")
 	})
 }

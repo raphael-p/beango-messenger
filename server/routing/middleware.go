@@ -38,6 +38,7 @@ var AuthRedirect Middleware = func(w *response.Writer, r *http.Request, conn dat
 	return newRequest, false
 }
 
+// TODO: test
 // Adds user to request context.
 // On failure, it proceeds anyway.
 var AuthWeak Middleware = func(w *response.Writer, newRequest *http.Request, conn database.Connection) (*http.Request, bool) {

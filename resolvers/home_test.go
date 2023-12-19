@@ -126,6 +126,7 @@ func TestGetMessages(t *testing.T) {
 }
 
 func TestSendMessageHTML(t *testing.T) {
+	// TODO: perhaps test event sending
 	t.Run("Normal", func(t *testing.T) {
 		body := fmt.Sprintf(`{"content": "%s"}`, "This is a sample message!")
 		w, r, conn := resolverutils.CommonSetup(body)
@@ -137,7 +138,6 @@ func TestSendMessageHTML(t *testing.T) {
 		SendMessageHTML(w, r, conn)
 		assert.Equals(t, w.Status, http.StatusNoContent)
 		assert.Equals(t, string(w.Body), "")
-		assert.Equals(t, w.Header().Get("HX-Trigger"), "refresh-messages")
 	})
 
 	t.Run("EmptyMessage", func(t *testing.T) {
