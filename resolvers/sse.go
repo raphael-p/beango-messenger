@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/raphael-p/beango/database"
@@ -69,8 +68,7 @@ func registerConnection(
 	return index, sseConnectionID
 }
 
-// Makes sure connection is kept alive until terminated by client, or
-// removed from the index.
+// Makes sure connection is kept alive until terminated by client
 func trapConnection(r *http.Request, index connectionIndex, key int64, connectionID string) {
 	_, cancel := context.WithCancel(r.Context())
 	defer func() {
@@ -82,18 +80,7 @@ func trapConnection(r *http.Request, index connectionIndex, key int64, connectio
 
 	message := fmt.Sprintf("[SSE connection %s] opened", connectionID)
 	logger.Info(message)
-	for {
-		select {
-		case <-r.Context().Done():
-			return
-		default:
-			// break the loop if the connection was removed
-			if _, ok := index[key][connectionID]; !ok {
-				return
-			}
-		}
-		time.Sleep(time.Millisecond * 2000)
-	}
+	<-r.Context().Done() // wait for client termination
 }
 
 // Removes an SSE connection from the index. Will remove an index entry if there
