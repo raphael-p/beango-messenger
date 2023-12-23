@@ -62,7 +62,6 @@ func (w *Writer) WriteHTML(code int, response string) {
 	w.WriteString(code, response)
 }
 
-// TODO test
 func (w *Writer) WriteSSE(event, data string) error {
 	if event == "" {
 		fmt.Fprint(w, "event: message\n") // default sse event

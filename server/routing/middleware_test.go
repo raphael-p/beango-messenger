@@ -85,7 +85,6 @@ func TestAuthWeak(t *testing.T) {
 		newReq, proceed := AuthWeak(w, req, conn)
 		assert.Equals(t, proceed, true)
 		_, err := context.GetUser(newReq)
-		assert.IsNotNil(t, err)
 		assert.ErrorHasMessage(t, err, "user not found in request context")
 	})
 }

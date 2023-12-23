@@ -75,6 +75,71 @@ func TestWriteHTML(t *testing.T) {
 	})
 }
 
+type noFlushRecorder struct {
+	*httptest.ResponseRecorder
+}
+
+func (recorder *noFlushRecorder) Flush() {}
+
+func TestWriteSSE(t *testing.T) {
+	appendToBody := func(body, event, data string) string {
+		return fmt.Sprintf("%sevent: %s\ndata: %s\n\n", body, event, data)
+	}
+
+	t.Run("Normal", func(t *testing.T) {
+		recorder := httptest.NewRecorder()
+		writer := NewWriter(recorder)
+
+		xEvent := "event-one"
+		xData := "the event's data"
+		xBody := appendToBody("", xEvent, xData)
+
+		err := writer.WriteSSE(xEvent, xData)
+		assert.IsNil(t, err)
+		assert.Equals(t, writer.Status, http.StatusOK)
+		assert.Equals(t, string(writer.Body), xBody)
+		assert.Equals(t, recorder.Flushed, true)
+	})
+
+	t.Run("WriteTwice", func(t *testing.T) {
+		recorder := httptest.NewRecorder()
+		writer := NewWriter(recorder)
+
+		xEvent1 := "event-one"
+		xData1 := "the event's data"
+		xBody := appendToBody("", xEvent1, xData1)
+
+		xEvent2 := "event-two"
+		xData2 := "another payload!"
+		xBody = appendToBody(xBody, xEvent2, xData2)
+
+		writer.WriteSSE(xEvent1, xData1)
+		writer.WriteSSE(xEvent2, xData2)
+		assert.Equals(t, string(writer.Body), xBody)
+		assert.Equals(t, string(writer.Body), xBody)
+	})
+
+	t.Run("DefaultEvent", func(t *testing.T) {
+		recorder := httptest.NewRecorder()
+		writer := NewWriter(recorder)
+		xEvent := "message"
+		xData := "the event's data"
+		xBody := appendToBody("", xEvent, xData)
+
+		writer.WriteSSE("", xData)
+		assert.Equals(t, writer.Status, http.StatusOK)
+		assert.Equals(t, string(writer.Body), xBody)
+	})
+
+	t.Run("NoFlushResponseWriter", func(t *testing.T) {
+		recorder := noFlushRecorder{httptest.NewRecorder()}
+		writer := NewWriter(recorder)
+
+		err := writer.WriteSSE("", "")
+		assert.ErrorHasMessage(t, err, "response writer does not have a flusher")
+	})
+}
+
 func TestString(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		recorder := httptest.NewRecorder()
