@@ -126,7 +126,6 @@ func TestGetMessages(t *testing.T) {
 }
 
 func TestSendMessageHTML(t *testing.T) {
-	// TODO: perhaps test event sending
 	t.Run("Normal", func(t *testing.T) {
 		body := fmt.Sprintf(`{"content": "%s"}`, "This is a sample message!")
 		w, r, conn := resolverutils.CommonSetup(body)

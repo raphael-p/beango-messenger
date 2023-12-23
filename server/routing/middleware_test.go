@@ -65,3 +65,27 @@ func TestAuthRedirect(t *testing.T) {
 		assert.Equals(t, w.Header().Get("HX-Redirect"), "/login")
 	})
 }
+
+func TestAuthWeak(t *testing.T) {
+	t.Run("AuthSucceeds", func(t *testing.T) {
+		w, req, conn := resolverutils.CommonSetup("")
+		cookie := &http.Cookie{Name: string(cookies.SESSION), Value: mocks.AdminSesh.ID}
+		req.AddCookie(cookie)
+
+		newReq, proceed := AuthWeak(w, req, conn)
+		assert.Equals(t, proceed, true)
+		user, err := context.GetUser(newReq)
+		assert.IsNil(t, err)
+		assert.DeepEquals(t, user, mocks.Admin)
+	})
+
+	t.Run("AuthFails", func(t *testing.T) {
+		w, req, conn := resolverutils.CommonSetup("")
+
+		newReq, proceed := AuthWeak(w, req, conn)
+		assert.Equals(t, proceed, true)
+		_, err := context.GetUser(newReq)
+		assert.IsNotNil(t, err)
+		assert.ErrorHasMessage(t, err, "user not found in request context")
+	})
+}
