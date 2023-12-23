@@ -13,11 +13,11 @@ import (
 func TestWriteHeader(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		recorder := httptest.NewRecorder()
-		writer := NewWriter(recorder)
+		w := NewWriter(recorder)
 
 		xStatus := http.StatusAccepted
-		writer.WriteHeader(xStatus)
-		assert.Equals(t, writer.Status, xStatus)
+		w.WriteHeader(xStatus)
+		assert.Equals(t, w.Status, xStatus)
 		assert.Equals(t, recorder.Code, xStatus)
 	})
 }
@@ -25,13 +25,13 @@ func TestWriteHeader(t *testing.T) {
 func TestWriteString(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		recorder := httptest.NewRecorder()
-		writer := NewWriter(recorder)
+		w := NewWriter(recorder)
 
 		xStatus := http.StatusAccepted
 		xBody := "Hello, world!"
-		writer.WriteString(xStatus, xBody)
-		assert.Equals(t, writer.Status, xStatus)
-		assert.Equals(t, string(writer.Body), xBody)
+		w.WriteString(xStatus, xBody)
+		assert.Equals(t, w.Status, xStatus)
+		assert.Equals(t, string(w.Body), xBody)
 		assert.Equals(t, recorder.Code, xStatus)
 		assert.Equals(t, recorder.Body.String(), xBody)
 	})
@@ -39,39 +39,36 @@ func TestWriteString(t *testing.T) {
 
 func TestWriteJSON(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
-		recorder := httptest.NewRecorder()
-		writer := NewWriter(recorder)
-
+		w := NewWriter(httptest.NewRecorder())
 		xStatus := http.StatusAccepted
-		writer.WriteJSON(xStatus, map[string]string{"message": "Hello, world!"})
-		assert.Equals(t, recorder.Header().Get("Content-Type"), "application/json")
-		assert.Equals(t, writer.Status, xStatus)
-		assert.Equals(t, string(writer.Body), "{\"message\":\"Hello, world!\"}")
+
+		w.WriteJSON(xStatus, map[string]string{"message": "Hello, world!"})
+		assert.Equals(t, w.Header().Get("Content-Type"), "application/json")
+		assert.Equals(t, w.Status, xStatus)
+		assert.Equals(t, string(w.Body), "{\"message\":\"Hello, world!\"}")
 	})
 
 	t.Run("InvalidJSON", func(t *testing.T) {
-		recorder := httptest.NewRecorder()
-		writer := NewWriter(recorder)
-
+		w := NewWriter(httptest.NewRecorder())
 		body := func(string) { fmt.Println("hello, world!") }
-		writer.WriteJSON(http.StatusAccepted, body)
+
+		w.WriteJSON(http.StatusAccepted, body)
 		xStatus := http.StatusBadRequest
-		assert.Equals(t, writer.Status, xStatus)
-		assert.Equals(t, string(writer.Body), "json: unsupported type: func(string)")
+		assert.Equals(t, w.Status, xStatus)
+		assert.Equals(t, string(w.Body), "json: unsupported type: func(string)")
 	})
 }
 
 func TestWriteHTML(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
-		recorder := httptest.NewRecorder()
-		writer := NewWriter(recorder)
-
+		w := NewWriter(httptest.NewRecorder())
 		xStatus := http.StatusAccepted
 		xBody := "<div class: >just some text, doesn't have to be valid HTML"
-		writer.WriteHTML(xStatus, xBody)
-		assert.Equals(t, recorder.Header().Get("Content-Type"), "text/html")
-		assert.Equals(t, writer.Status, xStatus)
-		assert.Equals(t, string(writer.Body), xBody)
+
+		w.WriteHTML(xStatus, xBody)
+		assert.Equals(t, w.Header().Get("Content-Type"), "text/html")
+		assert.Equals(t, w.Status, xStatus)
+		assert.Equals(t, string(w.Body), xBody)
 	})
 }
 
@@ -88,22 +85,21 @@ func TestWriteSSE(t *testing.T) {
 
 	t.Run("Normal", func(t *testing.T) {
 		recorder := httptest.NewRecorder()
-		writer := NewWriter(recorder)
+		w := NewWriter(recorder)
 
 		xEvent := "event-one"
 		xData := "the event's data"
 		xBody := appendToBody("", xEvent, xData)
 
-		err := writer.WriteSSE(xEvent, xData)
+		err := w.WriteSSE(xEvent, xData)
 		assert.IsNil(t, err)
-		assert.Equals(t, writer.Status, http.StatusOK)
-		assert.Equals(t, string(writer.Body), xBody)
+		assert.Equals(t, w.Status, http.StatusOK)
+		assert.Equals(t, string(w.Body), xBody)
 		assert.Equals(t, recorder.Flushed, true)
 	})
 
 	t.Run("WriteTwice", func(t *testing.T) {
-		recorder := httptest.NewRecorder()
-		writer := NewWriter(recorder)
+		w := NewWriter(httptest.NewRecorder())
 
 		xEvent1 := "event-one"
 		xData1 := "the event's data"
@@ -113,54 +109,77 @@ func TestWriteSSE(t *testing.T) {
 		xData2 := "another payload!"
 		xBody = appendToBody(xBody, xEvent2, xData2)
 
-		writer.WriteSSE(xEvent1, xData1)
-		writer.WriteSSE(xEvent2, xData2)
-		assert.Equals(t, string(writer.Body), xBody)
-		assert.Equals(t, string(writer.Body), xBody)
+		w.WriteSSE(xEvent1, xData1)
+		w.WriteSSE(xEvent2, xData2)
+		assert.Equals(t, string(w.Body), xBody)
+		assert.Equals(t, string(w.Body), xBody)
 	})
 
 	t.Run("DefaultEvent", func(t *testing.T) {
-		recorder := httptest.NewRecorder()
-		writer := NewWriter(recorder)
+		w := NewWriter(httptest.NewRecorder())
 		xEvent := "message"
 		xData := "the event's data"
 		xBody := appendToBody("", xEvent, xData)
 
-		writer.WriteSSE("", xData)
-		assert.Equals(t, writer.Status, http.StatusOK)
-		assert.Equals(t, string(writer.Body), xBody)
+		w.WriteSSE("", xData)
+		assert.Equals(t, w.Status, http.StatusOK)
+		assert.Equals(t, string(w.Body), xBody)
 	})
 
 	t.Run("NoFlushResponseWriter", func(t *testing.T) {
-		recorder := noFlushRecorder{httptest.NewRecorder()}
-		writer := NewWriter(recorder)
+		w := NewWriter(noFlushRecorder{httptest.NewRecorder()})
 
-		err := writer.WriteSSE("", "")
+		err := w.WriteSSE("", "")
 		assert.ErrorHasMessage(t, err, "response writer does not have a flusher")
 	})
 }
 
+func TestRedirect(t *testing.T) {
+	t.Run("Normal", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodGet, "/test", nil)
+		w := NewWriter(httptest.NewRecorder())
+		xLocation := "/somewhere/else"
+		xStatus := http.StatusSeeOther
+
+		w.Redirect(xLocation, r)
+		assert.Equals(t, w.Header().Get("Location"), xLocation)
+		assert.Equals(t, w.Status, xStatus)
+	})
+
+	t.Run("FromHTMX", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodGet, "/test", nil)
+		w := NewWriter(httptest.NewRecorder())
+		r.Header.Set("HX-Request", "true")
+		xLocation := "/somewhere/else"
+		xStatus := http.StatusOK
+
+		w.Redirect(xLocation, r)
+		assert.Equals(t, w.Header().Get("Location"), "")
+		assert.Equals(t, w.Header().Get("HX-Redirect"), xLocation)
+		assert.Equals(t, w.Status, xStatus)
+	})
+
+}
+
 func TestString(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
-		recorder := httptest.NewRecorder()
-		writer := NewWriter(recorder)
-		writer.Status = http.StatusOK
-		writer.Time = 100 * time.Millisecond.Milliseconds()
-		writer.Body = []byte("Hello, world!")
+		w := NewWriter(httptest.NewRecorder())
+		w.Status = http.StatusOK
+		w.Time = 100 * time.Millisecond.Milliseconds()
+		w.Body = []byte("Hello, world!")
 
-		xOut := fmt.Sprintf("status %d (took %dms)\n\tresponse: %s", http.StatusOK, writer.Time, writer.Body)
-		assert.Equals(t, writer.String(), xOut)
+		xOut := fmt.Sprintf("status %d (took %dms)\n\tresponse: %s", http.StatusOK, w.Time, w.Body)
+		assert.Equals(t, w.String(), xOut)
 	})
 
 	t.Run("BodyHidden", func(t *testing.T) {
-		recorder := httptest.NewRecorder()
-		writer := NewWriter(recorder)
-		writer.Status = http.StatusOK
-		writer.Time = 100 * time.Millisecond.Milliseconds()
-		writer.Body = []byte("Hello, world!")
-		writer.HideResponse = true
+		w := NewWriter(httptest.NewRecorder())
+		w.Status = http.StatusOK
+		w.Time = 100 * time.Millisecond.Milliseconds()
+		w.Body = []byte("Hello, world!")
+		w.HideResponse = true
 
-		xOut := fmt.Sprintf("status %d (took %dms)", http.StatusOK, writer.Time)
-		assert.Equals(t, writer.String(), xOut)
+		xOut := fmt.Sprintf("status %d (took %dms)", http.StatusOK, w.Time)
+		assert.Equals(t, w.String(), xOut)
 	})
 }
