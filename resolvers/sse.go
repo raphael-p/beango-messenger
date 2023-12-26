@@ -12,12 +12,12 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
-type connectionMap = map[string]response.Writer
+type connectionMap = map[string]*response.Writer
 type connectionIndex = map[int64]connectionMap
 
 var chatConnectionIndex = connectionIndex{}
 
-// TODO: test this file
+// TODO: test
 func RegisterChatSSE(w *response.Writer, r *http.Request, conn database.Connection) {
 	newWriter := upgradeConnection(w)
 
@@ -32,6 +32,7 @@ func RegisterChatSSE(w *response.Writer, r *http.Request, conn database.Connecti
 	trapConnection(r, chatConnectionIndex, chatID, connectionID)
 }
 
+// TODO: test
 func SendChatEvent(chatID int64, event, data string) {
 	chatConnections, ok := chatConnectionIndex[chatID]
 	if ok {
@@ -40,7 +41,7 @@ func SendChatEvent(chatID int64, event, data string) {
 }
 
 // Upgrades an HTTP connection to an SSE connection
-func upgradeConnection(w *response.Writer) response.Writer {
+func upgradeConnection(w *response.Writer) *response.Writer {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
@@ -48,12 +49,12 @@ func upgradeConnection(w *response.Writer) response.Writer {
 	// w.Header().Set("Access-Control-Allow-Origin", "*")
 	// w.Header().Set("Access-Control-Expose-Headers", "Content-Type")
 	w.Status = 200 // having this set avoids unnecessary WriteHeader calls
-	return *w
+	return w
 }
 
 // Add connection to the index.
 func registerConnection(
-	w response.Writer,
+	w *response.Writer,
 	index connectionIndex,
 	key int64,
 ) (connectionIndex, string) {
@@ -68,6 +69,7 @@ func registerConnection(
 	return index, sseConnectionID
 }
 
+// TODO: test
 // Makes sure connection is kept alive until terminated by client
 func trapConnection(r *http.Request, index connectionIndex, key int64, connectionID string) {
 	_, cancel := context.WithCancel(r.Context())
