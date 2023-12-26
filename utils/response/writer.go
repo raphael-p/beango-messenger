@@ -79,7 +79,6 @@ func (w *Writer) WriteSSE(event, data string) error {
 	return nil
 }
 
-// TODO: test
 func (w *Writer) Redirect(location string, r *http.Request) {
 	if r != nil && r.Header.Get("HX-Request") == "true" {
 		w.Header().Set("HX-Redirect", location)
