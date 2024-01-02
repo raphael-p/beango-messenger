@@ -15,6 +15,32 @@ import (
 	"github.com/raphael-p/beango/utils/response"
 )
 
+func TestSendChatEvent(t *testing.T) {
+	t.Run("Normal", func(t *testing.T) {
+		var key int64 = 1
+		connectionID := "a"
+		w := response.NewWriter(httptest.NewRecorder())
+		chatConnectionIndex[key] = connectionMap{connectionID: w}
+		buf := logger.MockFileLogger(t)
+		xEvent := "test-event"
+		xMessage := fmt.Sprintf("[SSE connection %s] sent '%s' event", connectionID, xEvent)
+
+		SendChatEvent(key, xEvent, "Hello World!")
+		assert.Contains(t, buf.String(), xMessage)
+	})
+
+	t.Run("ChatNotFound", func(t *testing.T) {
+		var key int64 = 1
+		connectionID := "a"
+		w := response.NewWriter(httptest.NewRecorder())
+		chatConnectionIndex[key] = connectionMap{connectionID: w}
+		buf := logger.MockFileLogger(t)
+
+		SendChatEvent(2, "test-event", "Hello World!")
+		assert.Equals(t, buf.String(), "")
+	})
+}
+
 func TestRegisterConnection(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		var key int64 = 1
@@ -110,11 +136,12 @@ func TestCloseSSEConnection(t *testing.T) {
 func TestSendEvent(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
 		w := response.NewWriter(httptest.NewRecorder())
-		connections := connectionMap{"a": w}
+		connectionID := "a"
+		connections := connectionMap{connectionID: w}
 		buf := logger.MockFileLogger(t)
 		xEvent := "test-event"
 		xData := "Hello World!"
-		xMessage := fmt.Sprintf("[SSE connection a] sent '%s' event", xEvent)
+		xMessage := fmt.Sprintf("[SSE connection %s] sent '%s' event", connectionID, xEvent)
 
 		sendEvent(connections, xEvent, xData)
 		assert.Equals(t, w.Status, http.StatusOK)

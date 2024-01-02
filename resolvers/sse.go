@@ -32,7 +32,6 @@ func RegisterChatSSE(w *response.Writer, r *http.Request, conn database.Connecti
 	trapConnection(r, chatConnectionIndex, chatID, connectionID)
 }
 
-// TODO: test
 func SendChatEvent(chatID int64, event, data string) {
 	chatConnections, ok := chatConnectionIndex[chatID]
 	if ok {
