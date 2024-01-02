@@ -69,10 +69,9 @@ func registerConnection(
 	return index, sseConnectionID
 }
 
-// TODO: test
 // Makes sure connection is kept alive until terminated by client
 func trapConnection(r *http.Request, index connectionIndex, key int64, connectionID string) {
-	_, cancel := context.WithCancel(r.Context())
+	ctx, cancel := context.WithCancel(r.Context())
 	defer func() {
 		cancel()
 		closeSSEConnection(index, key, connectionID)
@@ -82,7 +81,7 @@ func trapConnection(r *http.Request, index connectionIndex, key int64, connectio
 
 	message := fmt.Sprintf("[SSE connection %s] opened", connectionID)
 	logger.Info(message)
-	<-r.Context().Done() // wait for client termination
+	<-ctx.Done() // wait for client termination
 }
 
 // Removes an SSE connection from the index. Will remove an index entry if there

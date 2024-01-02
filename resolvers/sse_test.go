@@ -1,11 +1,13 @@
 package resolvers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/raphael-p/beango/test/assert"
 	"github.com/raphael-p/beango/utils/collections"
@@ -35,6 +37,36 @@ func TestRegisterConnection(t *testing.T) {
 		registerConnection(w, xConnectionIndex, key)
 		_, values := collections.MapEntries(xConnectionIndex[key])
 		assert.HasLength(t, values, 2)
+	})
+}
+
+func TestTrapConnection(t *testing.T) {
+	t.Run("Normal", func(t *testing.T) {
+		var key int64 = 1
+		connectionID := "a"
+		w := response.NewWriter(httptest.NewRecorder())
+		connectionIndex := connectionIndex{key: {connectionID: w}}
+		buf := logger.MockFileLogger(t)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		r, _ := http.NewRequestWithContext(ctx, http.MethodGet, "/test", nil)
+		done := make(chan bool)
+		go func() {
+			trapConnection(r, connectionIndex, key, connectionID)
+			done <- true
+		}()
+
+		time.Sleep(100 * time.Millisecond)
+		assert.Contains(t, buf.String(), "opened")
+		assert.NotContains(t, buf.String(), "closed")
+
+		cancel()
+		select {
+		case <-done:
+			assert.Contains(t, buf.String(), "closed")
+		case <-time.After(1 * time.Second):
+			t.Error("test timed out")
+		}
 	})
 }
 
