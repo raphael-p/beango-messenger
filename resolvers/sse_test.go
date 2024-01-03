@@ -1,6 +1,7 @@
 package resolvers
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net/http"
@@ -9,19 +10,69 @@ import (
 	"testing"
 	"time"
 
+	"github.com/raphael-p/beango/resolvers/resolverutils"
 	"github.com/raphael-p/beango/test/assert"
+	"github.com/raphael-p/beango/test/mocks"
 	"github.com/raphael-p/beango/utils/collections"
 	"github.com/raphael-p/beango/utils/logger"
 	"github.com/raphael-p/beango/utils/response"
 )
 
-func TestSendChatEvent(t *testing.T) {
+func TestRegisterChatSSE(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {
+		buf := logger.MockFileLogger(t)
+		w, r, conn := resolverutils.CommonSetup("")
+		user, _ := conn.SetUser(mocks.MakeUser())
+		chat, _ := conn.SetChat(mocks.MakePrivateChat(), user.ID, mocks.ADMIN_ID)
+		params := map[string]string{resolverutils.CHAT_ID_KEY: fmt.Sprint(chat.ID)}
+		r = resolverutils.SetContext(t, r, mocks.Admin, params)
+
+		done := make(chan bool)
+		go func() {
+			RegisterChatSSE(w, r, conn)
+			done <- true
+		}()
+
+		select {
+		case <-done:
+			t.Error("connection closed unexpectedly")
+		case <-time.After(1 * time.Second):
+			assert.Contains(t, buf.String(), "opened")
+		}
+	})
+
+	t.Run("RedirectsOnMissingUser", func(t *testing.T) {
+		w, r, conn := resolverutils.CommonSetup("")
+		params := map[string]string{resolverutils.CHAT_ID_KEY: "1"}
+		r = resolverutils.SetContext(t, r, nil, params)
+
+		RegisterChatSSE(w, r, conn)
+		assert.Equals(t, w.Status, http.StatusOK)
+		assert.Contains(t, string(w.Body), "redirect")
+	})
+
+	t.Run("RedirectsOnMissingChatID", func(t *testing.T) {
+		w, r, conn := resolverutils.CommonSetup("")
+		r = resolverutils.SetContext(t, r, mocks.Admin, nil)
+
+		RegisterChatSSE(w, r, conn)
+		assert.Equals(t, w.Status, http.StatusOK)
+		assert.Contains(t, string(w.Body), "redirect")
+	})
+}
+
+func TestSendChatEvent(t *testing.T) {
+	setup := func() (*bytes.Buffer, int64, string) {
+		buf := logger.MockFileLogger(t)
 		var key int64 = 1
 		connectionID := "a"
 		w := response.NewWriter(httptest.NewRecorder())
 		chatConnectionIndex[key] = connectionMap{connectionID: w}
-		buf := logger.MockFileLogger(t)
+		return buf, key, connectionID
+	}
+
+	t.Run("Normal", func(t *testing.T) {
+		buf, key, connectionID := setup()
 		xEvent := "test-event"
 		xMessage := fmt.Sprintf("[SSE connection %s] sent '%s' event", connectionID, xEvent)
 
@@ -30,11 +81,7 @@ func TestSendChatEvent(t *testing.T) {
 	})
 
 	t.Run("ChatNotFound", func(t *testing.T) {
-		var key int64 = 1
-		connectionID := "a"
-		w := response.NewWriter(httptest.NewRecorder())
-		chatConnectionIndex[key] = connectionMap{connectionID: w}
-		buf := logger.MockFileLogger(t)
+		buf, _, _ := setup()
 
 		SendChatEvent(2, "test-event", "Hello World!")
 		assert.Equals(t, buf.String(), "")
@@ -42,11 +89,15 @@ func TestSendChatEvent(t *testing.T) {
 }
 
 func TestRegisterConnection(t *testing.T) {
-	t.Run("Normal", func(t *testing.T) {
+	setup := func() (*response.Writer, connectionIndex, int64) {
 		var key int64 = 1
-		xStatus := 1
-		xConnectionIndex := connectionIndex{}
 		w := response.NewWriter(httptest.NewRecorder())
+		return w, connectionIndex{}, key
+	}
+
+	t.Run("Normal", func(t *testing.T) {
+		w, xConnectionIndex, key := setup()
+		xStatus := 1
 
 		registerConnection(w, xConnectionIndex, key)
 		_, values := collections.MapEntries(xConnectionIndex[key])
@@ -55,9 +106,7 @@ func TestRegisterConnection(t *testing.T) {
 	})
 
 	t.Run("MultipleConnectionsOnKey", func(t *testing.T) {
-		var key int64 = 1
-		w := response.NewWriter(httptest.NewRecorder())
-		xConnectionIndex := connectionIndex{}
+		w, xConnectionIndex, key := setup()
 
 		registerConnection(w, xConnectionIndex, key)
 		registerConnection(w, xConnectionIndex, key)

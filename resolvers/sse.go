@@ -17,7 +17,6 @@ type connectionIndex = map[int64]connectionMap
 
 var chatConnectionIndex = connectionIndex{}
 
-// TODO: test
 func RegisterChatSSE(w *response.Writer, r *http.Request, conn database.Connection) {
 	newWriter := upgradeConnection(w)
 
